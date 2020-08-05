@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1'?>
+<node id="dac70004_dev" fwinfo="endpoint; width=1">
+  <node id="DAC_BUSY"   address="0x0" mask="0x00000001"/>
+  <node id="DAC_WE"     address="0x4" mask="0x00000001"/>
+  <node id="DAC_DATA"   address="0x5"/>
+</node>
+
