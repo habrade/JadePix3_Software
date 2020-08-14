@@ -21,5 +21,5 @@ class IPbusLink:
 
     def get_hw(self):
         uhal.setLogLevelTo(uhal.LogLevel.DEBUG)
-        self.hw = uhal.getDevice("HappyDaq.udp.0", self.device_uri, self.address_table_uri)
+        self.hw = uhal.getDevice("JadePix3.udp.0", self.device_uri, self.address_table_uri)
         return self.hw
