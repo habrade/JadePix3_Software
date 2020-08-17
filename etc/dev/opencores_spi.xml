@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-
-<node id="spi_dev" description="SPI master controller" fwinfo="endpoint;width=3">
+<node fwinfo="endpoint">
 	<node id="d0" address="0x0" description="Data reg 0"/>
 	<node id="d1" address="0x1" description="Data reg 1"/>
 	<node id="d2" address="0x2" description="Data reg 2"/>
