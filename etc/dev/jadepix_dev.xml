@@ -10,4 +10,5 @@
     <node address="0x3" id="apulse" mask="0x8" perimission="rw"/>
     <node address="0x3" id="dpulse" mask="0x10" perimission="rw"/>
     <node address="0x3" id="pdb" mask="0x20" perimission="rw"/>
+    <node address="0x3" id="load" mask="0x40" perimission="rw"/>
 </node>
