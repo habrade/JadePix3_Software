@@ -10,6 +10,7 @@ coloredlogs.install(level='DEBUG', logger=log)
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
+
 class GlobalDevice:
     def __init__(self, hw):
         self.hw = hw
