@@ -1,3 +1,4 @@
 uhal~=0.0.0
 coloredlogs~=14.0
 setuptools~=49.2.1
+bitarray~=1.5.2
