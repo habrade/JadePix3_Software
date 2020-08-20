@@ -4,6 +4,10 @@
 	<node id="d1" address="0x1" description="Data reg 1"/>
 	<node id="d2" address="0x2" description="Data reg 2"/>
 	<node id="d3" address="0x3" description="Data reg 3"/>
+	<node id="d4" address="0x4" description="Data reg 4"/>
+	<node id="d5" address="0x5" description="Data reg 5"/>
+	<node id="d6" address="0x6" description="Data reg 6"/>
+	<node id="d7" address="0x7" description="Data reg 7"/>
 	<node id="ctrl" address="0x4" description="Control reg"/>
 	<node id="divider" address="0x5" description="Clock divider reg"/>
 	<node id="ss" address="0x6" description="Slave select reg"/>
