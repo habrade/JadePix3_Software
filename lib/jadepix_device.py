@@ -14,21 +14,33 @@ __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
-class JadePixDevice(SpiDevice):
+class JadePixDevice:
     def __init__(self, hw):
-        super().__init__(hw)
         self.hw = hw
+        self.reg_name_base = "jadepix_dev."
         self.spi_dev = SpiDevice(self.hw)
-        self.spi_reg = 200 * bitarray("0")
+        self.spi_reg = bitarray(200 * "0")
 
     @staticmethod
     def get_spi_reg():
-        spi_reg = pll_ibit0 + pll_ibit1 + pll_rbit1 + pll_rbit0 + rsds_sel_tx + rsds_sel_rx + rsds_sel_lpbk + bgp_trim \
-                  + bgp_en + vdac6_data + moni_sel_vdac6 + vdac3_data + moni_sel_vdac3 + moni_sel_vdac5 + \
-                  vdac5_data.reverse() + moni_sel_vdac2 + vdac2_data.reverse() + vdac4_data + moni_sel_vdac4 + \
-                  vdac1_data + moni_sel_vdac1 + idac6_data + moni_sel_idac6 + moni_sel_idac5 + idac5_data.reverse() + \
-                  idac4_data + moni_sel_idac4 + moni_sel_idac3 + idac3_data.reverse() + idac2_data + moni_sel_idac2 \
-                  + moni_sel_idac1 + idac1_data.reverse()
+        vdac5_data_tmp = vdac5_data
+        vdac5_data_tmp.reverse()
+        vdac2_data_tmp = vdac2_data
+        vdac2_data_tmp.reverse()
+        idac5_data_tmp = idac5_data
+        idac5_data_tmp.reverse()
+        idac3_data_tmp = idac3_data
+        idac3_data_tmp.reverse()
+        idac1_data_tmp = idac1_data
+        idac1_data_tmp.reverse()
+
+        spi_reg = pll_ibit0 + pll_ibit1 + pll_rbit1 + pll_rbit0 + bitarray(4 * "0") + rsds_sel_tx + rsds_sel_rx + \
+                  rsds_sel_lpbk + bgp_trim + bgp_en + bitarray(64 * "0") + vdac6_data + moni_sel_vdac6 + vdac3_data + \
+                  moni_sel_vdac3 + moni_sel_vdac5 + vdac5_data_tmp + moni_sel_vdac2 + vdac2_data_tmp + vdac4_data + \
+                  moni_sel_vdac4 + vdac1_data + moni_sel_vdac1 + idac6_data + moni_sel_idac6 + moni_sel_idac5 + \
+                  idac5_data_tmp + idac4_data + moni_sel_idac4 + moni_sel_idac3 + idac3_data_tmp + idac2_data + \
+                  moni_sel_idac2 + moni_sel_idac1 + idac1_data_tmp
+        log.debug("Lenth of spi_reg bit array: {:d}".format(len(spi_reg)))
         return spi_reg
 
     def update_spi_reg(self):
@@ -37,8 +49,14 @@ class JadePixDevice(SpiDevice):
     def get_spi_data(self):
         self.update_spi_reg()
         spi_data = []
+        for i in range(0, 6):
+            low = i * 32
+            high = (i + 1) * 32
+            spi_data.append(int(self.spi_reg[low:high].to01(), base=2))
+        spi_data.append(int(self.spi_reg[6 * 32:200].to01(), base=2))
+        spi_data.append(0)
         for i in range(0, 8):
-            spi_data[i] = self.spi_reg[40 * i:((i + 1) * 40)]
+            log.debug("SPI Send Data Ch: {:d} Val: {:#010x}".format(i, spi_data[i]))
         return spi_data
 
     def load_config(self, go_dispatch):
@@ -52,16 +70,28 @@ class JadePixDevice(SpiDevice):
             self.hw.dispatch()
 
     def w_data_regs(self, go_dispatch):
-        self.get_spi_data()
+        spi_data = self.get_spi_data()
         for i in range(0, 8):
             reg_name = "d" + str(i)
             node_name = self.spi_dev.reg_name_base + reg_name
             node = self.hw.getNode(node_name)
-            data = self.get_spi_data()[i]
+            data = spi_data[i]
             node.write(data)
-            if go_dispatch:
-                self.hw.dispatch()
+            log.debug("Write d{:d} : {:#010x}".format(i, data))
+        if go_dispatch:
+            self.hw.dispatch()
 
     def spi_config(self):
-        self.w_data_regs(True)
-        self.load_config(True)
+        self.w_data_regs(go_dispatch=True)
+        self.spi_dev.set_go_busy(enabled=True)
+        self.spi_dev.w_ctrl()
+        self.load_config(go_dispatch=True)
+
+    def foo_bar(self):
+        reg_name = "STAT0"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        stat = node.read()
+        self.hw.dispatch()
+        stat_val = stat.value()
+        return stat_val

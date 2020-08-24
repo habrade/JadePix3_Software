@@ -16,13 +16,13 @@ class SpiDevice:
         self.hw = hw
         self.reg_name_base = "spi_dev."
 
-        self.char_len = 0x00
+        self.char_len = 0
         self.go_busy = 0
         self.rx_neg = 0
         self.tx_neg = 0
         self.lsb = 0
         self.ie = 0
-        self.ass = 0
+        self.ass = 1
 
         self.ctrl = 0x00000000
 
@@ -34,7 +34,7 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_rx_neg(self, enabled):
-        if isinstance(enabled, bool):
+        if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
             self.rx_neg = 1
@@ -45,7 +45,7 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_tx_neg(self, enabled):
-        if isinstance(enabled, bool):
+        if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
             self.tx_neg = 1
@@ -56,7 +56,7 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_go_busy(self, enabled):
-        if isinstance(enabled, bool):
+        if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
             self.go_busy = 1
@@ -67,7 +67,7 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_lsb(self, enabled):
-        if isinstance(enabled, bool):
+        if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
             self.lsb = 1
@@ -80,7 +80,7 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_ie(self, enabled):
-        if isinstance(enabled, bool):
+        if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
             self.ie = 1
@@ -91,7 +91,7 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_ass(self, enabled):
-        if isinstance(enabled, bool):
+        if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
             self.ass = 1
@@ -104,7 +104,7 @@ class SpiDevice:
     def update_ctrl(self):
         self.ctrl = (self.ass << 13) + (self.ie << 12) + (self.lsb << 11) + (self.tx_neg << 10) + (self.rx_neg << 9) + (
                 self.go_busy << 8) + self.char_len
-        log.debug("Control register is updated to: {:#08x}")
+        log.debug("Control register is updated to: {:#010x}".format(self.ctrl))
 
     def w_data(self, data, chn):
         ## Write to data reg
@@ -127,7 +127,7 @@ class SpiDevice:
         self.hw.dispatch()
         return data
 
-    def w_ctrl(self, ctrl):
+    def w_ctrl(self):
         ## Write to Ctrl reg
         reg_name = "ctrl"
         node_name = self.reg_name_base + reg_name

@@ -1,3 +1,4 @@
+import time
 import coloredlogs
 import logging
 from lib.dac70004_defs import *
@@ -5,8 +6,8 @@ from lib.dac70004_defs import *
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-coloredlogs.install(level='DEBUG')
-coloredlogs.install(level='DEBUG', logger=log)
+coloredlogs.install(level='INFO')
+coloredlogs.install(level='INFO', logger=log)
 
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
@@ -24,25 +25,29 @@ class Dac70004Device:
         busy_raw = node.read()
         self.hw.dispatch()
         busy = busy_raw.value()
+        log.debug("Busy Status: {}".format(busy))
         return busy == 1
 
     def write_data(self, data):
-        if self.is_busy():
-            log.error("DAC70004 is busy now, stop write!")
-            return False
-        else:
-            ## Write to data reg
-            reg_name = "DAC_DATA"
-            node_name = self.reg_name_base + reg_name
-            node = self.hw.getNode(node_name)
-            node.write(data)
-            ## Set WE
-            reg_name = "DAC_WE"
-            node_name = self.reg_name_base + reg_name
-            node = self.hw.getNode(node_name)
-            node.write(1)
-            self.hw.dispatch()
-            return True
+        busy = self.is_busy()
+        while busy:
+            log.warning("DAC70004 is busy now, stop writing!")
+            time.sleep(0.003)
+            busy = self.is_busy()
+        ## Write to data reg
+        reg_name = "DAC_DATA"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(data)
+        ## Set WE
+        reg_name = "DAC_WE"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(0)
+        node.write(1)
+        node.write(0)
+        self.hw.dispatch()
+        return True
 
     def cmd(self, wr, cmd, chn, din, mode):
         if cmd not in [DAC70004_CMD_WR_BUF, DAC70004_CMD_UPDATE_CHN, DAC70004_CMD_W_UPDATE_ALL, DAC70004_CMD_W_UPDATE,
@@ -135,8 +140,10 @@ class Dac70004Device:
         return self.cmd(0, DAC70004_CMD_NOP, 0, 0, 0)
 
     @staticmethod
-    def out_to_din(analog_out):
-        if analog_out > DAC70004_REF_VOLT or analog_out < .0:
+    def anaVal_2_digVal(anaVal):
+        if anaVal > DAC70004_REF_VOLT or anaVal < .0:
             raise ValueError(
-                'Unexpected analog output value: {0}, should be less than reference voltage'.format(analog_out))
-        return int((2 ** 16) * analog_out / DAC70004_REF_VOLT)
+                'Unexpected analog output value: {0}, should be less than reference voltage'.format(anaVal))
+        digVal = int((2 ** 16) * anaVal / DAC70004_REF_VOLT)
+        log.debug("Convert analog to digital: {:f} {:d}".format(anaVal, digVal))
+        return digVal
