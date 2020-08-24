@@ -9,6 +9,10 @@ pip3 install -r requirements.txt
 ```
 
 #### Run
+1. SPI configuration
+    * The location of configuration file: __lib/jadepix_defs.py__. Consider to change the style be more general, eg, *.ini, *.json
+
+2. Just Try:
 ```shell script
 ./run.py
 ```
