@@ -16,7 +16,7 @@ class SpiDevice:
         self.hw = hw
         self.reg_name_base = "spi_dev."
 
-        self.char_len = 0
+        self.data_len = 0
         self.go_busy = 0
         self.rx_neg = 0
         self.tx_neg = 0
@@ -26,11 +26,11 @@ class SpiDevice:
 
         self.ctrl = 0x00000000
 
-    def set_char_len(self, char_len):
-        if char_len not in range(0, 256):
-            raise ValueError('Unexpected char_len number: {0}, should be less than 256'.format(char_len))
-        self.char_len = char_len
-        log.debug("Set how many bits are transmitted in one transfer: {}".format(char_len))
+    def set_data_len(self, data_len):
+        if data_len not in range(0, 256):
+            raise ValueError('Unexpected char_len number: {0}, should be less than 256'.format(data_len))
+        self.data_len = data_len
+        log.debug("Set how many bits are transmitted in one transfer: {}".format(data_len))
         self.update_ctrl()
 
     def set_rx_neg(self, enabled):
@@ -63,7 +63,7 @@ class SpiDevice:
             log.debug("Starts the transfer")
         else:
             self.go_busy = 0
-            log.warning("Writing 0 to this bit has no effect")
+            log.warning("set_go_busy: Writing 0 to this bit has no effect")
         self.update_ctrl()
 
     def set_lsb(self, enabled):
@@ -87,7 +87,7 @@ class SpiDevice:
             log.debug("The interrupt output is set active after a transfer is finished.")
         else:
             self.ie = 0
-            log.warning("Writing 0 to this bit has no effect")
+            log.warning("set_ie: Writing 0 to this bit has no effect")
         self.update_ctrl()
 
     def set_ass(self, enabled):
@@ -103,10 +103,10 @@ class SpiDevice:
 
     def update_ctrl(self):
         self.ctrl = (self.ass << 13) + (self.ie << 12) + (self.lsb << 11) + (self.tx_neg << 10) + (self.rx_neg << 9) + (
-                self.go_busy << 8) + self.char_len
+                self.go_busy << 8) + self.data_len
         log.debug("Control register is updated to: {:#010x}".format(self.ctrl))
 
-    def w_data(self, data, chn):
+    def w_data(self, data, chn, go_dispatch):
         ## Write to data reg
         if chn not in range(0, 8):
             raise ValueError('Unexpected chn number: {0}, should be 0-7'.format(chn))
@@ -114,26 +114,30 @@ class SpiDevice:
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(data)
-        self.hw.dispatch()
+        if go_dispatch:
+            self.hw.dispatch()
 
     def r_data(self, chn):
         ## Read to data reg
         if chn not in range(0, 8):
             raise ValueError('Unexpected chn number: {0}, should be 0-7'.format(chn))
-        reg_name = "d" + chn
+        reg_name = "d" + str(chn)
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         data = node.read()
         self.hw.dispatch()
-        return data
+        data_val = data.value()
+        log.debug("SPI data register channel {:d} val: {:#010x}".format(chn, data_val))
+        return data_val
 
-    def w_ctrl(self):
+    def w_ctrl(self, go_dispatch):
         ## Write to Ctrl reg
         reg_name = "ctrl"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(self.ctrl)
-        self.hw.dispatch()
+        if go_dispatch:
+            self.hw.dispatch()
 
     def r_ctrl(self):
         ## Write to Ctrl reg
@@ -142,15 +146,18 @@ class SpiDevice:
         node = self.hw.getNode(node_name)
         ctrl = node.read()
         self.hw.dispatch()
-        return ctrl
+        ctrl_val = ctrl.value()
+        log.debug("SPI control register is: {:#010x}".format(ctrl_val))
+        return ctrl_val
 
-    def w_div(self, divider):
+    def w_div(self, divider, go_dispatch):
         ## Write to divider reg
         reg_name = "divider"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(divider)
-        self.hw.dispatch()
+        if go_dispatch:
+            self.hw.dispatch()
 
     def r_div(self):
         ## Write to divider reg
@@ -159,15 +166,18 @@ class SpiDevice:
         node = self.hw.getNode(node_name)
         divider = node.read()
         self.hw.dispatch()
-        return divider
+        divider_val = divider.value()
+        log.debug("SPI clock divider val: {:d}".format(divider_val))
+        return divider_val
 
-    def w_ss(self, ss):
+    def w_ss(self, ss, go_dispatch):
         ## Write to ss reg
         reg_name = "ss"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(ss)
-        self.hw.dispatch()
+        if go_dispatch:
+            self.hw.dispatch()
 
     def r_ss(self):
         ## Write to ss reg
@@ -176,4 +186,10 @@ class SpiDevice:
         node = self.hw.getNode(node_name)
         ss = node.read()
         self.hw.dispatch()
-        return ss
+        ss_val = ss.value()
+        log.debug("SPI ss val: {:d}".format(ss_val))
+        return ss_val
+
+    def start(self, go_dispatch):
+        self.set_go_busy(enabled=True)
+        self.w_ctrl(go_dispatch=go_dispatch)

@@ -6,7 +6,6 @@ from lib.global_device import GlobalDevice
 from lib.dac70004_device import Dac70004Device
 from lib.dac70004_defs import *
 from lib.ipbus_link import IPbusLink
-from lib.spi_device import SpiDevice
 from lib.jadepix_device import JadePixDevice
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -28,14 +27,15 @@ def dac_config(dac_dev):
 
 
 def spi_config(spi_dev):
-    spi_dev.set_char_len(200)
-    spi_dev.set_ie(False)
-    spi_dev.set_ass(True)
-    spi_dev.set_lsb(True)
-    spi_dev.set_rx_neg(False)
-    spi_dev.set_tx_neg(False)
-    spi_dev.w_div(1)
-    spi_dev.w_ctrl()
+    spi_dev.set_data_len(200)
+    spi_dev.set_ie(enabled=False)
+    spi_dev.set_ass(enabled=True)
+    spi_dev.set_lsb(enabled=True)
+    spi_dev.set_rx_neg(enabled=False)
+    spi_dev.set_tx_neg(enabled=False)
+    spi_dev.w_div(divider=0, go_dispatch=True)
+    spi_dev.w_ctrl(go_dispatch=False)
+    spi_dev.w_ss(ss=0x01, go_dispatch=True)
 
 
 if __name__ == '__main__':
@@ -44,7 +44,6 @@ if __name__ == '__main__':
     jadepix_dev = JadePixDevice(hw)
     global_dev = GlobalDevice(hw)
     dac70004_dev = Dac70004Device(hw)
-    spi_dev = SpiDevice(hw)
 
     ## Soft global reset
     global_dev.set_soft_rst()
@@ -53,9 +52,13 @@ if __name__ == '__main__':
     dac_config(dac70004_dev)
 
     ## SPI master config
-    spi_config(spi_dev)
+    spi_config(jadepix_dev.spi_dev)
 
     ## Set JadePix SPI configuration
     jadepix_dev.spi_config()
-    # test = jadepix_dev.foo_bar()
-    # log.debug("test : {}".format(test))
+
+    # for i in range(0,8):
+    #     test = jadepix_dev.spi_dev.r_data(i)
+    #     log.debug("test: {:#010x}".format(test))
+
+    ## JadePix Control

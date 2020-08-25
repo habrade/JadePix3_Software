@@ -23,6 +23,7 @@ class JadePixDevice:
 
     @staticmethod
     def get_spi_reg():
+        log.info("Reading SPI configuration from defines file...")
         vdac5_data_tmp = vdac5_data
         vdac5_data_tmp.reverse()
         vdac2_data_tmp = vdac2_data
@@ -60,6 +61,7 @@ class JadePixDevice:
         return spi_data
 
     def load_config(self, go_dispatch):
+        log.info("Loading spi configuration...")
         reg_name = "load"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -71,6 +73,7 @@ class JadePixDevice:
 
     def w_data_regs(self, go_dispatch):
         spi_data = self.get_spi_data()
+        log.info("Writing SPI configuration data to SPI data registers...")
         for i in range(0, 8):
             reg_name = "d" + str(i)
             node_name = self.spi_dev.reg_name_base + reg_name
@@ -82,9 +85,9 @@ class JadePixDevice:
             self.hw.dispatch()
 
     def spi_config(self):
-        self.w_data_regs(go_dispatch=True)
-        self.spi_dev.set_go_busy(enabled=True)
-        self.spi_dev.w_ctrl()
+        self.w_data_regs(go_dispatch=False)
+        self.spi_dev.w_ctrl(go_dispatch=True)
+        self.spi_dev.start(go_dispatch=True)
         self.load_config(go_dispatch=True)
 
     def foo_bar(self):

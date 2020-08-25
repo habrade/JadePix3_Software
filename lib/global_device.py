@@ -15,7 +15,6 @@ class GlobalDevice:
     def __init__(self, hw):
         self.hw = hw
         self.reg_name_base = "global_dev."
-        log.info("Gloabl device")
 
     def set_bit(self, reg):
         reg_name = self.reg_name_base + reg
