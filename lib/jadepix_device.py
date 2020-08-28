@@ -7,8 +7,8 @@ from lib.spi_device import SpiDevice
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-coloredlogs.install(level='DEBUG')
-coloredlogs.install(level='DEBUG', logger=log)
+coloredlogs.install(level='INFO')
+coloredlogs.install(level='INFO', logger=log)
 
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
@@ -20,6 +20,8 @@ class JadePixDevice:
         self.reg_name_base = "jadepix_dev."
         self.spi_dev = SpiDevice(self.hw)
         self.spi_reg = bitarray(200 * "0")
+
+        self.cfg_file_path = "./config/jadepix_config.txt"
 
     @staticmethod
     def get_spi_reg():
@@ -86,8 +88,8 @@ class JadePixDevice:
 
     def spi_config(self):
         self.w_data_regs(go_dispatch=False)
-        self.spi_dev.w_ctrl(go_dispatch=True)
-        self.spi_dev.start(go_dispatch=True)
+        self.spi_dev.w_ctrl(go_dispatch=False)
+        self.spi_dev.start(go_dispatch=False)
         self.load_config(go_dispatch=True)
 
     def foo_bar(self):
@@ -98,3 +100,88 @@ class JadePixDevice:
         self.hw.dispatch()
         stat_val = stat.value()
         return stat_val
+
+    def w_cfg_fifo(self, data, go_dispatch):
+        # log.debug("Write data to JadePix configuration FIFO: {}".format(data))
+        reg_name = "cfg.data"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(data)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def wr_en_fifo(self, go_dispatch):
+        reg_name = "cfg.wr_en"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(0)
+        node.write(1)
+        node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def g_cfg_fifo_empty(self):
+        reg_name = "fifo.empty"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        empty = node.read()
+        self.hw.dispatch()
+        empty_val = empty.value()
+        return empty_val
+
+    def g_cfg_fifo_pfull(self):
+        reg_name = "fifo.prog_full"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        pfull = node.read()
+        self.hw.dispatch()
+        pgull_val = pfull.value()
+        return pgull_val
+
+    def g_cfg_fifo_count(self):
+        reg_name = "fifo.data_count"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        data_count = node.read()
+        self.hw.dispatch()
+        count = data_count.value()
+        return count
+
+    def clear_fifo(self, go_dispatch):
+        log.debug("Clear jadepix configuration FIFO!")
+        reg_name = "fifo_rst"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(0)
+        node.write(1)
+        node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def w_cfg(self):
+        self.clear_fifo(go_dispatch=True)
+        fifo_empty = self.g_cfg_fifo_empty()
+        fifo_pfull = self.g_cfg_fifo_pfull()
+        fifo_count = self.g_cfg_fifo_count()
+        log.debug("Fifo status: empty {} \t prog_full {}, count {}".format(fifo_empty, fifo_pfull, fifo_count))
+        cnt = 0
+        with open(self.cfg_file_path, mode='r') as fp:
+            for line in fp:
+                data = int(line, 2)
+                row, col = self.calc_row_col(cnt)
+                log.info("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))
+                self.w_cfg_fifo(data=data, go_dispatch=False)
+                self.wr_en_fifo(go_dispatch=True)
+                cnt += 1
+        if cnt != (ROW * COL):
+            log.error("Data count {} is not right, should be {}".format(cnt, ROW * COL))
+        fifo_empty = self.g_cfg_fifo_empty()
+        fifo_pfull = self.g_cfg_fifo_pfull()
+        fifo_count = self.g_cfg_fifo_count()
+        log.debug("Fifo status: empty {} \t prog_full {} \t count {}".format(fifo_empty, fifo_pfull, fifo_count))
+
+    @staticmethod
+    def calc_row_col(cnt):
+        row = int(cnt / COL)
+        col = int(cnt % COL)
+        return row, col

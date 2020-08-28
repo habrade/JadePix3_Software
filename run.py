@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import logging
+import time
+
 import coloredlogs
 
 from lib.global_device import GlobalDevice
@@ -57,8 +59,5 @@ if __name__ == '__main__':
     ## Set JadePix SPI configuration
     jadepix_dev.spi_config()
 
-    # for i in range(0,8):
-    #     test = jadepix_dev.spi_dev.r_data(i)
-    #     log.debug("test: {:#010x}".format(test))
-
     ## JadePix Control
+    jadepix_dev.w_cfg()

@@ -1,7 +1,11 @@
 from bitarray import bitarray
 
+## Pix chip parameters
+ROW = 512
+COL = 192
+
 ## SPI config
-idac1_data = bitarray("11111111")
+idac1_data = bitarray("00000011")
 idac2_data = bitarray("11111111")
 idac3_data = bitarray("00000000")
 idac4_data = bitarray("00000000")

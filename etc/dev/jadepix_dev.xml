@@ -1,10 +1,13 @@
 <?xml version='1.0' encoding='ISO-8859-1'?>
 <node fwinfo="endpoint">
-    <node address="0x0" id="STAT0" permission="r"/>
-    <node address="0x2" id="cfg">
-        <node id="data" mask="0x3" permission="rw"/>
-        <node id="col" mask="0x3fc" permission="rw"/>
-        <node id="row" mask="0x3fc00" permission="rw"/>
+    <node id="fifo" address="0x0">
+        <node id="empty" mask="0x1" permission="r"/>
+        <node id="prog_full" mask="0x2" permission="r"/>
+        <node id="data_count" mask="0x7fffc" permission="r"/>
+    </node>
+    <node id="cfg" address="0x2">
+        <node id="data" mask="0x7" permission="rw"/>
+        <node id="wr_en" mask="0x8" permission="rw"/>
     </node>
     <node address="0x3" id="cfg_start" mask="0x1" permission="rw"/>
     <node address="0x3" id="rs_start" mask="0x2" permission="rw"/>
@@ -13,4 +16,5 @@
     <node address="0x3" id="dpulse" mask="0x10" permission="rw"/>
     <node address="0x3" id="pdb" mask="0x20" permission="rw"/>
     <node address="0x3" id="load" mask="0x40" permission="rw"/>
+    <node address="0x3" id="fifo_rst" mask="0x80" permission="rw"/>
 </node>
