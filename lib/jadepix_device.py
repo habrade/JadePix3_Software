@@ -92,18 +92,9 @@ class JadePixDevice:
         self.spi_dev.start(go_dispatch=False)
         self.load_config(go_dispatch=True)
 
-    def foo_bar(self):
-        reg_name = "STAT0"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        stat = node.read()
-        self.hw.dispatch()
-        stat_val = stat.value()
-        return stat_val
-
     def w_cfg_fifo(self, data, go_dispatch):
         # log.debug("Write data to JadePix configuration FIFO: {}".format(data))
-        reg_name = "cfg.data"
+        reg_name = "cfg_fifo.data"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(data)
@@ -111,7 +102,7 @@ class JadePixDevice:
             self.hw.dispatch()
 
     def wr_en_fifo(self, go_dispatch):
-        reg_name = "cfg.wr_en"
+        reg_name = "cfg_fifo.wr_en"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(0)
@@ -121,7 +112,7 @@ class JadePixDevice:
             self.hw.dispatch()
 
     def g_cfg_fifo_empty(self):
-        reg_name = "fifo.empty"
+        reg_name = "cfg_fifo_status.empty"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         empty = node.read()
@@ -130,7 +121,7 @@ class JadePixDevice:
         return empty_val
 
     def g_cfg_fifo_pfull(self):
-        reg_name = "fifo.prog_full"
+        reg_name = "cfg_fifo_status.prog_full"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         pfull = node.read()
@@ -139,7 +130,7 @@ class JadePixDevice:
         return pgull_val
 
     def g_cfg_fifo_count(self):
-        reg_name = "fifo.data_count"
+        reg_name = "cfg_fifo_status.data_count"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         data_count = node.read()
@@ -149,7 +140,7 @@ class JadePixDevice:
 
     def clear_fifo(self, go_dispatch):
         log.debug("Clear jadepix configuration FIFO!")
-        reg_name = "fifo_rst"
+        reg_name = "cfg_fifo_rst"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(0)
@@ -179,6 +170,30 @@ class JadePixDevice:
         fifo_pfull = self.g_cfg_fifo_pfull()
         fifo_count = self.g_cfg_fifo_count()
         log.debug("Fifo status: empty {} \t prog_full {} \t count {}".format(fifo_empty, fifo_pfull, fifo_count))
+
+    def start_cfg(self, go_dispatch):
+        log.info("Read configuration from FIFO, and write to JadePix3")
+        reg_name = "cfg_start"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(0)
+        node.write(1)
+        node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def is_busy_cfg(self):
+        log.info("Read configuration from FIFO, and write to JadePix3")
+        reg_name = "cfg_busy"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        cfg_busy = node.read()
+        self.hw.dispatch()
+        cfg_busy_val = cfg_busy.value()
+        if cfg_busy_val:
+            return True
+        else:
+            return False
 
     @staticmethod
     def calc_row_col(cnt):

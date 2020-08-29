@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import logging
-import time
 
 import coloredlogs
 
@@ -55,9 +54,9 @@ if __name__ == '__main__':
 
     ## SPI master config
     spi_config(jadepix_dev.spi_dev)
-
     ## Set JadePix SPI configuration
     jadepix_dev.spi_config()
 
     ## JadePix Control
     jadepix_dev.w_cfg()
+    jadepix_dev.start_cfg(go_dispatch=True)
