@@ -64,7 +64,7 @@ class JadePixDevice:
 
     def load_config(self, go_dispatch):
         log.info("Loading spi configuration...")
-        reg_name = "load"
+        reg_name = "LOAD"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(0)
@@ -157,13 +157,15 @@ class JadePixDevice:
         log.debug("Fifo status: empty {} \t prog_full {}, count {}".format(fifo_empty, fifo_pfull, fifo_count))
         cnt = 0
         with open(self.cfg_file_path, mode='r') as fp:
+            log.info("Start read configuration from file, and write to FPGA FIFO...")
             for line in fp:
                 data = int(line, 2)
                 row, col = self.calc_row_col(cnt)
-                log.info("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))
+                log.debug("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))
                 self.w_cfg_fifo(data=data, go_dispatch=False)
                 self.wr_en_fifo(go_dispatch=True)
                 cnt += 1
+        log.info("...write to FPGA FIFO....\nEnding!")
         if cnt != (ROW * COL):
             log.error("Data count {} is not right, should be {}".format(cnt, ROW * COL))
         fifo_empty = self.g_cfg_fifo_empty()
@@ -208,5 +210,51 @@ class JadePixDevice:
         node.write(0)
         node.write(1)
         node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def cache_bit_set(self, cache_bit, go_dispatch):
+        log.info("Set CACHE_BIT_SET to {:#06x}".format(cache_bit))
+        if cache_bit < 0 or cache_bit > 15:
+            log.error("CACHE_BIT_SET error, should between 0x0 - 0xF!")
+        reg_name = "CACHE_BIT_SET"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(cache_bit)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_pdb(self, pdb, go_dispatch):
+        log.info("Set PDB to {:}".format(pdb))
+        reg_name = "PDB"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(pdb)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_matrix_grst(self, matrix_grst, go_dispatch):
+        log.info("Set MATRIX_GRST to {:}".format(matrix_grst))
+        reg_name = "MATRIX_GRST"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(matrix_grst)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_hitmap_addr(self, hitmap_col_low, hitmap_col_high, go_dispatch):
+        if hitmap_col_high > 351 or hitmap_col_high < 340 or hitmap_col_low > 351 or hitmap_col_low < 340 or hitmap_col_low > hitmap_col_high:
+            log.error("Hitmap address set error, the address should be between 340 and 351. Low = {}, High = {}".format(
+                hitmap_col_low, hitmap_col_high))
+        else:
+            log.info("Set Hitmap col address: {} to {}".format(hitmap_col_low, hitmap_col_high))
+        reg_name = "hitmap_col_low"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(hitmap_col_low)
+        reg_name = "hitmap_col_high"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(hitmap_col_high)
         if go_dispatch:
             self.hw.dispatch()

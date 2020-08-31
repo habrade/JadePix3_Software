@@ -59,8 +59,10 @@ if __name__ == '__main__':
     jadepix_dev.spi_config()
 
     ## JadePix Control
-    start = time.process_time()
-    jadepix_dev.w_cfg()
-    jadepix_dev.start_cfg(go_dispatch=True)
-    print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-    # jadepix_dev.start_rs(go_dispatch=True)
+    # start = time.process_time()
+    # jadepix_dev.w_cfg()
+    # jadepix_dev.start_cfg(go_dispatch=True)
+    # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+    jadepix_dev.cache_bit_set(cache_bit=0xF, go_dispatch=True)
+    jadepix_dev.set_hitmap_addr(hitmap_col_low=340, hitmap_col_high=340, go_dispatch=True)
+    jadepix_dev.start_rs(go_dispatch=True)

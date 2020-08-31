@@ -7,18 +7,22 @@
         <node id="data_count" mask="0x7fffc" permission="r"/>
     </node>
 
-
-    <node id="cfg_fifo" address="0x2">
+    <node id="cfg_fifo" address="0x4">
         <node id="data" mask="0x7" permission="rw"/>
         <node id="wr_en" mask="0x8" permission="rw"/>
     </node>
 
-    <node address="0x3" id="cfg_start" mask="0x1" permission="rw"/>
-    <node address="0x3" id="rs_start" mask="0x2" permission="rw"/>
-    <node address="0x3" id="gs_start" mask="0x4" permission="rw"/>
-    <node address="0x3" id="apulse" mask="0x8" permission="rw"/>
-    <node address="0x3" id="dpulse" mask="0x10" permission="rw"/>
-    <node address="0x3" id="pdb" mask="0x20" permission="rw"/>
-    <node address="0x3" id="load" mask="0x40" permission="rw"/>
-    <node address="0x3" id="cfg_fifo_rst" mask="0x80" permission="rw"/>
+    <node address="0x5" id="cfg_start" mask="0x1" permission="rw"/>
+    <node address="0x5" id="rs_start" mask="0x2" permission="rw"/>
+    <node address="0x5" id="gs_start" mask="0x4" permission="rw"/>
+    <node address="0x5" id="apulse" mask="0x8" permission="rw"/>
+    <node address="0x5" id="dpulse" mask="0x10" permission="rw"/>
+    <node address="0x5" id="PDB" mask="0x20" permission="rw"/>
+    <node address="0x5" id="LOAD" mask="0x40" permission="rw"/>
+    <node address="0x5" id="cfg_fifo_rst" mask="0x80" permission="rw"/>
+    <node address="0x5" id="CACHE_BIT_SET" mask="0xf00" permission="rw"/>
+    <node address="0x5" id="MATRIX_GRST" mask="0x1000" permission="rw"/>
+
+    <node address="0x6" id="hitmap_col_low" mask="0x1ff" permission="rw"/>
+    <node address="0x6" id="hitmap_col_high" mask="0x3fe00" permission="rw"/>
 </node>
