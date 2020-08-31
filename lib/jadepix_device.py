@@ -183,7 +183,6 @@ class JadePixDevice:
             self.hw.dispatch()
 
     def is_busy_cfg(self):
-        log.info("Read configuration from FIFO, and write to JadePix3")
         reg_name = "cfg_busy"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -200,3 +199,14 @@ class JadePixDevice:
         row = int(cnt / COL)
         col = int(cnt % COL)
         return row, col
+
+    def start_rs(self, go_dispatch):
+        log.info("Start rolling shutter")
+        reg_name = "rs_start"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(0)
+        node.write(1)
+        node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()

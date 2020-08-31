@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import logging
 
 import coloredlogs
@@ -58,5 +59,8 @@ if __name__ == '__main__':
     jadepix_dev.spi_config()
 
     ## JadePix Control
+    start = time.process_time()
     jadepix_dev.w_cfg()
     jadepix_dev.start_cfg(go_dispatch=True)
+    print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+    # jadepix_dev.start_rs(go_dispatch=True)
