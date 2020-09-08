@@ -214,7 +214,7 @@ class JadePixDevice:
             self.hw.dispatch()
 
     def cache_bit_set(self, cache_bit, go_dispatch):
-        log.info("Set CACHE_BIT_SET to {:#06x}".format(cache_bit))
+        log.info("Set CACHE_BIT_SET to {:#03x}".format(cache_bit))
         if cache_bit < 0 or cache_bit > 15:
             log.error("CACHE_BIT_SET error, should between 0x0 - 0xF!")
         reg_name = "CACHE_BIT_SET"
@@ -248,13 +248,39 @@ class JadePixDevice:
                 hitmap_col_low, hitmap_col_high))
         else:
             log.info("Set Hitmap col address: {} to {}".format(hitmap_col_low, hitmap_col_high))
-        reg_name = "hitmap_col_low"
+        reg_name = "hitmap.col_low"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(hitmap_col_low)
-        reg_name = "hitmap_col_high"
+        reg_name = "hitmap.col_high"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(hitmap_col_high)
+
+        #set hitmap_number here?
+        hitmap_num = hitmap_col_high - hitmap_col_low + 1
+        self.set_hitmap_num(hitmap_num=hitmap_num, go_dispatch=go_dispatch)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def hitmap_en(self, enable, go_dispatch):
+        log.info("Enabel Hitmap")
+        reg_name = "hitmap.en"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        if enable:
+            node.write(1)
+        else:
+            node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_hitmap_num(self, hitmap_num, go_dispatch):
+        if hitmap_num > 12 or hitmap_num < 1:
+            log.error("Hitmap number should be between 1 and 12, set: {}!".format(hitmap_num))
+        reg_name = "hitmap.num"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(hitmap_num)
         if go_dispatch:
             self.hw.dispatch()

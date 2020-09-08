@@ -23,6 +23,10 @@
     <node address="0x5" id="CACHE_BIT_SET" mask="0xf00" permission="rw"/>
     <node address="0x5" id="MATRIX_GRST" mask="0x1000" permission="rw"/>
 
-    <node address="0x6" id="hitmap_col_low" mask="0x1ff" permission="rw"/>
-    <node address="0x6" id="hitmap_col_high" mask="0x3fe00" permission="rw"/>
+    <node id="hitmap" address="0x6">
+        <node id="col_low" mask="0x1ff" permission="rw"/>
+        <node id="col_high" mask="0x3fe00" permission="rw"/>
+        <node id="en" mask="0x40000" permission="rw"/>
+        <node id="num" mask="0x780000" permission="rw"/>
+    </node>
 </node>
