@@ -59,11 +59,24 @@ if __name__ == '__main__':
     jadepix_dev.spi_config()
 
     ## JadePix Control
+
+    ##### From here we can test configuration #####
     # start = time.process_time()
     # jadepix_dev.w_cfg()
     # jadepix_dev.start_cfg(go_dispatch=True)
     # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-    jadepix_dev.cache_bit_set(cache_bit=0xF, go_dispatch=True)
-    jadepix_dev.set_hitmap_addr(hitmap_col_low=340, hitmap_col_high=340, go_dispatch=True)
-    jadepix_dev.start_rs(go_dispatch=False)
-    jadepix_dev.hitmap_en(enable=True, go_dispatch=True)
+
+    ##### From here we can test rolling shutter ######
+    # jadepix_dev.cache_bit_set(cache_bit=0xF, go_dispatch=True)
+    # jadepix_dev.set_hitmap_addr(hitmap_col_low=340, hitmap_col_high=340, go_dispatch=True)
+    # jadepix_dev.start_rs(go_dispatch=False)
+    # jadepix_dev.hitmap_en(enable=True, go_dispatch=True)
+
+    ##### From here we can test global shutter #####
+    jadepix_dev.set_gs_pulse_delay(pulse_delay=2)
+    jadepix_dev.set_gs_width_low(width_low=2)
+    jadepix_dev.set_gs_width_high(width_high=0)
+    jadepix_dev.set_gs_pulse_deassert(pulse_deassert=2)
+    jadepix_dev.set_gs_deassert(deassert=2)
+    jadepix_dev.set_gs_col(col=224)
+    jadepix_dev.start_gs(go_dispatch=True)

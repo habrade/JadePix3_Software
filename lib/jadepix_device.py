@@ -202,14 +202,27 @@ class JadePixDevice:
         col = int(cnt % COL)
         return row, col
 
-    def start_rs(self, go_dispatch):
+    def start_rs(self, enable, go_dispatch):
         log.info("Start rolling shutter")
         reg_name = "rs_start"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
+        if enable:
+            node.write(1)
+        else:
+            node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def stop_rs(self, enable, go_dispatch):
+        log.info("Stop rolling shutter")
+        reg_name = "rs_stop"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        if enable:
+            node.write(1)
+        else:
+            node.write(0)
         if go_dispatch:
             self.hw.dispatch()
 
@@ -282,5 +295,63 @@ class JadePixDevice:
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(hitmap_num)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def start_gs(self, go_dispatch):
+        reg_name = "gs_start"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(0)
+        node.write(1)
+        node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_gs_pulse_delay(self, pulse_delay, go_dispatch=True):
+        reg_name = "gs_pulse_delay_cnt"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(pulse_delay)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_gs_width_low(self, width_low, go_dispatch=True):
+        reg_name = "gs_pulse_width_cnt_low"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(width_low)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_gs_width_high(self, width_high, go_dispatch=True):
+        reg_name = "gs_pulse_width_cnt_high"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(width_high)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_gs_pulse_deassert(self, pulse_deassert, go_dispatch=True):
+        reg_name = "gs_pulse_deassert_cnt"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(pulse_deassert)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_gs_deassert(self, deassert, go_dispatch=True):
+        reg_name = "gs_deassert_cnt"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(deassert)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def set_gs_col(self, col, go_dispatch=True):
+        reg_name = "gs_col"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(col)
         if go_dispatch:
             self.hw.dispatch()
