@@ -196,6 +196,30 @@ class JadePixDevice:
         else:
             return False
 
+    def is_busy_rs(self):
+        reg_name = "rs_busy"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        rs_busy = node.read()
+        self.hw.dispatch()
+        rs_busy_val = rs_busy.value()
+        if rs_busy_val:
+            return True
+        else:
+            return False
+
+    def is_busy_gs(self):
+        reg_name = "gs_busy"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        gs_busy = node.read()
+        self.hw.dispatch()
+        gs_busy_val = gs_busy.value()
+        if gs_busy_val:
+            return True
+        else:
+            return False
+
     @staticmethod
     def calc_row_col(cnt):
         row = int(cnt / COL)
