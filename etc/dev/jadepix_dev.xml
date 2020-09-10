@@ -7,37 +7,37 @@
         <node id="data_count" mask="0x7fffc" permission="r"/>
     </node>
 
-    <node id="cfg_fifo" address="0x8">
+    <node id="cfg_fifo" address="0x10">
         <node id="data" mask="0x7" permission="rw"/>
         <node id="wr_en" mask="0x8" permission="rw"/>
     </node>
 
-    <node address="0x9" id="cfg_start" mask="0x1" permission="rw"/>
-    <node address="0x9" id="rs_start" mask="0x2" permission="rw"/>
-    <node address="0x9" id="gs_start" mask="0x4" permission="rw"/>
-    <node address="0x9" id="rs_stop" mask="0x8" permission="rw"/>
-    <node address="0x9" id="PDB" mask="0x20" permission="rw"/>
-    <node address="0x9" id="LOAD" mask="0x40" permission="rw"/>
-    <node address="0x9" id="cfg_fifo_rst" mask="0x80" permission="rw"/>
-    <node address="0x9" id="CACHE_BIT_SET" mask="0xf00" permission="rw"/>
-    <node address="0x9" id="MATRIX_GRST" mask="0x1000" permission="rw"/>
-    <node address="0x9" id="gs_col" mask="0x3fe000" permission="rw"/>
-    <node address="0x9" id="anasel_en" mask="0x400000" permission="rw"/>
-    <node address="0x9" id="digsel_en" mask="0x800000" permission="rw"/>
-    <node address="0x9" id="gs_sel_pulse" mask="0x1000000" permission="rw"/>
+    <node address="0x11" id="cfg_start" mask="0x1" permission="rw"/>
+    <node address="0x11" id="rs_start" mask="0x2" permission="rw"/>
+    <node address="0x11" id="gs_start" mask="0x4" permission="rw"/>
+    <node address="0x11" id="PDB" mask="0x20" permission="rw"/>
+    <node address="0x11" id="LOAD" mask="0x40" permission="rw"/>
+    <node address="0x11" id="cfg_fifo_rst" mask="0x80" permission="rw"/>
+    <node address="0x11" id="CACHE_BIT_SET" mask="0xf00" permission="rw"/>
+    <node address="0x11" id="MATRIX_GRST" mask="0x1000" permission="rw"/>
+    <node address="0x11" id="gs_col" mask="0x3fe000" permission="rw"/>
+    <node address="0x11" id="anasel_en" mask="0x400000" permission="rw"/>
+    <node address="0x11" id="digsel_en" mask="0x800000" permission="rw"/>
+    <node address="0x11" id="gs_sel_pulse" mask="0x1000000" permission="rw"/>
 
+    <node address="0x12" id="rs_frame_number" permission="rw"/>
 
-    <node id="hitmap" address="0xa">
+    <node id="hitmap" address="0x13">
         <node id="col_low" mask="0x1ff" permission="rw"/>
         <node id="col_high" mask="0x3fe00" permission="rw"/>
         <node id="en" mask="0x40000" permission="rw"/>
         <node id="num" mask="0x780000" permission="rw"/>
     </node>
 
-    <node id="gs_pulse_delay_cnt" address="0xb" mask="0x1ff" permission="rw"/>
-    <node id="gs_pulse_width_cnt_low" address="0xc" permission="rw"/>
-    <node id="gs_pulse_width_cnt_high" address="0xd" mask="0x3" permission="rw"/>
-    <node id="gs_pulse_deassert_cnt" address="0xe" mask="0x1ff" permission="rw"/>
-    <node id="gs_deassert_cnt" address="0xf" mask="0x1ff" permission="rw"/>
+    <node id="gs_pulse_delay_cnt" address="0x14" mask="0x1ff" permission="rw"/>
+    <node id="gs_pulse_width_cnt_low" address="0x15" permission="rw"/>
+    <node id="gs_pulse_width_cnt_high" address="0x16" mask="0x3" permission="rw"/>
+    <node id="gs_pulse_deassert_cnt" address="0x17" mask="0x1ff" permission="rw"/>
+    <node id="gs_deassert_cnt" address="0x18" mask="0x1ff" permission="rw"/>
 
 </node>

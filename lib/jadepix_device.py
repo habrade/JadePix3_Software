@@ -214,15 +214,12 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def stop_rs(self, enable, go_dispatch):
-        log.info("Stop rolling shutter")
-        reg_name = "rs_stop"
+    def set_rs_frame_number(self, frame_number, go_dispatch=True):
+        log.info("Set RS frame number: {}".format(frame_number))
+        reg_name = "rs_frame_number"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
-        if enable:
-            node.write(1)
-        else:
-            node.write(0)
+        node.write(frame_number)
         if go_dispatch:
             self.hw.dispatch()
 

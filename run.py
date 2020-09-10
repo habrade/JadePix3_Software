@@ -69,6 +69,7 @@ if __name__ == '__main__':
     """ From here we can test rolling shutter """
     # jadepix_dev.cache_bit_set(cache_bit=0xF, go_dispatch=True)
     # jadepix_dev.set_hitmap_addr(hitmap_col_low=340, hitmap_col_high=340, go_dispatch=True)
+    # jadepix_dev.set_rs_frame_number(frame_number=10)
     # jadepix_dev.start_rs(go_dispatch=False)
     # jadepix_dev.hitmap_en(enable=True, go_dispatch=True)
 
