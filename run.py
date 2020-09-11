@@ -67,20 +67,20 @@ if __name__ == '__main__':
     # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
 
     """ From here we can test rolling shutter """
-    # jadepix_dev.cache_bit_set(cache_bit=0xF, go_dispatch=True)
-    # jadepix_dev.set_hitmap_addr(hitmap_col_low=340, hitmap_col_high=340, go_dispatch=True)
-    # jadepix_dev.set_rs_frame_number(frame_number=10)
-    # jadepix_dev.start_rs(go_dispatch=False)
-    # jadepix_dev.hitmap_en(enable=True, go_dispatch=True)
+    jadepix_dev.cache_bit_set(cache_bit=0xF, go_dispatch=True)
+    jadepix_dev.set_hitmap_addr(hitmap_col_low=340, hitmap_col_high=340, go_dispatch=True)
+    jadepix_dev.set_rs_frame_number(frame_number=10)
+    jadepix_dev.start_rs(go_dispatch=False)
+    jadepix_dev.hitmap_en(enable=True, go_dispatch=True)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     """Will change to real time later"""
-    jadepix_dev.set_gs_pulse_delay(pulse_delay=5)
-    jadepix_dev.set_gs_width_low(width_low=3)
-    jadepix_dev.set_gs_width_high(width_high=0)
-    jadepix_dev.set_gs_pulse_deassert(pulse_deassert=2)
-    jadepix_dev.set_gs_deassert(deassert=2)
-    jadepix_dev.set_gs_col(col=204)
-    jadepix_dev.start_gs(go_dispatch=True)
+    # jadepix_dev.set_gs_pulse_delay(pulse_delay=7)
+    # jadepix_dev.set_gs_width_low(width_low=4)
+    # jadepix_dev.set_gs_width_high(width_high=0)
+    # jadepix_dev.set_gs_pulse_deassert(pulse_deassert=3)
+    # jadepix_dev.set_gs_deassert(deassert=4)
+    # jadepix_dev.set_gs_col(col=204)
+    # jadepix_dev.start_gs(go_dispatch=True)

@@ -226,15 +226,12 @@ class JadePixDevice:
         col = int(cnt % COL)
         return row, col
 
-    def start_rs(self, enable, go_dispatch):
+    def start_rs(self, go_dispatch):
         log.info("Start rolling shutter")
         reg_name = "rs_start"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
-        if enable:
-            node.write(1)
-        else:
-            node.write(0)
+        node.write(1)
         if go_dispatch:
             self.hw.dispatch()
 
