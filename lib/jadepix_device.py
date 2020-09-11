@@ -230,7 +230,7 @@ class JadePixDevice:
         col = int(cnt % COL)
         return row, col
 
-    def start_rs(self, go_dispatch):
+    def start_rs(self, go_dispatch=True):
         if self.is_busy_rs():
             log.error("RS is busy now! Stop!")
         else:
@@ -297,7 +297,7 @@ class JadePixDevice:
         node = self.hw.getNode(node_name)
         node.write(hitmap_col_high)
 
-        #set hitmap_number here?
+        # set hitmap_number here?
         hitmap_num = hitmap_col_high - hitmap_col_low + 1
         self.set_hitmap_num(hitmap_num=hitmap_num, go_dispatch=go_dispatch)
         if go_dispatch:
@@ -386,3 +386,17 @@ class JadePixDevice:
         node.write(col)
         if go_dispatch:
             self.hw.dispatch()
+
+    def rs_config(self, cache_bit, hitmap_col_low, hitmap_col_high, hitmap_en, frame_number):
+        self.cache_bit_set(cache_bit=cache_bit, go_dispatch=True)
+        self.set_hitmap_addr(hitmap_col_low=hitmap_col_low, hitmap_col_high=hitmap_col_high, go_dispatch=True)
+        self.set_rs_frame_number(frame_number=frame_number)
+        self.hitmap_en(enable=hitmap_en, go_dispatch=True)
+
+    def gs_config(self, pulse_delay, width_low, width_high, pulse_deassert, deassert, col):
+        self.set_gs_pulse_delay(pulse_delay=pulse_delay)
+        self.set_gs_width_low(width_low=width_low)
+        self.set_gs_width_high(width_high=width_high)
+        self.set_gs_pulse_deassert(pulse_deassert=pulse_deassert)
+        self.set_gs_deassert(deassert=deassert)
+        self.set_gs_col(col=col)
