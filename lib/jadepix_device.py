@@ -227,13 +227,16 @@ class JadePixDevice:
         return row, col
 
     def start_rs(self, go_dispatch):
-        log.info("Start rolling shutter")
-        reg_name = "rs_start"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(1)
-        if go_dispatch:
-            self.hw.dispatch()
+        if self.is_busy_rs():
+            log.error("RS is busy now! Stop!")
+        else:
+            log.info("Start rolling shutter")
+            reg_name = "rs_start"
+            node_name = self.reg_name_base + reg_name
+            node = self.hw.getNode(node_name)
+            node.write(1)
+            if go_dispatch:
+                self.hw.dispatch()
 
     def set_rs_frame_number(self, frame_number, go_dispatch=True):
         log.info("Set RS frame number: {}".format(frame_number))
@@ -316,15 +319,19 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def start_gs(self, go_dispatch):
-        reg_name = "gs_start"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        if go_dispatch:
-            self.hw.dispatch()
+    def start_gs(self, go_dispatch=True):
+        if self.is_busy_gs():
+            log.error("GS is busy now! Stop!")
+        else:
+            log.info("Start GS...")
+            reg_name = "gs_start"
+            node_name = self.reg_name_base + reg_name
+            node = self.hw.getNode(node_name)
+            node.write(0)
+            node.write(1)
+            node.write(0)
+            if go_dispatch:
+                self.hw.dispatch()
 
     def set_gs_pulse_delay(self, pulse_delay, go_dispatch=True):
         reg_name = "gs_pulse_delay_cnt"
