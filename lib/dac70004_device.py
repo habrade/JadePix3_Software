@@ -83,6 +83,9 @@ class Dac70004Device:
             raise ValueError('Unexpected chn value {0}.'.format(chn))
         return self.cmd(0, DAC70004_CMD_W_UPDATE, chn, din, 0)
 
+    def w_ana_chn_update_chn(self, chn, vout):
+        self.w_chn_update_chn(chn, self.anaVal_2_digVal(vout))
+
     def w_power_chn(self, pd_bits, chn_map):
         # mode = chn_map, mode[0]=ch-A, mode[1]=ch-B, mode[2]=ch-C, mode[3]=ch-D
         if pd_bits not in [DAC70004_PW_UP, DAC70004_PW_DOWN_1K, DAC70004_PW_DOWN_100K, DAC70004_PW_DOWN_HIZ]:

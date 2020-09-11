@@ -20,26 +20,6 @@ __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
-def dac_config(dac_dev):
-    dac_dev.soft_reset()
-    dac_dev.soft_clr()
-    dac_dev.w_power_chn(DAC70004_PW_UP, 0xf)  # Power up all channels
-    dac_dev.w_chn_update_chn(DAC70004_CHN_A, dac_dev.anaVal_2_digVal(1.5))  # Set channle A to 1.5V
-    dac_dev.w_chn_update_chn(DAC70004_CHN_B, dac_dev.anaVal_2_digVal(2.0))  # Set channle B to 2.0V
-
-
-def spi_config(spi_dev):
-    spi_dev.set_data_len(200)
-    spi_dev.set_ie(enabled=False)
-    spi_dev.set_ass(enabled=True)
-    spi_dev.set_lsb(enabled=True)
-    spi_dev.set_rx_neg(enabled=False)
-    spi_dev.set_tx_neg(enabled=False)
-    spi_dev.w_div(divider=0, go_dispatch=True)
-    spi_dev.w_ctrl(go_dispatch=False)
-    spi_dev.w_ss(ss=0x01, go_dispatch=True)
-
-
 if __name__ == '__main__':
     hw = IPbusLink().get_hw()
 
@@ -51,13 +31,18 @@ if __name__ == '__main__':
     global_dev.set_soft_rst()
 
     ## DAC70004 Config
-    dac_config(dac70004_dev)
+    dac70004_dev.soft_reset()
+    dac70004_dev.soft_clr()
+    dac70004_dev.w_power_chn(DAC70004_PW_UP, 0xf)  # Power up all channels
+    dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_A, 1.5)  # Set channle A to 1.5V
+    dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_B, 2.0)  # Set channle B to 2.0V
 
     ## SPI master config
-    spi_config(jadepix_dev.spi_dev)
+    jadepix_dev.set_spi(data_len=200, ie=False, ass=True, lsb=True, rx_neg=False, tx_neg=False, div=0, ss=0x01)
     ## Set JadePix SPI configuration
-    jadepix_dev.spi_config()
-    jadepix_dev.load_config()
+    jadepix_dev.start_spi_config()
+    ## Load Config
+    jadepix_dev.load_config(go_dispatch=True)
 
     ## JadePix Control
 

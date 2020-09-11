@@ -55,7 +55,7 @@ class SpiDevice:
             log.debug("The mosi_pad_o signal is changed on the rising edge of a sclk_pad_o clock signal")
         self.update_ctrl()
 
-    def set_go_busy(self, enabled):
+    def set_go_busy(self, enabled=True):
         if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
@@ -130,7 +130,7 @@ class SpiDevice:
         log.debug("SPI data register channel {:d} val: {:#010x}".format(chn, data_val))
         return data_val
 
-    def w_ctrl(self, go_dispatch):
+    def w_ctrl(self, go_dispatch=False):
         ## Write to Ctrl reg
         reg_name = "ctrl"
         node_name = self.reg_name_base + reg_name
@@ -150,7 +150,7 @@ class SpiDevice:
         log.debug("SPI control register is: {:#010x}".format(ctrl_val))
         return ctrl_val
 
-    def w_div(self, divider, go_dispatch):
+    def w_div(self, divider, go_dispatch=True):
         ## Write to divider reg
         reg_name = "divider"
         node_name = self.reg_name_base + reg_name
@@ -170,7 +170,7 @@ class SpiDevice:
         log.debug("SPI clock divider val: {:d}".format(divider_val))
         return divider_val
 
-    def w_ss(self, ss, go_dispatch):
+    def w_ss(self, ss, go_dispatch=True):
         ## Write to ss reg
         reg_name = "ss"
         node_name = self.reg_name_base + reg_name
@@ -190,6 +190,6 @@ class SpiDevice:
         log.debug("SPI ss val: {:d}".format(ss_val))
         return ss_val
 
-    def start(self, go_dispatch):
-        self.set_go_busy(enabled=True)
-        self.w_ctrl(go_dispatch=go_dispatch)
+    def start(self):
+        self.set_go_busy()
+        self.w_ctrl(go_dispatch=True)

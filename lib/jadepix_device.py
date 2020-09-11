@@ -73,7 +73,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def w_data_regs(self, go_dispatch):
+    def w_data_regs(self, go_dispatch=False):
         spi_data = self.get_spi_data()
         log.info("Writing SPI configuration data to SPI data registers...")
         for i in range(0, 8):
@@ -86,11 +86,21 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def spi_config(self):
-        self.w_data_regs(go_dispatch=False)
-        self.spi_dev.w_ctrl(go_dispatch=False)
-        self.spi_dev.start(go_dispatch=False)
-        self.load_config(go_dispatch=True)
+    def set_spi(self, data_len=200, ie=False, ass=True, lsb=True, rx_neg=False, tx_neg=False, div=0, ss=0x01):
+        self.spi_dev.set_data_len(data_len)
+        self.spi_dev.set_ie(ie)
+        self.spi_dev.set_ass(ass)
+        self.spi_dev.set_lsb(lsb)
+        self.spi_dev.set_rx_neg(rx_neg)
+        self.spi_dev.set_tx_neg(tx_neg)
+        self.spi_dev.w_div(div)
+        self.spi_dev.w_ctrl()
+        self.spi_dev.w_ss(ss)
+
+    def start_spi_config(self):
+        self.w_data_regs()
+        self.spi_dev.w_ctrl()
+        self.spi_dev.start()
 
     def w_cfg_fifo(self, data, go_dispatch):
         # log.debug("Write data to JadePix configuration FIFO: {}".format(data))
@@ -244,7 +254,7 @@ class JadePixDevice:
             if go_dispatch:
                 self.hw.dispatch()
 
-    def set_rs_frame_number(self, frame_number, go_dispatch=True):
+    def set_rs_frame_number(self, frame_number, go_dispatch=False):
         log.info("Set RS frame number: {}".format(frame_number))
         reg_name = "rs_frame_number"
         node_name = self.reg_name_base + reg_name
@@ -253,7 +263,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def cache_bit_set(self, cache_bit, go_dispatch):
+    def cache_bit_set(self, cache_bit, go_dispatch=False):
         log.info("Set CACHE_BIT_SET to {:#03x}".format(cache_bit))
         if cache_bit < 0 or cache_bit > 15:
             log.error("CACHE_BIT_SET error, should between 0x0 - 0xF!")
@@ -282,7 +292,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def set_hitmap_addr(self, hitmap_col_low, hitmap_col_high, go_dispatch):
+    def set_hitmap_addr(self, hitmap_col_low, hitmap_col_high, go_dispatch=False):
         if hitmap_col_high > 351 or hitmap_col_high < 340 or hitmap_col_low > 351 or hitmap_col_low < 340 or hitmap_col_low > hitmap_col_high:
             log.error("Hitmap address set error, the address should be between 340 and 351. Low = {}, High = {}".format(
                 hitmap_col_low, hitmap_col_high))
@@ -303,7 +313,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def hitmap_en(self, enable, go_dispatch):
+    def hitmap_en(self, enable, go_dispatch=False):
         log.info("Enabel Hitmap")
         reg_name = "hitmap.en"
         node_name = self.reg_name_base + reg_name
@@ -339,7 +349,7 @@ class JadePixDevice:
             if go_dispatch:
                 self.hw.dispatch()
 
-    def set_gs_pulse_delay(self, pulse_delay, go_dispatch=True):
+    def set_gs_pulse_delay(self, pulse_delay, go_dispatch=False):
         reg_name = "gs_pulse_delay_cnt"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -347,7 +357,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def set_gs_width_low(self, width_low, go_dispatch=True):
+    def set_gs_width_low(self, width_low, go_dispatch=False):
         reg_name = "gs_pulse_width_cnt_low"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -355,7 +365,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def set_gs_width_high(self, width_high, go_dispatch=True):
+    def set_gs_width_high(self, width_high, go_dispatch=False):
         reg_name = "gs_pulse_width_cnt_high"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -363,7 +373,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def set_gs_pulse_deassert(self, pulse_deassert, go_dispatch=True):
+    def set_gs_pulse_deassert(self, pulse_deassert, go_dispatch=False):
         reg_name = "gs_pulse_deassert_cnt"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -371,7 +381,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def set_gs_deassert(self, deassert, go_dispatch=True):
+    def set_gs_deassert(self, deassert, go_dispatch=False):
         reg_name = "gs_deassert_cnt"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -379,7 +389,7 @@ class JadePixDevice:
         if go_dispatch:
             self.hw.dispatch()
 
-    def set_gs_col(self, col, go_dispatch=True):
+    def set_gs_col(self, col, go_dispatch=False):
         reg_name = "gs_col"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
@@ -388,10 +398,11 @@ class JadePixDevice:
             self.hw.dispatch()
 
     def rs_config(self, cache_bit, hitmap_col_low, hitmap_col_high, hitmap_en, frame_number):
-        self.cache_bit_set(cache_bit=cache_bit, go_dispatch=True)
-        self.set_hitmap_addr(hitmap_col_low=hitmap_col_low, hitmap_col_high=hitmap_col_high, go_dispatch=True)
+        self.cache_bit_set(cache_bit=cache_bit)
+        self.set_hitmap_addr(hitmap_col_low=hitmap_col_low, hitmap_col_high=hitmap_col_high)
         self.set_rs_frame_number(frame_number=frame_number)
-        self.hitmap_en(enable=hitmap_en, go_dispatch=True)
+        self.hitmap_en(enable=hitmap_en)
+        self.hw.dispatch()
 
     def gs_config(self, pulse_delay, width_low, width_high, pulse_deassert, deassert, col):
         self.set_gs_pulse_delay(pulse_delay=pulse_delay)
@@ -400,3 +411,4 @@ class JadePixDevice:
         self.set_gs_pulse_deassert(pulse_deassert=pulse_deassert)
         self.set_gs_deassert(deassert=deassert)
         self.set_gs_col(col=col)
+        self.hw.dispatch()
