@@ -62,7 +62,7 @@ class JadePixDevice:
             log.debug("SPI Send Data Ch: {:d} Val: {:#010x}".format(i, spi_data[i]))
         return spi_data
 
-    def load_config(self, go_dispatch):
+    def load_config(self, go_dispatch=True):
         log.info("Loading spi configuration...")
         reg_name = "LOAD"
         node_name = self.reg_name_base + reg_name

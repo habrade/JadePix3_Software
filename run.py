@@ -57,6 +57,7 @@ if __name__ == '__main__':
     spi_config(jadepix_dev.spi_dev)
     ## Set JadePix SPI configuration
     jadepix_dev.spi_config()
+    jadepix_dev.load_config()
 
     ## JadePix Control
 
