@@ -203,9 +203,11 @@ class JadePixDevice:
         rs_busy = node.read()
         self.hw.dispatch()
         rs_busy_val = rs_busy.value()
-        if rs_busy_val:
+        if rs_busy_val == 1:
+            log.debug("RS is busy")
             return True
         else:
+            log.debug("RS is NOT busy")
             return False
 
     def is_busy_gs(self):
@@ -215,9 +217,11 @@ class JadePixDevice:
         gs_busy = node.read()
         self.hw.dispatch()
         gs_busy_val = gs_busy.value()
-        if gs_busy_val:
+        if gs_busy_val == 1:
+            log.debug("GS is busy")
             return True
         else:
+            log.debug("GS is NOT busy")
             return False
 
     @staticmethod
@@ -234,7 +238,9 @@ class JadePixDevice:
             reg_name = "rs_start"
             node_name = self.reg_name_base + reg_name
             node = self.hw.getNode(node_name)
+            node.write(0)
             node.write(1)
+            node.write(0)
             if go_dispatch:
                 self.hw.dispatch()
 

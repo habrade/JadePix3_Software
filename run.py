@@ -71,8 +71,8 @@ if __name__ == '__main__':
     jadepix_dev.set_hitmap_addr(hitmap_col_low=340, hitmap_col_high=340, go_dispatch=True)
     jadepix_dev.set_rs_frame_number(frame_number=7)
     jadepix_dev.hitmap_en(enable=True, go_dispatch=True)
-    jadepix_dev.start_rs(go_dispatch=True)
 
+    jadepix_dev.start_rs(go_dispatch=True)
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
