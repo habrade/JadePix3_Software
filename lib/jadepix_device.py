@@ -56,7 +56,7 @@ class JadePixDevice:
             low = i * 32
             high = (i + 1) * 32
             spi_data.append(int(self.spi_reg[low:high].to01(), base=2))
-        spi_data.append(int(self.spi_reg[6 * 32:200].to01(), base=2))
+        spi_data.append(int((self.spi_reg[6 * 32:200] + 24 * bitarray("0")).to01(), base=2))
         spi_data.append(0)
         for i in range(0, 8):
             log.debug("SPI Send Data Ch: {:d} Val: {:#010x}".format(i, spi_data[i]))
