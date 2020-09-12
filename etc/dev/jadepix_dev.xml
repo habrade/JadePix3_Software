@@ -18,6 +18,7 @@
     <node address="0x11" id="cfg_start" mask="0x1" permission="rw"/>
     <node address="0x11" id="rs_start" mask="0x2" permission="rw"/>
     <node address="0x11" id="gs_start" mask="0x4" permission="rw"/>
+    <node address="0x11" id="spi_rst" mask="0x8" permission="rw"/>
     <node address="0x11" id="PDB" mask="0x20" permission="rw"/>
     <node address="0x11" id="LOAD" mask="0x40" permission="rw"/>
     <node address="0x11" id="cfg_fifo_rst" mask="0x80" permission="rw"/>

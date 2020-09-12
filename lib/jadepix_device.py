@@ -44,6 +44,7 @@ class JadePixDevice:
                   idac5_data_tmp + idac4_data + moni_sel_idac4 + moni_sel_idac3 + idac3_data_tmp + idac2_data + \
                   moni_sel_idac2 + moni_sel_idac1 + idac1_data_tmp
         log.debug("Lenth of spi_reg bit array: {:d}".format(len(spi_reg)))
+        spi_reg.reverse()
         return spi_reg
 
     def update_spi_reg(self):
@@ -55,8 +56,8 @@ class JadePixDevice:
         for i in range(0, 6):
             low = i * 32
             high = (i + 1) * 32
-            spi_data.append(int(self.spi_reg[low:high].to01(), base=2))
-        spi_data.append(int((self.spi_reg[6 * 32:200] + 24 * bitarray("0")).to01(), base=2))
+            spi_data.append(int(self.spi_reg[low:high].to01()[::-1], base=2))
+        spi_data.append(int((self.spi_reg[6 * 32:200] + 24 * bitarray("0")).to01()[::-1], base=2))
         spi_data.append(0)
         for i in range(0, 8):
             log.debug("SPI Send Data Ch: {:d} Val: {:#010x}".format(i, spi_data[i]))
@@ -113,6 +114,16 @@ class JadePixDevice:
 
     def wr_en_fifo(self, go_dispatch):
         reg_name = "cfg_fifo.wr_en"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        node.write(0)
+        node.write(1)
+        node.write(0)
+        if go_dispatch:
+            self.hw.dispatch()
+
+    def reset_spi(self, go_dispatch=True):
+        reg_name = "spi_rst"
         node_name = self.reg_name_base + reg_name
         node = self.hw.getNode(node_name)
         node.write(0)

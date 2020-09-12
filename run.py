@@ -38,7 +38,8 @@ if __name__ == '__main__':
     dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_B, 2.0)  # Set channle B to 2.0V
 
     ## SPI master config
-    jadepix_dev.set_spi(data_len=200, ie=False, ass=True, lsb=True, rx_neg=False, tx_neg=False, div=0, ss=0x01)
+    jadepix_dev.reset_spi()
+    jadepix_dev.set_spi(data_len=200, ie=False, ass=True, lsb=False, rx_neg=False, tx_neg=False, div=0, ss=0x01)
     ## Set JadePix SPI configuration
     jadepix_dev.start_spi_config()
     ## Load Config
@@ -53,12 +54,12 @@ if __name__ == '__main__':
     # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
 
     """ From here we can test rolling shutter """
-    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=340, hitmap_en=True, frame_number=1)
-    jadepix_dev.start_rs()
+    # jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=340, hitmap_en=True, frame_number=1)
+    # jadepix_dev.start_rs()
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     """Will change to real time later"""
-    jadepix_dev.gs_config(pulse_delay=2, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
-    jadepix_dev.start_gs()
+    # jadepix_dev.gs_config(pulse_delay=2, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
+    # jadepix_dev.start_gs()
