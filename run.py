@@ -43,7 +43,7 @@ if __name__ == '__main__':
     ## Set JadePix SPI configuration
     jadepix_dev.start_spi_config()
     ## Load Config
-    jadepix_dev.load_config(go_dispatch=True)
+    jadepix_dev.load_config_soft(go_dispatch=True)
 
     ## JadePix Control
 

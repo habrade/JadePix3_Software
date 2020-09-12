@@ -63,7 +63,7 @@ class JadePixDevice:
             log.debug("SPI Send Data Ch: {:d} Val: {:#010x}".format(i, spi_data[i]))
         return spi_data
 
-    def load_config(self, go_dispatch=True):
+    def load_config_soft(self, go_dispatch=True):
         log.info("Loading spi configuration...")
         reg_name = "LOAD"
         node_name = self.reg_name_base + reg_name
@@ -97,11 +97,26 @@ class JadePixDevice:
         self.spi_dev.w_div(div)
         self.spi_dev.w_ctrl()
         self.spi_dev.w_ss(ss)
+    
+    def is_busy_spi(self):
+        reg_name = "spi_busy"
+        node_name = self.reg_name_base + reg_name
+        node = self.hw.getNode(node_name)
+        spi_busy = node.read()
+        self.hw.dispatch()
+        spi_busy_val = spi_busy.value()
+        if spi_busy_val:
+            return True
+        else:
+            return False
 
     def start_spi_config(self):
-        self.w_data_regs()
-        self.spi_dev.w_ctrl()
-        self.spi_dev.start()
+        if self.is_busy_spi():
+            log.error("SPI is busy now! Stop!")
+        else:
+            self.w_data_regs()
+            self.spi_dev.w_ctrl()
+            self.spi_dev.start()
 
     def w_cfg_fifo(self, data, go_dispatch):
         # log.debug("Write data to JadePix configuration FIFO: {}".format(data))

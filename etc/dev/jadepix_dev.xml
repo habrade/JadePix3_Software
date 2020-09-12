@@ -3,6 +3,7 @@
     <node id="cfg_busy" address="0x0" mask="0x1" permission="r"/>
     <node id="rs_busy" address="0x0" mask="0x2" permission="r"/>
     <node id="gs_busy" address="0x0" mask="0x4" permission="r"/>
+    <node id="spi_busy" address="0x0" mask="0x8" permission="r"/>
 
     <node id="cfg_fifo_status" address="0x1">
         <node id="empty" mask="0x1" permission="r"/>
