@@ -113,14 +113,14 @@ class SpiDevice:
         log.debug("Control register is updated to: {:#010x}".format(self.ctrl))
 
     def w_data(self, data, chn):
-        ## Write to data reg
+        """Write to data reg"""
         if chn not in range(0, 8):
             raise ValueError('Unexpected chn number: {0}, should be 0-7'.format(chn))
         reg_name = "d" + chn
         self.w_reg(reg_name, data, is_pulse=False, go_dispatch=True)
 
     def r_data(self, chn):
-        ## Read to data reg
+        """Read to data reg"""
         if chn not in range(0, 8):
             raise ValueError('Unexpected chn number: {0}, should be 0-7'.format(chn))
         reg_name = "d" + str(chn)
@@ -129,36 +129,36 @@ class SpiDevice:
         return data_val
 
     def w_ctrl(self, go_dispatch=True):
-        ## Write to Ctrl reg
+        """Write to Ctrl reg"""
         reg_name = "ctrl"
         self.w_reg(reg_name, self.ctrl, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_ctrl(self):
-        ## Write to Ctrl reg
+        """Read ctrl reg"""
         reg_name = "ctrl"
         ctrl_val = self.r_reg(reg_name)
         log.debug("SPI control register is: {:#010x}".format(ctrl_val))
         return ctrl_val
 
     def w_div(self, divider, go_dispatch=True):
-        ## Write to divider reg
+        """Write to divider reg"""
         reg_name = "divider"
         self.w_reg(reg_name, reg_val=divider, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_div(self):
-        ## Write to divider reg
+        """Write to divider reg"""
         reg_name = "divider"
         divider_val = self.r_reg(reg_name)
         log.debug("SPI clock divider val: {:d}".format(divider_val))
         return divider_val
 
     def w_ss(self, ss, go_dispatch=True):
-        ## Write to ss reg
+        """Write to ss reg"""
         reg_name = "ss"
         self.w_reg(reg_name, reg_val=ss, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_ss(self):
-        ## Write to ss reg
+        """Write to ss reg"""
         reg_name = "ss"
         ss_val = self.r_reg(reg_name)
         log.debug("SPI ss val: {:d}".format(ss_val))

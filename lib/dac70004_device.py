@@ -34,10 +34,10 @@ class Dac70004Device:
             log.warning("DAC70004 is busy now, stop writing!")
             time.sleep(0.003)
             busy = self.is_busy()
-        ## Write to data reg
+        """Write to data reg"""
         reg_name = "DAC_DATA"
         self.w_reg(reg_name, data, is_pulse=False, go_dispatch=False)
-        ## Set WE
+        """Set WE"""
         reg_name = "DAC_WE"
         self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=True)
 

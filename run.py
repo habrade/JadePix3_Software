@@ -48,12 +48,12 @@ if __name__ == '__main__':
     ## JadePix Control
 
     """ From here we can test configuration """
-    start = time.process_time()
-    jadepix_dev.w_cfg()
-    jadepix_dev.start_cfg(go_dispatch=True)
-    print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-
-    time.sleep(20)
+    # start = time.process_time()
+    # jadepix_dev.w_cfg()
+    # jadepix_dev.start_cfg(go_dispatch=True)
+    # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+    #
+    # time.sleep(20)
 
     """ From here we can test rolling shutter """
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=340, hitmap_en=True, frame_number=1)
@@ -65,5 +65,5 @@ if __name__ == '__main__':
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     """Will change to real time later"""
-    jadepix_dev.gs_config(pulse_delay=2, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
+    jadepix_dev.gs_config(pulse_delay=4, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
     jadepix_dev.start_gs()

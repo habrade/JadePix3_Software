@@ -219,7 +219,7 @@ class JadePixDevice:
         self.w_reg(reg_name, hitmap_col_low, is_pulse=False, go_dispatch=go_dispatch)
         reg_name = "hitmap.col_high"
         self.w_reg(reg_name, hitmap_col_high, is_pulse=False, go_dispatch=go_dispatch)
-        # set hitmap_number here?
+        """set hitmap_number here"""
         hitmap_num = hitmap_col_high - hitmap_col_low + 1
         self.set_hitmap_num(hitmap_num=hitmap_num, go_dispatch=go_dispatch)
 
@@ -239,9 +239,9 @@ class JadePixDevice:
 
     def start_gs(self, go_dispatch=True):
         if self.is_busy_gs():
-            log.error("GS is busy now! Stop!")
+            log.error("Global shutter is busy now! Stop!")
         else:
-            log.info("Start GS...")
+            log.info("Start global shutter...")
             reg_name = "gs_start"
             self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
