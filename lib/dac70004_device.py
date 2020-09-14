@@ -39,7 +39,7 @@ class Dac70004Device:
         self.w_reg(reg_name, data, is_pulse=False, go_dispatch=False)
         ## Set WE
         reg_name = "DAC_WE"
-        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=False)
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=True)
 
     def cmd(self, wr, cmd, chn, din, mode):
         if cmd not in [DAC70004_CMD_WR_BUF, DAC70004_CMD_UPDATE_CHN, DAC70004_CMD_W_UPDATE_ALL, DAC70004_CMD_W_UPDATE,

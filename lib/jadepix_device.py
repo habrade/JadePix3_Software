@@ -74,15 +74,6 @@ class JadePixDevice:
         reg_name = "LOAD"
         self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=True)
 
-    def w_spi_data_regs(self, go_dispatch=False):
-        spi_data = self.get_spi_data()
-        log.info("Writing SPI configuration data to SPI data registers...")
-        for i in range(0, 8):
-            reg_name = "d" + str(i)
-            data = spi_data[i]
-            self.w_reg(reg_name, reg_val=data, is_pulse=False, go_dispatch=True)
-            log.debug("Write d{:d} : {:#010x}".format(i, data))
-
     def set_spi(self, data_len=200, ie=False, ass=True, lsb=True, rx_neg=False, tx_neg=False, div=0, ss=0x01):
         self.spi_dev.set_data_len(data_len)
         self.spi_dev.set_ie(ie)
@@ -201,7 +192,7 @@ class JadePixDevice:
         reg_name = "rs_frame_number"
         self.w_reg(reg_name, frame_number, is_pulse=False, go_dispatch=go_dispatch)
 
-    def cache_bit_set(self, cache_bit, go_dispatch=False):
+    def cache_bit_set(self, cache_bit, go_dispatch=True):
         log.info("Set CACHE_BIT_SET to {:#03x}".format(cache_bit))
         if cache_bit < 0 or cache_bit > 15:
             log.error("CACHE_BIT_SET error, should between 0x0 - 0xF!")

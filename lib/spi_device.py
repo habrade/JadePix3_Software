@@ -112,12 +112,12 @@ class SpiDevice:
                 self.go_busy << 8) + self.data_len
         log.debug("Control register is updated to: {:#010x}".format(self.ctrl))
 
-    def w_data(self, data, chn, go_dispatch):
+    def w_data(self, data, chn):
         ## Write to data reg
         if chn not in range(0, 8):
             raise ValueError('Unexpected chn number: {0}, should be 0-7'.format(chn))
         reg_name = "d" + chn
-        self.w_reg(reg_name, data, is_pulse=False, go_dispatch=False)
+        self.w_reg(reg_name, data, is_pulse=False, go_dispatch=True)
 
     def r_data(self, chn):
         ## Read to data reg
@@ -128,7 +128,7 @@ class SpiDevice:
         log.debug("SPI data register channel {:d} val: {:#010x}".format(chn, data_val))
         return data_val
 
-    def w_ctrl(self, go_dispatch=False):
+    def w_ctrl(self, go_dispatch=True):
         ## Write to Ctrl reg
         reg_name = "ctrl"
         self.w_reg(reg_name, self.ctrl, is_pulse=False, go_dispatch=go_dispatch)
