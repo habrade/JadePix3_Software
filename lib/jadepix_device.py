@@ -80,10 +80,8 @@ class JadePixDevice:
         for i in range(0, 8):
             reg_name = "d" + str(i)
             data = spi_data[i]
-            self.w_reg(reg_name, reg_val=data, is_pulse=False, go_dispatch=False)
+            self.w_reg(reg_name, reg_val=data, is_pulse=False, go_dispatch=True)
             log.debug("Write d{:d} : {:#010x}".format(i, data))
-        if go_dispatch:
-            self._ipbus_link.dispatch()
 
     def set_spi(self, data_len=200, ie=False, ass=True, lsb=True, rx_neg=False, tx_neg=False, div=0, ss=0x01):
         self.spi_dev.set_data_len(data_len)
@@ -220,7 +218,7 @@ class JadePixDevice:
         reg_name = "MATRIX_GRST"
         self.w_reg(reg_name, matrix_grst, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_hitmap_addr(self, hitmap_col_low, hitmap_col_high, go_dispatch=False):
+    def set_hitmap_addr(self, hitmap_col_low, hitmap_col_high, go_dispatch=True):
         if hitmap_col_high > 351 or hitmap_col_high < 340 or hitmap_col_low > 351 or hitmap_col_low < 340 or hitmap_col_low > hitmap_col_high:
             log.error("Hitmap address set error, the address should be between 340 and 351. Low = {}, High = {}".format(
                 hitmap_col_low, hitmap_col_high))
@@ -233,8 +231,6 @@ class JadePixDevice:
         # set hitmap_number here?
         hitmap_num = hitmap_col_high - hitmap_col_low + 1
         self.set_hitmap_num(hitmap_num=hitmap_num, go_dispatch=go_dispatch)
-        if go_dispatch:
-            self._ipbus_link.dispatch()
 
     def hitmap_en(self, enable, go_dispatch=True):
         log.info("Enabel Hitmap")

@@ -168,12 +168,10 @@ class SpiDevice:
         self.set_go_busy()
         self.w_ctrl(go_dispatch=True)
 
-    def w_data_regs(self, spi_data, go_dispatch=False):
+    def w_data_regs(self, spi_data, go_dispatch=True):
         log.info("Writing SPI configuration data to SPI data registers...")
         for i in range(0, 8):
             reg_name = "d" + str(i)
             data = spi_data[i]
-            self.w_reg(reg_name, reg_val=data, is_pulse=False, go_dispatch=False)
+            self.w_reg(reg_name, reg_val=data, is_pulse=False, go_dispatch=go_dispatch)
             log.debug("Write d{:d} : {:#010x}".format(i, data))
-        if go_dispatch:
-            self._ipbus_link.dispatch()
