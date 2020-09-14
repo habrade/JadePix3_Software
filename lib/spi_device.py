@@ -12,8 +12,8 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
 class SpiDevice:
-    def __init__(self, hw):
-        self.hw = hw
+    def __init__(self, ipbus_link):
+        self._ipbus_link = ipbus_link
         self.reg_name_base = "spi_dev."
 
         self.data_len = 0
@@ -25,6 +25,12 @@ class SpiDevice:
         self.ass = 1
 
         self.ctrl = 0x00000000
+
+    def w_reg(self, reg_name, reg_val, is_pulse, go_dispatch):
+        self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
+
+    def r_reg(self, reg_name):
+        self._ipbus_link.r_reg(self.reg_name_base, reg_name)
 
     def set_data_len(self, data_len):
         if data_len not in range(0, 256):
@@ -111,85 +117,63 @@ class SpiDevice:
         if chn not in range(0, 8):
             raise ValueError('Unexpected chn number: {0}, should be 0-7'.format(chn))
         reg_name = "d" + chn
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(data)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, data, is_pulse=False, go_dispatch=False)
 
     def r_data(self, chn):
         ## Read to data reg
         if chn not in range(0, 8):
             raise ValueError('Unexpected chn number: {0}, should be 0-7'.format(chn))
         reg_name = "d" + str(chn)
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        data = node.read()
-        self.hw.dispatch()
-        data_val = data.value()
+        data_val = self.r_reg(reg_name)
         log.debug("SPI data register channel {:d} val: {:#010x}".format(chn, data_val))
         return data_val
 
     def w_ctrl(self, go_dispatch=False):
         ## Write to Ctrl reg
         reg_name = "ctrl"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(self.ctrl)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, self.ctrl, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_ctrl(self):
         ## Write to Ctrl reg
         reg_name = "ctrl"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        ctrl = node.read()
-        self.hw.dispatch()
-        ctrl_val = ctrl.value()
+        ctrl_val = self.r_reg(reg_name)
         log.debug("SPI control register is: {:#010x}".format(ctrl_val))
         return ctrl_val
 
     def w_div(self, divider, go_dispatch=True):
         ## Write to divider reg
         reg_name = "divider"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(divider)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, reg_val=divider, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_div(self):
         ## Write to divider reg
         reg_name = "divider"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        divider = node.read()
-        self.hw.dispatch()
-        divider_val = divider.value()
+        divider_val = self.r_reg(reg_name)
         log.debug("SPI clock divider val: {:d}".format(divider_val))
         return divider_val
 
     def w_ss(self, ss, go_dispatch=True):
         ## Write to ss reg
         reg_name = "ss"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(ss)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, reg_val=ss, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_ss(self):
         ## Write to ss reg
         reg_name = "ss"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        ss = node.read()
-        self.hw.dispatch()
-        ss_val = ss.value()
+        ss_val = self.r_reg(reg_name)
         log.debug("SPI ss val: {:d}".format(ss_val))
         return ss_val
 
     def start(self):
         self.set_go_busy()
         self.w_ctrl(go_dispatch=True)
+
+    def w_data_regs(self, spi_data, go_dispatch=False):
+        log.info("Writing SPI configuration data to SPI data registers...")
+        for i in range(0, 8):
+            reg_name = "d" + str(i)
+            data = spi_data[i]
+            self.w_reg(reg_name, reg_val=data, is_pulse=False, go_dispatch=False)
+            log.debug("Write d{:d} : {:#010x}".format(i, data))
+        if go_dispatch:
+            self._ipbus_link.dispatch()

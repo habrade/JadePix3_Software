@@ -14,19 +14,19 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
 class Dac70004Device:
-    def __init__(self, hw):
+    def __init__(self, ipbus_link):
         self.reg_name_base = "dac70004_dev."
-        self.hw = hw
+        self._ipbus_link = ipbus_link
+
+    def w_reg(self, reg_name, reg_val, is_pulse, go_dispatch):
+        self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
+
+    def r_reg(self, reg_name):
+        self._ipbus_link.r_reg(self.reg_name_base, reg_name)
 
     def is_busy(self):
         reg_name = "DAC_BUSY"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        busy_raw = node.read()
-        self.hw.dispatch()
-        busy = busy_raw.value()
-        log.debug("Busy Status: {}".format(busy))
-        return busy == 1
+        return self.r_reg(reg_name) == 1
 
     def write_data(self, data):
         busy = self.is_busy()
@@ -36,18 +36,10 @@ class Dac70004Device:
             busy = self.is_busy()
         ## Write to data reg
         reg_name = "DAC_DATA"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(data)
+        self.w_reg(reg_name, data, is_pulse=False, go_dispatch=False)
         ## Set WE
         reg_name = "DAC_WE"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        self.hw.dispatch()
-        return True
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=False)
 
     def cmd(self, wr, cmd, chn, din, mode):
         if cmd not in [DAC70004_CMD_WR_BUF, DAC70004_CMD_UPDATE_CHN, DAC70004_CMD_W_UPDATE_ALL, DAC70004_CMD_W_UPDATE,

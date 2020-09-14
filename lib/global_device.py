@@ -12,18 +12,12 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
 class GlobalDevice:
-    def __init__(self, hw):
-        self.hw = hw
+    def __init__(self, ipbus_link):
+        self._ipbus_link = ipbus_link
         self.reg_name_base = "global_dev."
 
-    def set_bit(self, reg):
-        reg_name = self.reg_name_base + reg
-        node = self.hw.getNode(reg_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        self.hw.dispatch()
-        return True
+    def set_bit(self, reg_name):
+        self._ipbus_link.w_reg(self.reg_name_base, reg_name, 0, is_pulse=True, go_dispatch=True)
 
     def set_nuke(self):
         return self.set_bit("nuke")

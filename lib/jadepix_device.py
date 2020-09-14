@@ -15,13 +15,19 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
 class JadePixDevice:
-    def __init__(self, hw):
-        self.hw = hw
+    def __init__(self, ipbus_link):
+        self._ipbus_link = ipbus_link
         self.reg_name_base = "jadepix_dev."
-        self.spi_dev = SpiDevice(self.hw)
+        self.spi_dev = SpiDevice(self._ipbus_link)
         self.spi_reg = bitarray(200 * "0")
 
         self.cfg_file_path = "./config/jadepix_config.txt"
+
+    def w_reg(self, reg_name, reg_val, is_pulse, go_dispatch):
+        self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
+
+    def r_reg(self, reg_name):
+        return self._ipbus_link.r_reg(self.reg_name_base, reg_name)
 
     @staticmethod
     def get_spi_reg():
@@ -63,29 +69,21 @@ class JadePixDevice:
             log.debug("SPI Send Data Ch: {:d} Val: {:#010x}".format(i, spi_data[i]))
         return spi_data
 
-    def load_config_soft(self, go_dispatch=True):
+    def load_config_soft(self):
         log.info("Loading spi configuration...")
         reg_name = "LOAD"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=True)
 
-    def w_data_regs(self, go_dispatch=False):
+    def w_spi_data_regs(self, go_dispatch=False):
         spi_data = self.get_spi_data()
         log.info("Writing SPI configuration data to SPI data registers...")
         for i in range(0, 8):
             reg_name = "d" + str(i)
-            node_name = self.spi_dev.reg_name_base + reg_name
-            node = self.hw.getNode(node_name)
             data = spi_data[i]
-            node.write(data)
+            self.w_reg(reg_name, reg_val=data, is_pulse=False, go_dispatch=False)
             log.debug("Write d{:d} : {:#010x}".format(i, data))
         if go_dispatch:
-            self.hw.dispatch()
+            self._ipbus_link.dispatch()
 
     def set_spi(self, data_len=200, ie=False, ass=True, lsb=True, rx_neg=False, tx_neg=False, div=0, ss=0x01):
         self.spi_dev.set_data_len(data_len)
@@ -97,15 +95,11 @@ class JadePixDevice:
         self.spi_dev.w_div(div)
         self.spi_dev.w_ctrl()
         self.spi_dev.w_ss(ss)
-    
+
     def is_busy_spi(self):
         reg_name = "spi_busy"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        spi_busy = node.read()
-        self.hw.dispatch()
-        spi_busy_val = spi_busy.value()
-        if spi_busy_val:
+        spi_busy = self.r_reg(reg_name)
+        if spi_busy == 1:
             return True
         else:
             return False
@@ -114,76 +108,40 @@ class JadePixDevice:
         if self.is_busy_spi():
             log.error("SPI is busy now! Stop!")
         else:
-            self.w_data_regs()
+            spi_data = self.get_spi_data()
+            self.spi_dev.w_data_regs(spi_data=spi_data)
             self.spi_dev.w_ctrl()
             self.spi_dev.start()
 
     def w_cfg_fifo(self, data, go_dispatch):
         # log.debug("Write data to JadePix configuration FIFO: {}".format(data))
         reg_name = "cfg_fifo.data"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(data)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, data, is_pulse=False, go_dispatch=go_dispatch)
 
     def wr_en_fifo(self, go_dispatch):
         reg_name = "cfg_fifo.wr_en"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
     def reset_spi(self, go_dispatch=True):
         reg_name = "spi_rst"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
     def g_cfg_fifo_empty(self):
         reg_name = "cfg_fifo_status.empty"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        empty = node.read()
-        self.hw.dispatch()
-        empty_val = empty.value()
-        return empty_val
+        return self.r_reg(reg_name)
 
     def g_cfg_fifo_pfull(self):
         reg_name = "cfg_fifo_status.prog_full"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        pfull = node.read()
-        self.hw.dispatch()
-        pgull_val = pfull.value()
-        return pgull_val
+        return self.r_reg(reg_name)
 
     def g_cfg_fifo_count(self):
         reg_name = "cfg_fifo_status.data_count"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        data_count = node.read()
-        self.hw.dispatch()
-        count = data_count.value()
-        return count
+        return self.r_reg(reg_name)
 
     def clear_fifo(self, go_dispatch):
         log.debug("Clear jadepix configuration FIFO!")
         reg_name = "cfg_fifo_rst"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
     def w_cfg(self):
         self.clear_fifo(go_dispatch=True)
@@ -212,53 +170,19 @@ class JadePixDevice:
     def start_cfg(self, go_dispatch):
         log.info("Read configuration from FIFO, and write to JadePix3")
         reg_name = "cfg_start"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(0)
-        node.write(1)
-        node.write(0)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
     def is_busy_cfg(self):
         reg_name = "cfg_busy"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        cfg_busy = node.read()
-        self.hw.dispatch()
-        cfg_busy_val = cfg_busy.value()
-        if cfg_busy_val:
-            return True
-        else:
-            return False
+        return self.r_reg(reg_name) == 1
 
     def is_busy_rs(self):
         reg_name = "rs_busy"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        rs_busy = node.read()
-        self.hw.dispatch()
-        rs_busy_val = rs_busy.value()
-        if rs_busy_val == 1:
-            log.debug("RS is busy")
-            return True
-        else:
-            log.debug("RS is NOT busy")
-            return False
+        return self.r_reg(reg_name) == 1
 
     def is_busy_gs(self):
         reg_name = "gs_busy"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        gs_busy = node.read()
-        self.hw.dispatch()
-        gs_busy_val = gs_busy.value()
-        if gs_busy_val == 1:
-            log.debug("GS is busy")
-            return True
-        else:
-            log.debug("GS is NOT busy")
-            return False
+        return self.r_reg(reg_name) == 1
 
     @staticmethod
     def calc_row_col(cnt):
@@ -272,51 +196,29 @@ class JadePixDevice:
         else:
             log.info("Start rolling shutter")
             reg_name = "rs_start"
-            node_name = self.reg_name_base + reg_name
-            node = self.hw.getNode(node_name)
-            node.write(0)
-            node.write(1)
-            node.write(0)
-            if go_dispatch:
-                self.hw.dispatch()
+            self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
-    def set_rs_frame_number(self, frame_number, go_dispatch=False):
+    def set_rs_frame_number(self, frame_number, go_dispatch=True):
         log.info("Set RS frame number: {}".format(frame_number))
         reg_name = "rs_frame_number"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(frame_number)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, frame_number, is_pulse=False, go_dispatch=go_dispatch)
 
     def cache_bit_set(self, cache_bit, go_dispatch=False):
         log.info("Set CACHE_BIT_SET to {:#03x}".format(cache_bit))
         if cache_bit < 0 or cache_bit > 15:
             log.error("CACHE_BIT_SET error, should between 0x0 - 0xF!")
         reg_name = "CACHE_BIT_SET"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(cache_bit)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, cache_bit, is_pulse=False, go_dispatch=go_dispatch)
 
     def set_pdb(self, pdb, go_dispatch):
         log.info("Set PDB to {:}".format(pdb))
         reg_name = "PDB"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(pdb)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, pdb, is_pulse=False, go_dispatch=go_dispatch)
 
     def set_matrix_grst(self, matrix_grst, go_dispatch):
         log.info("Set MATRIX_GRST to {:}".format(matrix_grst))
         reg_name = "MATRIX_GRST"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(matrix_grst)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, matrix_grst, is_pulse=False, go_dispatch=go_dispatch)
 
     def set_hitmap_addr(self, hitmap_col_low, hitmap_col_high, go_dispatch=False):
         if hitmap_col_high > 351 or hitmap_col_high < 340 or hitmap_col_low > 351 or hitmap_col_low < 340 or hitmap_col_low > hitmap_col_high:
@@ -325,41 +227,28 @@ class JadePixDevice:
         else:
             log.info("Set Hitmap col address: {} to {}".format(hitmap_col_low, hitmap_col_high))
         reg_name = "hitmap.col_low"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(hitmap_col_low)
+        self.w_reg(reg_name, hitmap_col_low, is_pulse=False, go_dispatch=go_dispatch)
         reg_name = "hitmap.col_high"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(hitmap_col_high)
-
+        self.w_reg(reg_name, hitmap_col_high, is_pulse=False, go_dispatch=go_dispatch)
         # set hitmap_number here?
         hitmap_num = hitmap_col_high - hitmap_col_low + 1
         self.set_hitmap_num(hitmap_num=hitmap_num, go_dispatch=go_dispatch)
         if go_dispatch:
-            self.hw.dispatch()
+            self._ipbus_link.dispatch()
 
-    def hitmap_en(self, enable, go_dispatch=False):
+    def hitmap_en(self, enable, go_dispatch=True):
         log.info("Enabel Hitmap")
         reg_name = "hitmap.en"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
         if enable:
-            node.write(1)
+            self.w_reg(reg_name, 1, is_pulse=False, go_dispatch=go_dispatch)
         else:
-            node.write(0)
-        if go_dispatch:
-            self.hw.dispatch()
+            self.w_reg(reg_name, 0, is_pulse=False, go_dispatch=go_dispatch)
 
     def set_hitmap_num(self, hitmap_num, go_dispatch):
         if hitmap_num > 12 or hitmap_num < 1:
             log.error("Hitmap number should be between 1 and 12, set: {}!".format(hitmap_num))
         reg_name = "hitmap.num"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(hitmap_num)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, hitmap_num, is_pulse=False, go_dispatch=go_dispatch)
 
     def start_gs(self, go_dispatch=True):
         if self.is_busy_gs():
@@ -367,68 +256,37 @@ class JadePixDevice:
         else:
             log.info("Start GS...")
             reg_name = "gs_start"
-            node_name = self.reg_name_base + reg_name
-            node = self.hw.getNode(node_name)
-            node.write(0)
-            node.write(1)
-            node.write(0)
-            if go_dispatch:
-                self.hw.dispatch()
+            self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
-    def set_gs_pulse_delay(self, pulse_delay, go_dispatch=False):
+    def set_gs_pulse_delay(self, pulse_delay, go_dispatch=True):
         reg_name = "gs_pulse_delay_cnt"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(pulse_delay)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, pulse_delay, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_gs_width_low(self, width_low, go_dispatch=False):
+    def set_gs_width_low(self, width_low, go_dispatch=True):
         reg_name = "gs_pulse_width_cnt_low"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(width_low)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, width_low, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_gs_width_high(self, width_high, go_dispatch=False):
+    def set_gs_width_high(self, width_high, go_dispatch=True):
         reg_name = "gs_pulse_width_cnt_high"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(width_high)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, width_high, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_gs_pulse_deassert(self, pulse_deassert, go_dispatch=False):
+    def set_gs_pulse_deassert(self, pulse_deassert, go_dispatch=True):
         reg_name = "gs_pulse_deassert_cnt"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(pulse_deassert)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, pulse_deassert, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_gs_deassert(self, deassert, go_dispatch=False):
+    def set_gs_deassert(self, deassert, go_dispatch=True):
         reg_name = "gs_deassert_cnt"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(deassert)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, deassert, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_gs_col(self, col, go_dispatch=False):
+    def set_gs_col(self, col, go_dispatch=True):
         reg_name = "gs_col"
-        node_name = self.reg_name_base + reg_name
-        node = self.hw.getNode(node_name)
-        node.write(col)
-        if go_dispatch:
-            self.hw.dispatch()
+        self.w_reg(reg_name, col, is_pulse=False, go_dispatch=go_dispatch)
 
     def rs_config(self, cache_bit, hitmap_col_low, hitmap_col_high, hitmap_en, frame_number):
         self.cache_bit_set(cache_bit=cache_bit)
         self.set_hitmap_addr(hitmap_col_low=hitmap_col_low, hitmap_col_high=hitmap_col_high)
         self.set_rs_frame_number(frame_number=frame_number)
         self.hitmap_en(enable=hitmap_en)
-        self.hw.dispatch()
 
     def gs_config(self, pulse_delay, width_low, width_high, pulse_deassert, deassert, col):
         self.set_gs_pulse_delay(pulse_delay=pulse_delay)
@@ -437,4 +295,3 @@ class JadePixDevice:
         self.set_gs_pulse_deassert(pulse_deassert=pulse_deassert)
         self.set_gs_deassert(deassert=deassert)
         self.set_gs_col(col=col)
-        self.hw.dispatch()

@@ -21,11 +21,11 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
 if __name__ == '__main__':
-    hw = IPbusLink().get_hw()
+    ipbus_link = IPbusLink()
 
-    jadepix_dev = JadePixDevice(hw)
-    global_dev = GlobalDevice(hw)
-    dac70004_dev = Dac70004Device(hw)
+    jadepix_dev = JadePixDevice(ipbus_link)
+    global_dev = GlobalDevice(ipbus_link)
+    dac70004_dev = Dac70004Device(ipbus_link)
 
     ## Soft global reset
     global_dev.set_soft_rst()
@@ -43,23 +43,27 @@ if __name__ == '__main__':
     ## Set JadePix SPI configuration
     jadepix_dev.start_spi_config()
     ## Load Config
-    jadepix_dev.load_config_soft(go_dispatch=True)
+    jadepix_dev.load_config_soft()
 
     ## JadePix Control
 
     """ From here we can test configuration """
-    # start = time.process_time()
-    # jadepix_dev.w_cfg()
-    # jadepix_dev.start_cfg(go_dispatch=True)
-    # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+    start = time.process_time()
+    jadepix_dev.w_cfg()
+    jadepix_dev.start_cfg(go_dispatch=True)
+    print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+
+    time.sleep(20)
 
     """ From here we can test rolling shutter """
-    # jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=340, hitmap_en=True, frame_number=1)
-    # jadepix_dev.start_rs()
+    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=340, hitmap_en=True, frame_number=1)
+    jadepix_dev.start_rs()
+
+    time.sleep(2)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     """Will change to real time later"""
-    # jadepix_dev.gs_config(pulse_delay=2, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
-    # jadepix_dev.start_gs()
+    jadepix_dev.gs_config(pulse_delay=2, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
+    jadepix_dev.start_gs()
