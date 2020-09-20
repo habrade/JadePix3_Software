@@ -264,6 +264,13 @@ class JadePixDevice:
     def set_gs_deassert(self, deassert, go_dispatch=True):
         reg_name = "gs_deassert_cnt"
         self.w_reg(reg_name, deassert, is_pulse=False, go_dispatch=go_dispatch)
+    
+    def set_gs_plse(self, is_dplse, go_dispatch=True):
+        reg_name = "gs_sel_pulse"
+        if is_dplse:
+            self.w_reg(reg_name, 1, is_pulse=False, go_dispatch=go_dispatch)
+        else:
+            self.w_reg(reg_name, 0, is_pulse=False, go_dispatch=go_dispatch)
 
     def set_gs_col(self, col, go_dispatch=True):
         reg_name = "gs_col"
