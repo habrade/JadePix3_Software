@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     ## SPI master config
     jadepix_dev.reset_spi()
-    jadepix_dev.set_spi(data_len=200, ie=False, ass=True, lsb=False, rx_neg=False, tx_neg=False, div=0, ss=0x01)
+    jadepix_dev.set_spi(data_len=200, ie=False, ass=True, lsb=False, rx_neg=False, tx_neg=True, div=0, ss=0x01)
     ## Set JadePix SPI configuration
     jadepix_dev.start_spi_config()
     ## Load Config
