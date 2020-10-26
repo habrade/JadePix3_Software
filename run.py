@@ -62,6 +62,8 @@ if __name__ == '__main__':
 
     time.sleep(2)
 
+    jadepix_dev.read_ipb_data_fifo(100)
+
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
