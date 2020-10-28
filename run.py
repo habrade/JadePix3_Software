@@ -57,12 +57,14 @@ if __name__ == '__main__':
 
     """ From here we can test rolling shutter """
     jadepix_dev.set_gs_plse(is_dplse=True)
-    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=341, hitmap_en=True, frame_number=1)
+    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=341, hitmap_en=False, frame_number=1)
     jadepix_dev.start_rs()
 
     time.sleep(2)
 
-    jadepix_dev.read_ipb_data_fifo(100)
+    test_cmd = [0, 1, 2]
+    jadepix_dev.send_slow_ctrl_cmd(test_cmd)
+    # jadepix_dev.read_ipb_data_fifo(100)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
