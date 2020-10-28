@@ -1,3 +1,5 @@
+import time
+
 import uhal
 import coloredlogs
 import logging
@@ -21,7 +23,7 @@ class IPbusLink:
         self._hw = self.get_hw()
 
     def get_hw(self):
-        uhal.setLogLevelTo(uhal.LogLevel.INFO)
+        uhal.setLogLevelTo(uhal.LogLevel.DEBUG)
         hw = uhal.getDevice("JadePix3.udp.0", self.device_uri, self.address_table_uri)
         return hw
 
@@ -44,3 +46,32 @@ class IPbusLink:
         self._hw.dispatch()
         ret_val = ret.value()
         return ret_val
+
+    def send_slow_ctrl_cmd(self, reg_name_base, fifo_name, cmd):
+        for i in range(len(cmd)):
+            self._hw.getNode(reg_name_base + fifo_name + ".WFIFO_DATA").write(cmd[i])
+            self._hw.dispatch()
+            valid_len = 0
+            while valid_len != 1:
+                valid_len = self._hw.getNode(reg_name_base + fifo_name + ".WVALID_LEN").read()
+                self._hw.dispatch()
+                valid_len = valid_len & 0x7fffffff
+            print("Slow ctrl cmd {:#08x} has been sent".format(cmd[i]))
+            time.sleep(0.2)
+            
+    def read_ipb_data_fifo(self, reg_name_base, fifo_name, num):
+        left = num
+        mem = []
+        while left > 0:
+            read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
+            self._hw.dispatch()
+            time.sleep(0.01)
+            if read_len == 0:
+                continue
+            read_len = min(left, int(read_len))
+            mem0 = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(read_len)
+            self._hw.dispatch()
+            #      print read_len
+            mem.extend(mem0)
+            left = left - read_len
+        return mem

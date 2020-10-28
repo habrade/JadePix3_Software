@@ -19,7 +19,6 @@ coloredlogs.install(level='DEBUG', logger=log)
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
-
 if __name__ == '__main__':
     ipbus_link = IPbusLink()
 
@@ -63,9 +62,13 @@ if __name__ == '__main__':
     time.sleep(2)
 
     test_cmd = [0, 1, 2]
-    jadepix_dev.send_slow_ctrl_cmd(test_cmd)
-    # jadepix_dev.read_ipb_data_fifo(100)
+    # jadepix_dev.send_slow_ctrl_cmd(test_cmd)
+    mem = jadepix_dev.read_ipb_data_fifo(100)
 
+    data_path = "./data/test_data.txt"
+    with open(data_path, 'w') as file_handler:
+        for item in mem:
+            file_handler.write("{}\n".format(hex(item)))
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""

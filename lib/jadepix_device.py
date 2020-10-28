@@ -293,31 +293,7 @@ class JadePixDevice:
         self.set_gs_col(col=col)
 
     def send_slow_ctrl_cmd(self, cmd):
-        for i in range(len(cmd)):
-            self._ipbus_link.get_hw().getNode(self.reg_name_base + "SLCTRL_FIFO.WFIFO_DATA").write(cmd[i])
-            self._ipbus_link.get_hw().dispatch()
-            valid_len = 0
-            while valid_len != 1:
-                valid_len = self._ipbus_link.get_hw().getNode(self.reg_name_base + "SLCTRL_FIFO.WVALID_LEN").read()
-                self._ipbus_link.get_hw().dispatch()
-                valid_len = valid_len & 0x7fffffff
-            print("Slow ctrl cmd {:#08x} has been sent".format(cmd[i]))
-            time.sleep(0.2)
-        return
+        self._ipbus_link.send_slow_ctrl_cmd(self.reg_name_base, "SLCTRL_FIFO", cmd)
 
     def read_ipb_data_fifo(self, num):
-        left = num
-        mem = []
-        while left > 0:
-            read_len = self._ipbus_link.get_hw().getNode(self.reg_name_base + "DATA_FIFO.RFIFO_LEN").read()
-            self._ipbus_link.get_hw().dispatch()
-            time.sleep(0.01)
-            if read_len == 0:
-                continue
-            read_len = min(left, int(read_len))
-            mem0 = self._ipbus_link.get_hw().getNode(self.reg_name_base + "DATA_FIFO.RFIFO_DATA").readBlock(read_len)
-            self._ipbus_link.get_hw().dispatch()
-            #      print read_len
-            mem.extend(mem0)
-            left = left - read_len
-        return mem
+        return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num)
