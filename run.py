@@ -56,22 +56,21 @@ if __name__ == '__main__':
 
     """ From here we can test rolling shutter """
     jadepix_dev.set_gs_plse(is_dplse=True)
-    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=341, hitmap_en=False, frame_number=1)
+    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=341, hitmap_en=False, frame_number=10000)
     jadepix_dev.start_rs()
+    # time.sleep(2)
 
-    time.sleep(2)
-
-    test_cmd = [0, 1, 2]
-    # jadepix_dev.send_slow_ctrl_cmd(test_cmd)
-    mem = jadepix_dev.read_ipb_data_fifo(100)
-
-    data_path = "./data/test_data.txt"
-    with open(data_path, 'w') as file_handler:
-        for item in mem:
-            file_handler.write("{}\n".format(hex(item)))
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     """Will change to real time later"""
     # jadepix_dev.gs_config(pulse_delay=4, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
     # jadepix_dev.start_gs()
+
+    rfifo_depth_width = 17
+    rfifo_depth = pow(2, rfifo_depth_width)
+    data_path = "./data/data.txt"
+    mem = jadepix_dev.read_ipb_data_fifo(rfifo_depth)
+    with open(data_path, 'w') as file_handler:
+        for item in mem:
+            file_handler.write("{:08x}\n".format(item))
