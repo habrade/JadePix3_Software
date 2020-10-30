@@ -47,6 +47,8 @@
     <node id="gs_pulse_deassert_cnt" address="0x17" mask="0x1ff" permission="rw"/>
     <node id="gs_deassert_cnt" address="0x18" mask="0x1ff" permission="rw"/>
 
+    <node id="rst_rfifo" address="0x19" mask="0x1" permission="rw"/>
+
     <node id="SLCTRL_FIFO"   module="file://../slave/wfifo.xml"   address="0x20" tags="slave"/>
     <node id="DATA_FIFO"     module="file://../slave/rfifo.xml"   address="0x24" tags="slave"/>
 

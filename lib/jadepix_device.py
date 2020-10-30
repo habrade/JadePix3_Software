@@ -187,6 +187,7 @@ class JadePixDevice:
         else:
             log.info("Start rolling shutter")
             reg_name = "rs_start"
+            self.reset_rfifo()
             self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
     def set_rs_frame_number(self, frame_number, go_dispatch=True):
@@ -243,6 +244,7 @@ class JadePixDevice:
         if self.is_busy_gs():
             log.error("Global shutter is busy now! Stop!")
         else:
+            self.reset_rfifo()
             log.info("Start global shutter...")
             reg_name = "gs_start"
             self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
@@ -297,3 +299,7 @@ class JadePixDevice:
 
     def read_ipb_data_fifo(self, num):
         return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num)
+
+    def reset_rfifo(self):
+        log.info("Reset readout FIFO.")
+        self.w_reg("rst_rfifo", 0, is_pulse=True, go_dispatch=True)
