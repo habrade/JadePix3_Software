@@ -65,7 +65,7 @@ class IPbusLink:
         while left > 0:
             read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
             self._hw.dispatch()
-            time.sleep(0.01)
+            # time.sleep(0.01)
             if read_len == 0:
                 continue
             read_len = min(left, int(read_len))

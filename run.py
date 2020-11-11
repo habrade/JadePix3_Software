@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     """ From here we can test rolling shutter """
     jadepix_dev.set_gs_plse(is_dplse=True)
-    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=341, hitmap_en=False, frame_number=10000)
+    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340, hitmap_col_high=341, hitmap_en=False, frame_number=100000)
     jadepix_dev.start_rs()
     # time.sleep(2)
 
@@ -70,7 +70,26 @@ if __name__ == '__main__':
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
     data_path = "./data/data.txt"
-    mem = jadepix_dev.read_ipb_data_fifo(rfifo_depth)
-    with open(data_path, 'w') as file_handler:
-        for item in mem:
-            file_handler.write("{:08x}\n".format(item))
+    slice_size = rfifo_depth
+    # log.info("The number (word, 32bits) of data wanted: {:d}".format(slice_size))
+
+    ## remove data file before taking data
+    import os
+    if os.path.exists(data_path):
+        os.remove(data_path)
+
+    num_token = 20
+    data_amount = num_token * slice_size * 32
+
+    start = time.process_time()
+    for i in range(num_token):
+        mem = jadepix_dev.read_ipb_data_fifo(slice_size)
+        # with open(data_path, 'a') as file_handler:
+        #     for item in mem:
+        #         file_handler.write("{:08x}\n".format(item))
+        # del mem    
+    trans_time = time.process_time() -start
+    trans_speed = int(data_amount / trans_time) # Unit: bps
+    log.info("Transfer time: {:f} s".format(trans_time))
+    log.info("Transfer speed: {:f} Mbps".format(trans_speed/pow(10, 6)))
+    # file_handler.close()
