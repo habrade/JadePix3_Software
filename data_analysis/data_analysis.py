@@ -84,10 +84,18 @@ class DataAnalysis:
         rfifo_oc_t = TTree("rfifo_oc", "rfifo_oc")
         rfifo_oc_branch = rfifo_oc_t.Branch("rfifo_oc", rfifo_oc, 'i')
 
+        # histogrames
         h_data = TH1D("Data_Hist", "Data amount in each frame",
-                      100, 0.0, 100.0)
+                      200, 0.0, 200.0)
+        h_data_ch0 = TH1D("Data_CH0", "Channel 0 data amount in each frame",
+                      200, 0.0, 200.0)
+        h_data_ch1 = TH1D("Data_CH1", "Channel 1 data amount in each frame",
+                      200, 0.0, 200.0)
+        h_data_ch2 = TH1D("Data_CH2", "Channel 2 data amount in each frame",
+                      200, 0.0, 200.0)
+        h_data_ch3 = TH1D("Data_CH3", "Channel 3 data amount in each frame",
+                      200, 0.0, 200.0)
 
-        data_num = 0
         log.info("Start writing to .root file...")
         for frame_data in self._dataIn_array:
             data_stream = frame_data
@@ -106,32 +114,39 @@ class DataAnalysis:
                 fifo_status = (frame_data >> 15) & 0xFF
                 rbof = frame_data & 0x7FFF
                 fifo_status_t.Fill()
-                rbof_t.Fill()
+                if rbof > 0:
+                    rbof_t.Fill()
 
             elif frame_type == 2:  # Data
                 data = frame_data
                 data_t.Fill()
-                h_data.Fill(int(frame_index))
+                h_data.Fill(tail_branch.GetEntries())
                 data_t.Fill()
                 ch = (frame_data >> 16) & 0x3
                 oc = (frame_data >> 18) & 0x1F
-                oc_t.Fill()
+                if oc > 0:
+                    oc_t.Fill()
                 if ch == 0:  # Ch 0
                     ch0 = frame_data
+                    h_data_ch0.Fill(tail_branch.GetEntries())
                     ch0_t.Fill()
                 elif ch == 1:  # Ch 1
                     ch1 = frame_data
+                    h_data_ch1.Fill(tail_branch.GetEntries())
                     ch1_t.Fill()
                 elif ch == 2:  # Ch 2
                     ch2 = frame_data
+                    h_data_ch2.Fill(tail_branch.GetEntries())
                     ch2_t.Fill()
                 elif ch == 3:  # Ch 3
                     ch3 = frame_data
+                    h_data_ch3.Fill(tail_branch.GetEntries())
                     ch3_t.Fill()
 
             elif frame_type == 3:  # rfifo overflow
                 rfifo_oc = frame_data
-                rfifo_oc_t.Fill()
+                if rfifo_oc > 0:
+                    rfifo_oc_t.Fill()
 
         root_tree.Write()
         head_t.Write()
@@ -146,6 +161,10 @@ class DataAnalysis:
         tail_t.Write()
         frame_index_t.Write()
         h_data.Write()
+        h_data_ch0.Write()
+        h_data_ch1.Write()
+        h_data_ch2.Write()
+        h_data_ch3.Write()
 
         del self._dataIn_array
         log.info("Write to .root end.")

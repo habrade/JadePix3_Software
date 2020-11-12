@@ -88,7 +88,7 @@ if __name__ == '__main__':
     dataIn_array = []
     # log.info("The number (word, 32bits) of data wanted: {:d}".format(slice_size))
 
-    num_token = 2
+    num_token = 1
     data_amount = num_token * slice_size * 32
 
     # Get Data Stream
