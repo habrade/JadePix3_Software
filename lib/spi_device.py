@@ -30,7 +30,7 @@ class SpiDevice:
         self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
 
     def r_reg(self, reg_name):
-        self._ipbus_link.r_reg(self.reg_name_base, reg_name)
+        return self._ipbus_link.r_reg(self.reg_name_base, reg_name)
 
     def set_data_len(self, data_len):
         if data_len not in range(0, 256):
