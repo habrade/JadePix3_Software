@@ -296,7 +296,7 @@ class JadePixDevice:
         self._ipbus_link.send_slow_ctrl_cmd(self.reg_name_base, "SLCTRL_FIFO", cmd)
 
     def read_ipb_data_fifo(self, num):
-        return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num)
+        return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num, safe_style)
 
     def reset_rfifo(self):
         log.info("Reset readout FIFO.")
