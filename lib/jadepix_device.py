@@ -184,10 +184,12 @@ class JadePixDevice:
     def start_rs(self, go_dispatch=True):
         if self.is_busy_rs():
             log.error("RS is busy now! Stop!")
+            return False
         else:
             log.info("Start rolling shutter")
             reg_name = "rs_start"
             self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
+            return True
 
     def set_rs_frame_number(self, frame_number, go_dispatch=True):
         log.info("Set RS frame number: {}".format(frame_number))
@@ -295,7 +297,7 @@ class JadePixDevice:
     def send_slow_ctrl_cmd(self, cmd):
         self._ipbus_link.send_slow_ctrl_cmd(self.reg_name_base, "SLCTRL_FIFO", cmd)
 
-    def read_ipb_data_fifo(self, num):
+    def read_ipb_data_fifo(self, num, safe_style):
         return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num, safe_style)
 
     def reset_rfifo(self):

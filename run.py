@@ -12,8 +12,12 @@ from lib.jadepix_device import JadePixDevice
 
 from data_analysis.data_analysis import DataAnalysis
 
+from lib import jadepix_defs
+
 # from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1D, TTree
 # from ROOT import gROOT, gBenchmark, gRandom, gSystem
+
+from ROOT import TFile, gROOT
 
 # import numpy as np
 
@@ -66,12 +70,12 @@ if __name__ == '__main__':
     # time.sleep(20)
 
     """ From here we can test rolling shutter """
+    frame_number = 64
     jadepix_dev.set_gs_plse(is_dplse=True)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
-                          hitmap_col_high=341, hitmap_en=False, frame_number=100000)
+                          hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
     jadepix_dev.reset_rfifo()
     jadepix_dev.start_rs()
-    # time.sleep(2)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
@@ -80,27 +84,32 @@ if __name__ == '__main__':
     # jadepix_dev.gs_config(pulse_delay=4, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
     # jadepix_dev.start_gs()
 
+    test_valid_pattern = 1
+    valid_data_num = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern + 2 * frame_number - 1
+
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
 
-    slice_size = rfifo_depth
-    # dataIn_array = np.empty(slice_size, dtype=np.uint32, order='F')
+    slice_size = int(rfifo_depth)
+    # slice_size = 256
     dataIn_array = []
     # log.info("The number (word, 32bits) of data wanted: {:d}".format(slice_size))
 
     num_token = 1
-    data_amount = num_token * slice_size * 32
+    num_data = num_token * slice_size - 2
+    data_size = num_data * 32   # Unit: bit
+
+    if num_data > valid_data_num:
+        log.warning("Token number should be less than valid number")
 
     # Get Data Stream
     start = time.process_time()
     for i in range(num_token):
-        # dataIn_array = jadepix_dev.read_ipb_data_fifo(slice_size)
-        dataIn_array.extend(jadepix_dev.read_ipb_data_fifo(slice_size))
-    trans_time = time.process_time() - start
-    trans_speed = int(data_amount / trans_time)  # Unit: bps
-    log.info("Transfer time: {:f} s".format(trans_time))
+        dataIn_array.extend(jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False))
+    trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
     log.info("Transfer speed: {:f} Mbps".format(trans_speed/pow(10, 6)))
 
     # Write data to .root
     data_ana = DataAnalysis(dataIn_array)
     data_ana.w_data()
+

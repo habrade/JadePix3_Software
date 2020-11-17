@@ -3,10 +3,11 @@
 import coloredlogs
 import logging
 
-from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1D, TTree
+from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1D, TTree, TGraph
 from ROOT import gROOT, gBenchmark, gRandom, gSystem
 
 import numpy as np
+from array import array
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -42,6 +43,11 @@ class DataAnalysis:
         ch1 = 0
         ch2 = 0
         ch3 = 0
+        data_cnt_list_ch0 = array('d')
+        data_cnt_list_ch1 = array('d')
+        data_cnt_list_ch2 = array('d')
+        data_cnt_list_ch3 = array('d')
+        frame_index_list = array('d')
 
         # Tail couters
         tail = 0
@@ -85,17 +91,22 @@ class DataAnalysis:
         rfifo_oc_branch = rfifo_oc_t.Branch("rfifo_oc", rfifo_oc, 'i')
 
         # histogrames
-        h_data = TH1D("Data_Hist", "Data amount in each frame",
-                      200, 0.0, 200.0)
-        h_data_ch0 = TH1D("Data_CH0", "Channel 0 data amount in each frame",
-                      200, 0.0, 200.0)
-        h_data_ch1 = TH1D("Data_CH1", "Channel 1 data amount in each frame",
-                      200, 0.0, 200.0)
-        h_data_ch2 = TH1D("Data_CH2", "Channel 2 data amount in each frame",
-                      200, 0.0, 200.0)
-        h_data_ch3 = TH1D("Data_CH3", "Channel 3 data amount in each frame",
-                      200, 0.0, 200.0)
+        h_data = TH1D("Data_Hist", "Data count in frame",
+                      100, 0, 100)
+        h_data_ch0 = TH1D("Data_CH0", "Channel 0 data count in frame",
+                          100, 0, 100)
+        h_data_ch1 = TH1D("Data_CH1", "Channel 1 data count in frame",
+                          100, 0, 100)
+        h_data_ch2 = TH1D("Data_CH2", "Channel 2 data count in frame",
+                          100, 0, 100)
+        h_data_ch3 = TH1D("Data_CH3", "Channel 3 data count in frame",
+                          100, 0, 100)
+        h_frame_index = TH1D("Frame_index", "Frame distribution",
+                             100, 0, 100)
+        h_rfifo_oc = TH1D("rfifo_oc", "rfifo overflow in frame",
+                          100, 0, 100)
 
+        real_frame_index = 0
         log.info("Start writing to .root file...")
         for frame_data in self._dataIn_array:
             data_stream = frame_data
@@ -106,9 +117,16 @@ class DataAnalysis:
                 tail = frame_data
                 tail_t.Fill()
                 frame_index = frame_data & 0x3FFFF
+                h_frame_index.Fill(frame_index)
+                frame_index_list.append(frame_index)
+                data_cnt_list_ch0.append(ch0_branch.GetEntries())
+                data_cnt_list_ch1.append(ch1_branch.GetEntries())
+                data_cnt_list_ch2.append(ch2_branch.GetEntries())
+                data_cnt_list_ch3.append(ch3_branch.GetEntries())
                 frame_index_t.Fill()
 
             elif frame_type == 1:  # Head
+                real_frame_index = frame_index + 1
                 head = frame_data
                 head_t.Fill()
                 fifo_status = (frame_data >> 15) & 0xFF
@@ -120,7 +138,8 @@ class DataAnalysis:
             elif frame_type == 2:  # Data
                 data = frame_data
                 data_t.Fill()
-                h_data.Fill(tail_branch.GetEntries())
+                h_data.Fill(real_frame_index)
+
                 data_t.Fill()
                 ch = (frame_data >> 16) & 0x3
                 oc = (frame_data >> 18) & 0x1F
@@ -128,19 +147,19 @@ class DataAnalysis:
                     oc_t.Fill()
                 if ch == 0:  # Ch 0
                     ch0 = frame_data
-                    h_data_ch0.Fill(tail_branch.GetEntries())
+                    h_data_ch0.Fill(real_frame_index)
                     ch0_t.Fill()
                 elif ch == 1:  # Ch 1
                     ch1 = frame_data
-                    h_data_ch1.Fill(tail_branch.GetEntries())
+                    h_data_ch1.Fill(real_frame_index)
                     ch1_t.Fill()
                 elif ch == 2:  # Ch 2
                     ch2 = frame_data
-                    h_data_ch2.Fill(tail_branch.GetEntries())
+                    h_data_ch2.Fill(real_frame_index)
                     ch2_t.Fill()
                 elif ch == 3:  # Ch 3
                     ch3 = frame_data
-                    h_data_ch3.Fill(tail_branch.GetEntries())
+                    h_data_ch3.Fill(real_frame_index)
                     ch3_t.Fill()
 
             elif frame_type == 3:  # rfifo overflow
@@ -148,6 +167,15 @@ class DataAnalysis:
                 if rfifo_oc > 0:
                     rfifo_oc_t.Fill()
 
+        # Graph
+        # print("{:}, len: {:}".format(frame_index_list, len(frame_index_list)))
+        # print("\n{:}, len: {:}".format(
+            # data_cnt_list_ch0, len(data_cnt_list_ch0)))
+        # data_dist_g = TGraph(283,frame_index_list,data_cnt_list_ch0)
+        data_dist_g = TGraph(len(frame_index_list),
+                             frame_index_list, data_cnt_list_ch0)
+
+        # Trees
         root_tree.Write()
         head_t.Write()
         fifo_status_t.Write()
@@ -160,11 +188,30 @@ class DataAnalysis:
         ch3_t.Write()
         tail_t.Write()
         frame_index_t.Write()
+
+        # Histograms
         h_data.Write()
+        h_data.GetXaxis().SetTitle("Frame Index")
+
         h_data_ch0.Write()
+        h_data_ch0.GetXaxis().SetTitle("Frame Index")
         h_data_ch1.Write()
+        h_data_ch1.GetXaxis().SetTitle("Frame Index")
         h_data_ch2.Write()
+        h_data_ch2.GetXaxis().SetTitle("Frame Index")
         h_data_ch3.Write()
+        h_data_ch3.GetXaxis().SetTitle("Frame Index")
+        h_frame_index.Write()
+        h_frame_index.GetXaxis().SetTitle("Frame Index")
+
+        # Graph
+        data_dist_g.SetTitle("Data counter in Frame")
+        data_dist_g.GetXaxis().SetTitle("Frame Index")
+        data_dist_g.GetYaxis().SetTitle("Data Counters")
+        data_dist_g.SetMarkerStyle(6)
+        data_dist_g.SetLineColor(2)
+        data_dist_g.SetMarkerColor(4)
+        data_dist_g.Write()
 
         del self._dataIn_array
         log.info("Write to .root end.")
