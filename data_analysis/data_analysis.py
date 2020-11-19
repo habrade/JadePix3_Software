@@ -18,200 +18,197 @@ coloredlogs.install(level='DEBUG', logger=log)
 
 
 class DataAnalysis:
-    def __init__(self, dataIn_array):
-        self._dataIn_array = dataIn_array
+    def __init__(self):
         self.data_file = "data/data.root"
         self.hfile = gROOT.FindObject(self.data_file)
         if self.hfile:
             self.hfile.Close()
         self.hfile = TFile(self.data_file, 'RECREATE', 'Data ROOT file')
 
-    def w_data(self):
-        data_stream = 0
-        root_tree = TTree('root_tree', 'Data_Stream')
-        root_branch = root_tree.Branch('root_tree', data_stream, 'i')
+        self.data_stream = 0
+        self.root_tree = TTree('root_tree', 'Data_Stream')
+        self.root_branch = self.root_tree.Branch('root_tree', self.data_stream, 'i')
 
         # Head couters
-        head = 0
-        fifo_status = 0
-        rbof = 0
+        self.head = 0
+        self.fifo_status = 0
+        self.rbof = 0
 
         # Data couters
-        data = 0
-        oc = 0
-        ch0 = 0
-        ch1 = 0
-        ch2 = 0
-        ch3 = 0
-        data_cnt_list_ch0 = array('d')
-        data_cnt_list_ch1 = array('d')
-        data_cnt_list_ch2 = array('d')
-        data_cnt_list_ch3 = array('d')
-        frame_index_list = array('d')
+        self.data = 0
+        self.oc = 0
+        self.ch0 = 0
+        self.ch1 = 0
+        self.ch2 = 0
+        self.ch3 = 0
+        self.data_cnt_list_ch0 = array('d')
+        self.data_cnt_list_ch1 = array('d')
+        self.data_cnt_list_ch2 = array('d')
+        self.data_cnt_list_ch3 = array('d')
+        self.frame_index_list = array('d')
 
         # Tail couters
-        tail = 0
-        frame_index = 0
+        self.tail = 0
+        self.frame_index = 0
 
         # rfifo overflow
-        rfifo_oc = 0
+        self.rfifo_oc = 0
 
         # Head Branch
-        head_t = TTree("Frame_Head", "HEAD")
-        head_branch = head_t.Branch("Frame_Head", head, 'i')
-        fifo_status_t = TTree("FIFO_Status", "fifo_status")
-        fifo_status_branch = fifo_status_t.Branch(
-            "FIFO_Status", fifo_status, 'i')
-        rbof_t = TTree("RBOF", "rbof")
-        rbof_branch = rbof_t.Branch("RBOF", rbof, 'i')
+        self.head_t = TTree("Frame_Head", "HEAD")
+        self.head_branch = self.head_t.Branch("Frame_Head", self.head, 'i')
+        self.fifo_status_t = TTree("FIFO_Status", "fifo_status")
+        self.fifo_status_branch = self.fifo_status_t.Branch("FIFO_Status", self.fifo_status, 'i')
+        self.rbof_t = TTree("RBOF", "rbof")
+        self.rbof_branch = self.rbof_t.Branch("RBOF", self.rbof, 'i')
 
         # Tail Branch
-        tail_t = TTree("Frame_Tail", "tail")
-        tail_branch = tail_t.Branch("Frame_Tail", tail, 'i')
-        frame_index_t = TTree("Frame_index", "frame_index")
-        frame_index_branch = frame_index_t.Branch(
-            "Frame_index", frame_index, 'i')
+        self.tail_t = TTree("Frame_Tail", "tail")
+        self.tail_branch = self.tail_t.Branch("Frame_Tail", self.tail, 'i')
+        self.frame_index_t = TTree("Frame_index", "frame_index")
+        self.frame_index_branch = self.frame_index_t.Branch("Frame_index", self.frame_index, 'i')
 
         # Data Branch
-        data_t = TTree("Frame_Data", "data")
-        data_branch = data_t.Branch("Frame_Data", data, 'i')
-        oc_t = TTree("OC", "oc")
-        oc_branch = oc_t.Branch("OC", oc, 'i')
-        ch0_t = TTree("CH0", "ch0")
-        ch0_branch = ch0_t.Branch("CH0", ch0, 'i')
-        ch1_t = TTree("CH1", "ch1")
-        ch1_branch = ch1_t.Branch("CH1", ch1, 'i')
-        ch2_t = TTree("CH2", "ch2")
-        ch2_branch = ch2_t.Branch("CH2", ch2, 'i')
-        ch3_t = TTree("CH3", "ch3")
-        ch3_branch = ch3_t.Branch("CH3", ch3, 'i')
+        self.data_t = TTree("Frame_Data", "data")
+        self.data_branch = self.data_t.Branch("Frame_Data", self.data, 'i')
+        self.oc_t = TTree("OC", "oc")
+        self.oc_branch = self.oc_t.Branch("OC", self.oc, 'i')
+        self.ch0_t = TTree("CH0", "ch0")
+        self.ch0_branch = self.ch0_t.Branch("CH0", self.ch0, 'i')
+        self.ch1_t = TTree("CH1", "ch1")
+        self.ch1_branch = self.ch1_t.Branch("CH1", self.ch1, 'i')
+        self.ch2_t = TTree("CH2", "ch2")
+        self.ch2_branch = self.ch2_t.Branch("CH2", self.ch2, 'i')
+        self.ch3_t = TTree("CH3", "ch3")
+        self.ch3_branch = self.ch3_t.Branch("CH3", self.ch3, 'i')
 
         # rfifo branch
-        rfifo_oc_t = TTree("rfifo_oc", "rfifo_oc")
-        rfifo_oc_branch = rfifo_oc_t.Branch("rfifo_oc", rfifo_oc, 'i')
+        self.rfifo_oc_t = TTree("rfifo_oc", "rfifo_oc")
+        self.rfifo_oc_branch = self.rfifo_oc_t.Branch("rfifo_oc", self.rfifo_oc, 'i')
 
         # histogrames
-        h_data = TH1D("Data_Hist", "Data count in frame",
-                      100, 0, 100)
-        h_data_ch0 = TH1D("Data_CH0", "Channel 0 data count in frame",
-                          100, 0, 100)
-        h_data_ch1 = TH1D("Data_CH1", "Channel 1 data count in frame",
-                          100, 0, 100)
-        h_data_ch2 = TH1D("Data_CH2", "Channel 2 data count in frame",
-                          100, 0, 100)
-        h_data_ch3 = TH1D("Data_CH3", "Channel 3 data count in frame",
-                          100, 0, 100)
-        h_frame_index = TH1D("Frame_index", "Frame distribution",
-                             100, 0, 100)
-        h_rfifo_oc = TH1D("rfifo_oc", "rfifo overflow in frame",
-                          100, 0, 100)
+        self.h_data = TH1D("Data_Hist", "Data count in frame",
+                           10000, 0, 10000)
+        self.h_data_ch0 = TH1D("Data_CH0", "Channel 0 data count in frame",
+                               10000, 0, 10000)
+        self.h_data_ch1 = TH1D("Data_CH1", "Channel 1 data count in frame",
+                               10000, 0, 10000)
+        self.h_data_ch2 = TH1D("Data_CH2", "Channel 2 data count in frame",
+                               10000, 0, 10000)
+        self.h_data_ch3 = TH1D("Data_CH3", "Channel 3 data count in frame",
+                               10000, 0, 10000)
+        self.h_frame_index = TH1D("Frame_index", "Frame distribution",
+                                  10000, 0, 10000)
+        self.h_rfifo_oc = TH1D("rfifo_oc", "rfifo overflow in frame",
+                               10000, 0, 10000)
 
-        real_frame_index = 0
+        self.data_dist_g = TGraph(len(self.frame_index_list),
+                             self.frame_index_list, self.data_cnt_list_ch0)
+
+    def w_data(self, dataIn_arr):
         log.info("Start writing to .root file...")
-        for frame_data in self._dataIn_array:
-            data_stream = frame_data
-            root_tree.Fill()
+        real_frame_index = 0
+        for frame_data in dataIn_arr:
+            data_stream = int(frame_data)
+            self.root_tree.Fill()
 
-            frame_type = (frame_data >> 23)
+            frame_type = (data_stream >> 23)
             if frame_type == 0:  # Tail
-                tail = frame_data
-                tail_t.Fill()
-                frame_index = frame_data & 0x3FFFF
-                h_frame_index.Fill(frame_index)
-                frame_index_list.append(frame_index)
-                data_cnt_list_ch0.append(ch0_branch.GetEntries())
-                data_cnt_list_ch1.append(ch1_branch.GetEntries())
-                data_cnt_list_ch2.append(ch2_branch.GetEntries())
-                data_cnt_list_ch3.append(ch3_branch.GetEntries())
-                frame_index_t.Fill()
+                tail = data_stream
+                self.tail_t.Fill()
+                frame_index = data_stream & 0x3FFFF
+                self.h_frame_index.Fill(frame_index)
+                self.frame_index_list.append(frame_index)
+                self.data_cnt_list_ch0.append(self.ch0_branch.GetEntries())
+                self.data_cnt_list_ch1.append(self.ch1_branch.GetEntries())
+                self.data_cnt_list_ch2.append(self.ch2_branch.GetEntries())
+                self.data_cnt_list_ch3.append(self.ch3_branch.GetEntries())
+                self.frame_index_t.Fill()
 
             elif frame_type == 1:  # Head
                 real_frame_index = frame_index + 1
-                head = frame_data
-                head_t.Fill()
-                fifo_status = (frame_data >> 15) & 0xFF
-                rbof = frame_data & 0x7FFF
-                fifo_status_t.Fill()
-                if rbof > 0:
-                    rbof_t.Fill()
+                self.head = data_stream
+                self.head_t.Fill()
+                self.fifo_status = (data_stream >> 15) & 0xFF
+                self.rbof = data_stream & 0x7FFF
+                self.fifo_status_t.Fill()
+                if self.rbof > 0:
+                    self.rbof_t.Fill()
 
             elif frame_type == 2:  # Data
-                data = frame_data
-                data_t.Fill()
-                h_data.Fill(real_frame_index)
+                data = data_stream
+                self.data_t.Fill()
+                self.h_data.Fill(real_frame_index)
 
-                data_t.Fill()
-                ch = (frame_data >> 16) & 0x3
-                oc = (frame_data >> 18) & 0x1F
+                self.data_t.Fill()
+                ch = (data_stream >> 16) & 0x3
+                oc = (data_stream >> 18) & 0x1F
                 if oc > 0:
-                    oc_t.Fill()
+                    self.oc_t.Fill()
                 if ch == 0:  # Ch 0
-                    ch0 = frame_data
-                    h_data_ch0.Fill(real_frame_index)
-                    ch0_t.Fill()
+                    self.ch0 = data_stream
+                    self.h_data_ch0.Fill(real_frame_index)
+                    self.ch0_t.Fill()
                 elif ch == 1:  # Ch 1
-                    ch1 = frame_data
-                    h_data_ch1.Fill(real_frame_index)
-                    ch1_t.Fill()
+                    self.ch1 = data_stream
+                    self.h_data_ch1.Fill(real_frame_index)
+                    self.ch1_t.Fill()
                 elif ch == 2:  # Ch 2
-                    ch2 = frame_data
-                    h_data_ch2.Fill(real_frame_index)
-                    ch2_t.Fill()
+                    self.ch2 = data_stream
+                    self.h_data_ch2.Fill(real_frame_index)
+                    self.ch2_t.Fill()
                 elif ch == 3:  # Ch 3
-                    ch3 = frame_data
-                    h_data_ch3.Fill(real_frame_index)
-                    ch3_t.Fill()
+                    self.ch3 = data_stream
+                    self.h_data_ch3.Fill(real_frame_index)
+                    self.ch3_t.Fill()
 
             elif frame_type == 3:  # rfifo overflow
-                rfifo_oc = frame_data
-                if rfifo_oc > 0:
-                    rfifo_oc_t.Fill()
+                self.rfifo_oc = data_stream
+                if self.rfifo_oc > 0:
+                    self.rfifo_oc_t.Fill()
 
         # Graph
         # print("{:}, len: {:}".format(frame_index_list, len(frame_index_list)))
         # print("\n{:}, len: {:}".format(
             # data_cnt_list_ch0, len(data_cnt_list_ch0)))
         # data_dist_g = TGraph(283,frame_index_list,data_cnt_list_ch0)
-        data_dist_g = TGraph(len(frame_index_list),
-                             frame_index_list, data_cnt_list_ch0)
 
         # Trees
-        root_tree.Write()
-        head_t.Write()
-        fifo_status_t.Write()
-        rbof_t.Write()
-        oc_t.Write()
-        data_t.Write()
-        ch0_t.Write()
-        ch1_t.Write()
-        ch2_t.Write()
-        ch3_t.Write()
-        tail_t.Write()
-        frame_index_t.Write()
+        self.root_tree.Write()
+        self.head_t.Write()
+        self.fifo_status_t.Write()
+        self.rbof_t.Write()
+        self.oc_t.Write()
+        self.data_t.Write()
+        self.ch0_t.Write()
+        self.ch1_t.Write()
+        self.ch2_t.Write()
+        self.ch3_t.Write()
+        self.tail_t.Write()
+        self.frame_index_t.Write()
 
         # Histograms
-        h_data.Write()
-        h_data.GetXaxis().SetTitle("Frame Index")
+        self.h_data.Write()
+        self.h_data.GetXaxis().SetTitle("Frame Index")
 
-        h_data_ch0.Write()
-        h_data_ch0.GetXaxis().SetTitle("Frame Index")
-        h_data_ch1.Write()
-        h_data_ch1.GetXaxis().SetTitle("Frame Index")
-        h_data_ch2.Write()
-        h_data_ch2.GetXaxis().SetTitle("Frame Index")
-        h_data_ch3.Write()
-        h_data_ch3.GetXaxis().SetTitle("Frame Index")
-        h_frame_index.Write()
-        h_frame_index.GetXaxis().SetTitle("Frame Index")
+        self.h_data_ch0.Write()
+        self.h_data_ch0.GetXaxis().SetTitle("Frame Index")
+        self.h_data_ch1.Write()
+        self.h_data_ch1.GetXaxis().SetTitle("Frame Index")
+        self.h_data_ch2.Write()
+        self.h_data_ch2.GetXaxis().SetTitle("Frame Index")
+        self.h_data_ch3.Write()
+        self.h_data_ch3.GetXaxis().SetTitle("Frame Index")
+        self.h_frame_index.Write()
+        self.h_frame_index.GetXaxis().SetTitle("Frame Index")
 
         # Graph
-        data_dist_g.SetTitle("Data counter in Frame")
-        data_dist_g.GetXaxis().SetTitle("Frame Index")
-        data_dist_g.GetYaxis().SetTitle("Data Counters")
-        data_dist_g.SetMarkerStyle(6)
-        data_dist_g.SetLineColor(2)
-        data_dist_g.SetMarkerColor(4)
-        data_dist_g.Write()
+        self.data_dist_g.SetTitle("Data counter in Frame")
+        self.data_dist_g.GetXaxis().SetTitle("Frame Index")
+        self.data_dist_g.GetYaxis().SetTitle("Data Counters")
+        self.data_dist_g.SetMarkerStyle(6)
+        self.data_dist_g.SetLineColor(2)
+        self.data_dist_g.SetMarkerColor(4)
+        self.data_dist_g.Write()
 
-        del self._dataIn_array
         log.info("Write to .root end.")

@@ -17,7 +17,10 @@ from lib import jadepix_defs
 # from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1D, TTree
 # from ROOT import gROOT, gBenchmark, gRandom, gSystem
 
-from ROOT import TFile, gROOT
+# from ROOT import TFile, gROOT
+
+import numpy as np 
+from root_numpy import array2root
 
 # import numpy as np
 
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     # time.sleep(20)
 
     """ From here we can test rolling shutter """
-    frame_number = 64
+    frame_number = 64000
     jadepix_dev.set_gs_plse(is_dplse=True)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                           hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
@@ -85,31 +88,46 @@ if __name__ == '__main__':
     # jadepix_dev.start_gs()
 
     test_valid_pattern = 1
-    valid_data_num = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern + 2 * frame_number - 1
+    num_valid_data = frame_number * jadepix_defs.ROW * \
+        jadepix_defs.BLK * test_valid_pattern + 2 * frame_number - 1
 
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
 
-    slice_size = int(rfifo_depth)
-    # slice_size = 256
-    dataIn_array = []
+    slice_size = int(rfifo_depth)  # try largest slice as possible
+    # dataIn_array = []
     # log.info("The number (word, 32bits) of data wanted: {:d}".format(slice_size))
 
-    num_token = 1
-    num_data = num_token * slice_size - 2
-    data_size = num_data * 32   # Unit: bit
+    num_token = 1000
+    num_data_wanted = num_token * slice_size
 
-    if num_data > valid_data_num:
-        log.warning("Token number should be less than valid number")
+    if num_data_wanted > num_valid_data:
+        new_num_token = int(num_valid_data/slice_size)
+        log.warning("Token number {:d} should be less than valid number {:d}, set new tolken number to {:d}".format(
+            num_data_wanted, num_valid_data, new_num_token))
+    else:
+        new_num_token = num_token
 
+    num_data_got = new_num_token * slice_size
+    data_size = num_data_got * 32   # Unit: bit
     # Get Data Stream
     start = time.process_time()
-    for i in range(num_token):
-        dataIn_array.extend(jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False))
+    data = []
+    for i in range(new_num_token):
+        # dataIn_array.extend(jadepix_dev.read_ipb_data_fifo(
+        #     slice_size, safe_style=False))
+        data.append(jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False))
     trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
     log.info("Transfer speed: {:f} Mbps".format(trans_speed/pow(10, 6)))
+    log.info("len of data {:d}".format(len(data)))
 
+
+    
     # Write data to .root
-    data_ana = DataAnalysis(dataIn_array)
-    data_ana.w_data()
+    data_ana = DataAnalysis()
+    for data_vector in data:
+        data_ana.w_data(data_vector)
+    
+    # data_array = np.array(data)
+    # array2root(data_array, 'test.root', 'tree')
 
