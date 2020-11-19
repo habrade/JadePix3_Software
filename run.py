@@ -10,14 +10,11 @@ from lib.dac70004_defs import *
 from lib.ipbus_link import IPbusLink
 from lib.jadepix_device import JadePixDevice
 
-from data_analysis.data_analysis import DataAnalysis
+from ROOT import gROOT, TFile, TTree
+
+from data_analysis import data_analysis
 
 from lib import jadepix_defs
-
-# from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1D, TTree
-# from ROOT import gROOT, gBenchmark, gRandom, gSystem
-
-# from ROOT import TFile, gROOT
 
 import numpy as np 
 from root_numpy import array2root
@@ -73,7 +70,7 @@ if __name__ == '__main__':
     # time.sleep(20)
 
     """ From here we can test rolling shutter """
-    frame_number = 64000
+    frame_number = 64
     jadepix_dev.set_gs_plse(is_dplse=True)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                           hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
@@ -98,7 +95,7 @@ if __name__ == '__main__':
     # dataIn_array = []
     # log.info("The number (word, 32bits) of data wanted: {:d}".format(slice_size))
 
-    num_token = 1000
+    num_token = 1
     num_data_wanted = num_token * slice_size
 
     if num_data_wanted > num_valid_data:
@@ -111,23 +108,29 @@ if __name__ == '__main__':
     num_data_got = new_num_token * slice_size
     data_size = num_data_got * 32   # Unit: bit
     # Get Data Stream
+    data_list = []
     start = time.process_time()
-    data = []
     for i in range(new_num_token):
-        # dataIn_array.extend(jadepix_dev.read_ipb_data_fifo(
-        #     slice_size, safe_style=False))
-        data.append(jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False))
+        data_list.append(jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False))
     trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
     log.info("Transfer speed: {:f} Mbps".format(trans_speed/pow(10, 6)))
-    log.info("len of data {:d}".format(len(data)))
 
-
-    
     # Write data to .root
-    data_ana = DataAnalysis()
-    for data_vector in data:
-        data_ana.w_data(data_vector)
-    
-    # data_array = np.array(data)
-    # array2root(data_array, 'test.root', 'tree')
+    log.info("Write data to .root ...")
+    data_file = "data/data.root"
+    hfile = gROOT.FindObject(data_file)
+    if hfile:
+        hfile.Close()
+    hfile = TFile(data_file, 'RECREATE', 'Data ROOT file')
+    data = 0
+    d_tree = TTree('root_tree', 'Data_Stream')
+    d_branch = d_tree.Branch('data', data, 'i')
+    for data_vector in data_list:
+        for data_in in data_vector:
+            data = data_in
+            d_tree.Fill()
+    d_tree.Write()
+    hfile.Close()
+    log.info("Write to .root end.")
 
+    data_analysis.draw_data(data_file)
