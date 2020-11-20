@@ -14,7 +14,7 @@ pip3 install -r requirements.txt
 2. JadePix configuration
     * The location of configuraiton file: __config/jadepix_config.txt__ 
 
-3. Pull data:
+3. Dump data:
 ```shell script
 . setEnv.sh
 ./run.py
@@ -22,5 +22,5 @@ pip3 install -r requirements.txt
 
 4. Plot data:
 ```shell script
-cd data & ./draw_data.py
+python3 data_analysis/data_analysis.py
 ```
