@@ -11,15 +11,11 @@ from lib.ipbus_link import IPbusLink
 from lib.jadepix_device import JadePixDevice
 
 from ROOT import gROOT, TFile, TTree
+from array import array
 
 from data_analysis import data_analysis
 
 from lib import jadepix_defs
-
-import numpy as np 
-from root_numpy import array2root
-
-# import numpy as np
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -70,7 +66,7 @@ if __name__ == '__main__':
     # time.sleep(20)
 
     """ From here we can test rolling shutter """
-    frame_number = 64
+    frame_number = 64000
     jadepix_dev.set_gs_plse(is_dplse=True)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                           hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
@@ -86,7 +82,7 @@ if __name__ == '__main__':
 
     test_valid_pattern = 1
     num_valid_data = frame_number * jadepix_defs.ROW * \
-        jadepix_defs.BLK * test_valid_pattern + 2 * frame_number - 1
+                     jadepix_defs.BLK * test_valid_pattern + 2 * frame_number - 1
 
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
@@ -95,25 +91,25 @@ if __name__ == '__main__':
     # dataIn_array = []
     # log.info("The number (word, 32bits) of data wanted: {:d}".format(slice_size))
 
-    num_token = 1
+    num_token = 1000
     num_data_wanted = num_token * slice_size
 
     if num_data_wanted > num_valid_data:
-        new_num_token = int(num_valid_data/slice_size)
+        new_num_token = int(num_valid_data / slice_size)
         log.warning("Token number {:d} should be less than valid number {:d}, set new tolken number to {:d}".format(
             num_data_wanted, num_valid_data, new_num_token))
     else:
         new_num_token = num_token
 
     num_data_got = new_num_token * slice_size
-    data_size = num_data_got * 32   # Unit: bit
+    data_size = num_data_got * 32  # Unit: bit
     # Get Data Stream
     data_list = []
     start = time.process_time()
     for i in range(new_num_token):
         data_list.append(jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False))
     trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
-    log.info("Transfer speed: {:f} Mbps".format(trans_speed/pow(10, 6)))
+    log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
     # Write data to .root
     log.info("Write data to .root ...")
@@ -122,12 +118,12 @@ if __name__ == '__main__':
     if hfile:
         hfile.Close()
     hfile = TFile(data_file, 'RECREATE', 'Data ROOT file')
-    data = 0
+    data = array("i", [0])
     d_tree = TTree('root_tree', 'Data_Stream')
-    d_branch = d_tree.Branch('data', data, 'i')
+    d_branch = d_tree.Branch('data', data, 'data/i')
     for data_vector in data_list:
         for data_in in data_vector:
-            data = data_in
+            data[0] = data_in
             d_tree.Fill()
     d_tree.Write()
     hfile.Close()
