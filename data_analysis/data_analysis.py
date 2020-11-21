@@ -1,8 +1,7 @@
 import coloredlogs
 import logging
 
-from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1D, TH2D, TTree, TGraph
-from ROOT import gROOT, gBenchmark, gRandom, gSystem
+import ROOT
 
 from array import array
 
@@ -16,143 +15,83 @@ coloredlogs.install(level='DEBUG', logger=log)
 
 def draw_data(data_file):
     log.info("Start drawing plots...")
-    hfile = TFile.Open(data_file)
-    data_in_t = hfile.Get("root_tree")
+
+    ## Going parallel
+    ROOT.EnableImplicitMT()
 
     drawing_file = "data/drawing.root"
-    dfile = gROOT.FindObject(drawing_file)
+    dfile = ROOT.gROOT.FindObject(drawing_file)
     if dfile:
         dfile.Close()
-    dfile = TFile(drawing_file, 'RECREATE', 'Drawing plots')
+    dfile = ROOT.TFile(drawing_file, 'RECREATE', 'Drawing plots')
 
-    data_stream = array("I", [0])
-    # Head couters
-    head = array("I", [0])
-    fifo_status = array("I", [0])
-    rbof = array("I", [0])
+    ## Try DataFrame
+    df = ROOT.RDataFrame("root_tree", data_file)
+    d_valid = df.Filter("data < 0x1FFFFFF")
 
-    # Data couters
-    data = array("I", [0])
-    oc = array("I", [0])
-    ch0 = array("I", [0])
-    ch1 = array("I", [0])
-    ch2 = array("I", [0])
-    ch3 = array("I", [0])
+    d_dummy_data = d_valid.Filter("(data >> 25) > 0").Define("dummy_data", "data")
+    d_head = d_valid.Filter("(data >> 23) == 1").Define("head", "data")
 
-    # Tail couters
-    tail = array("I", [0])
-    frame_index = array("I", [0])
+    ROOT.gInterpreter.Declare("""
+    int filter_fifo_status(int x) {
+        return x & 0xFF;
+    }
+    """)
+    ROOT.gInterpreter.Declare("""
+    int filter_rbof(int x) {
+        return x & 0x7FFF;
+    }
+    """)
+    d_fifo_status = d_head.Filter("(data >> 23) == 1").Define("fifo_status", "filter_fifo_status(head)").Define(
+        "fifo_status_ch0", "(fifo_status & 0xc0)").Define("fifo_status_ch1", "(fifo_status & 0x30)").Define(
+        "fifo_status_ch2", "(fifo_status & 0x0c)").Define("fifo_status_ch3", "(fifo_status & 0x03)")
+    d_rbof = d_head.Filter("(data >> 23) == 1").Define("rbof", "filter_rbof(head)").Filter("rbof > 0 ")
+    d_tail = d_valid.Filter("(data >> 23) == 0").Define("tail", "data")
+    d_ch_data = d_valid.Filter("(data >> 23) == 2").Define("ch_data", "data").Define("fifo_oc",
+                                                                                     "((ch_data >> 18) & 0x1F)")
+    ROOT.gInterpreter.Declare("""
+    int filter_data(int x) {
+        return x & 0xFFFF;
+    }
+    """)
+    d_ch0_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 0").Define("ch0_data", "(ch_data & 0xFFFF)")
+    d_ch1_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 1").Define("ch1_data", "filter_data(ch_data)")
+    d_ch2_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 2").Define("ch2_data", "filter_data(ch_data)")
+    d_ch3_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 3").Define("ch3_data", "filter_data(ch_data)")
 
-    # rfifo overflow
-    rfifo_oc = array("I", [0])
+    h_stream = d_valid.Histo1D("data")
+    h_dummy_data = d_dummy_data.Histo1D("dummy_data")
+    h_head = d_head.Histo1D("head")
+    h_fifo_satus = d_fifo_status.Histo1D("fifo_status")
+    h_fifo_satus_ch0 = d_fifo_status.Histo1D("fifo_status_ch0")
+    h_fifo_satus_ch1 = d_fifo_status.Histo1D("fifo_status_ch1")
+    h_fifo_satus_ch2 = d_fifo_status.Histo1D("fifo_status_ch2")
+    h_fifo_satus_ch3 = d_fifo_status.Histo1D("fifo_status_ch3")
+    h_rbof = d_rbof.Histo1D("rbof")
+    h_tail = d_tail.Histo1D("tail")
+    h_ch_data = d_ch_data.Histo1D("ch_data")
+    h_fifo_oc = d_ch_data.Histo1D("fifo_oc")
+    h_ch0_data = d_ch0_data.Histo1D("ch0_data")
+    h_ch1_data = d_ch1_data.Histo1D("ch1_data")
+    h_ch2_data = d_ch2_data.Histo1D("ch2_data")
+    h_ch3_data = d_ch3_data.Histo1D("ch3_data")
 
-    # Head Branch
-    head_t = TTree("Frame_Head", "HEAD")
-    head_t.Branch("Frame_Head", head, 'Frame_Index/i')
-    fifo_status_t = TTree("FIFO_Status", "fifo_status")
-    fifo_status_t.Branch("FIFO_Status", fifo_status, 'FIFO_Status/i')
-    rbof_t = TTree("RBOF", "rbof")
-    rbof_t.Branch("RBOF", rbof, 'RBOF/i')
-
-    # Tail Branch
-    tail_t = TTree("Frame_Tail", "tail")
-    tail_t.Branch("Frame_Tail", tail, 'Frame_Tail/i')
-    frame_index_t = TTree("Frame_index", "frame_index")
-    frame_index_t.Branch("Frame_index", frame_index, 'Frame_index/i')
-
-    # Data Branch
-    data_t = TTree("Frame_Data", "data")
-    data_t.Branch("Frame_Data", data, 'Frame_Data/i')
-    ch0_t = TTree("CH0", "ch0")
-    ch0_t.Branch("CH0", ch0, 'CH0/i')
-    ch1_t = TTree("CH1", "ch1")
-    ch1_t.Branch("CH1", ch1, 'CH1/i')
-    ch2_t = TTree("CH2", "ch2")
-    ch2_t.Branch("CH2", ch2, 'CH2/i')
-    ch3_t = TTree("CH3", "ch3")
-    ch3_t.Branch("CH3", ch3, 'CH3/i')
-
-    # rfifo branch
-    rfifo_oc_t = TTree("rfifo_oc", "rfifo_oc")
-    rfifo_oc_t.Branch("rfifo_oc", rfifo_oc, 'rfifo_oc/i')
-
-    # histogrames
-    h_data = TH1D("Data_Hist", "Data count in frame", 10000, 0, 10000)
-    h_data_ch0 = TH1D("Data_CH0", "Channel 0 data count in frame", 10000, 0, 10000)
-    h_data_ch1 = TH1D("Data_CH1", "Channel 1 data count in frame", 10000, 0, 10000)
-    h_data_ch2 = TH1D("Data_CH2", "Channel 2 data count in frame", 10000, 0, 10000)
-    h_data_ch3 = TH1D("Data_CH3", "Channel 3 data count in frame", 10000, 0, 10000)
-    h_frame_index = TH1D("Frame_Num", "Frame distribution", 10000, 0, 10000)
-
-    h_data_in_frame = TH2D("Data_Quantity", "Data quantity in frame", 10000, 0, 10000, 10000, 0, 10000*512)
-    h_oc_in_frame = TH2D("OC_Quantity", "OC quantity in frame", 10000, 0, 10000, 10000, 0, 10000*512)
-    h_rbof_in_frame = TH2D("RBOF_Quantity", "RBOF quantity in frame", 10000, 0, 10000, 10000, 0, 10000*512)
-
-    real_frame_index = array("I", [0])
-
-    data_in_t.Print()
-    for event in data_in_t:
-        data_stream = event.data
-        frame_type = (data_stream >> 23)
-        if frame_type == 0:  # Tail
-            tail[0] = data_stream
-            tail_t.Fill()
-            frame_index[0] = data_stream & 0x3FFFF
-            h_frame_index.Fill(frame_index[0])
-            frame_index_t.Fill()
-            h_data_in_frame.Fill(frame_index[0], ch0_t.GetEntries())
-
-        elif frame_type == 1:  # Head
-            real_frame_index[0] = frame_index[0] + 1
-            head[0] = data_stream
-            head_t.Fill()
-            fifo_status[0] = (data_stream >> 15) & 0xFF
-            rbof[0] = data_stream & 0x7FFF
-            fifo_status_t.Fill()
-            h_rbof_in_frame.Fill(real_frame_index[0], rfifo_oc[0])
-            # if rbof[0] > 0:
-            #     rbof_t.Fill()
-
-        elif frame_type == 2:  # Data
-            data[0] = data_stream
-            data_t.Fill()
-            h_data.Fill(real_frame_index[0])
-            ch = (data_stream >> 16) & 0x3
-            oc[0] = (data_stream >> 18) & 0x1F
-            h_oc_in_frame.Fill(real_frame_index[0], oc[0])
-
-            if ch == 0:  # Ch 0
-                ch0[0] = data_stream
-                h_data_ch0.Fill(real_frame_index[0])
-                ch0_t.Fill()
-            elif ch == 1:  # Ch 1
-                ch1[0] = data_stream
-                h_data_ch1.Fill(real_frame_index[0])
-                ch1_t.Fill()
-            elif ch == 2:  # Ch 2
-                ch2[0] = data_stream
-                h_data_ch2.Fill(real_frame_index[0])
-                ch2_t.Fill()
-            elif ch == 3:  # Ch 3
-                ch3[0] = data_stream
-                h_data_ch3.Fill(real_frame_index[0])
-                ch3_t.Fill()
-
-        elif frame_type == 3:  # rfifo overflow
-            rfifo_oc[0] = data_stream
-            if rfifo_oc[0] > 0:
-                rfifo_oc_t.Fill()
-
-    hfile.Close()
-
-    # Histograms
-    h_data.GetXaxis().SetTitle("Frame Index")
-
-    h_data_ch0.GetXaxis().SetTitle("Frame Index")
-    h_data_ch1.GetXaxis().SetTitle("Frame Index")
-    h_data_ch2.GetXaxis().SetTitle("Frame Index")
-    h_data_ch3.GetXaxis().SetTitle("Frame Index")
-    h_frame_index.GetXaxis().SetTitle("Frame Index")
+    h_stream.Write()
+    h_dummy_data.Write()
+    h_head.Write()
+    h_fifo_satus.Write()
+    h_fifo_satus_ch0.Write()
+    h_fifo_satus_ch1.Write()
+    h_fifo_satus_ch2.Write()
+    h_fifo_satus_ch3.Write()
+    h_rbof.Write()
+    h_tail.Write()
+    h_ch_data.Write()
+    h_fifo_oc.Write()
+    h_ch0_data.Write()
+    h_ch1_data.Write()
+    h_ch2_data.Write()
+    h_ch3_data.Write()
 
     dfile.Write()
     dfile.Close()
