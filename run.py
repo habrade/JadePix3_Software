@@ -10,7 +10,7 @@ from lib.dac70004_defs import *
 from lib.ipbus_link import IPbusLink
 from lib.jadepix_device import JadePixDevice
 
-from ROOT import gROOT, TFile, TTree
+import ROOT
 from array import array
 
 from data_analysis import data_analysis
@@ -113,13 +113,13 @@ if __name__ == '__main__':
     # Write data to .root
     log.info("Write data to .root ...")
     data_file = "data/data.root"
-    hfile = gROOT.FindObject(data_file)
+    hfile = ROOT.gROOT.FindObject(data_file)
     if hfile:
         hfile.Close()
-    hfile = TFile(data_file, 'RECREATE', 'Data ROOT file')
+    hfile = ROOT.TFile(data_file, 'RECREATE', 'Data ROOT file')
 
     data = array("I", [0])
-    d_tree = TTree('root_tree', 'Data_Stream')
+    d_tree = ROOT.TTree('root_tree', 'Data_Stream')
     d_branch = d_tree.Branch('data', data, 'data/i')
     for data_vector in data_list:
         for data_in in data_vector:

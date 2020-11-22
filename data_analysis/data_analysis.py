@@ -32,32 +32,18 @@ def draw_data(data_file):
     d_dummy_data = d_valid.Filter("(data >> 25) > 0").Define("dummy_data", "data")
     d_head = d_valid.Filter("(data >> 23) == 1").Define("head", "data")
 
-    ROOT.gInterpreter.Declare("""
-    int filter_fifo_status(int x) {
-        return x & 0xFF;
-    }
-    """)
-    ROOT.gInterpreter.Declare("""
-    int filter_rbof(int x) {
-        return x & 0x7FFF;
-    }
-    """)
-    d_fifo_status = d_head.Filter("(data >> 23) == 1").Define("fifo_status", "filter_fifo_status(head)").Define(
+    d_fifo_status = d_head.Filter("(data >> 23) == 1").Define("fifo_status", "(head >> 15) & 0xFF").Define(
         "fifo_status_ch0", "(fifo_status & 0xc0)").Define("fifo_status_ch1", "(fifo_status & 0x30)").Define(
         "fifo_status_ch2", "(fifo_status & 0x0c)").Define("fifo_status_ch3", "(fifo_status & 0x03)")
-    d_rbof = d_head.Filter("(data >> 23) == 1").Define("rbof", "filter_rbof(head)").Filter("rbof > 0 ")
+    d_rbof = d_head.Filter("(data >> 23) == 1").Define("rbof", "head & 0x7FFF").Filter("rbof > 0 ")
     d_tail = d_valid.Filter("(data >> 23) == 0").Define("tail", "data")
     d_ch_data = d_valid.Filter("(data >> 23) == 2").Define("ch_data", "data").Define("fifo_oc",
                                                                                      "((ch_data >> 18) & 0x1F)")
-    ROOT.gInterpreter.Declare("""
-    int filter_data(int x) {
-        return x & 0xFFFF;
-    }
-    """)
+
     d_ch0_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 0").Define("ch0_data", "(ch_data & 0xFFFF)")
-    d_ch1_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 1").Define("ch1_data", "filter_data(ch_data)")
-    d_ch2_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 2").Define("ch2_data", "filter_data(ch_data)")
-    d_ch3_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 3").Define("ch3_data", "filter_data(ch_data)")
+    d_ch1_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 1").Define("ch1_data", "(ch_data & 0xFFFF)")
+    d_ch2_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 2").Define("ch2_data", "(ch_data & 0xFFFF)")
+    d_ch3_data = d_ch_data.Filter("((ch_data >> 16) & 0x3 ) == 3").Define("ch3_data", "(ch_data & 0xFFFF)")
 
     h_stream = d_valid.Histo1D("data")
     h_dummy_data = d_dummy_data.Histo1D("dummy_data")
