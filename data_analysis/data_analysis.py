@@ -36,7 +36,7 @@ def draw_data(data_file):
         "fifo_status_ch0", "(fifo_status & 0xc0)").Define("fifo_status_ch1", "(fifo_status & 0x30)").Define(
         "fifo_status_ch2", "(fifo_status & 0x0c)").Define("fifo_status_ch3", "(fifo_status & 0x03)")
     d_rbof = d_head.Filter("(data >> 23) == 1").Define("rbof", "head & 0x7FFF").Filter("rbof > 0 ")
-    d_tail = d_valid.Filter("(data >> 23) == 0").Define("tail", "data")
+    d_tail = d_valid.Filter("(data >> 23) == 0").Define("frame_index", "data & 0x3FFFF")
     d_ch_data = d_valid.Filter("(data >> 23) == 2").Define("ch_data", "data").Define("fifo_oc",
                                                                                      "((ch_data >> 18) & 0x1F)")
 
@@ -54,7 +54,7 @@ def draw_data(data_file):
     h_fifo_satus_ch2 = d_fifo_status.Histo1D("fifo_status_ch2")
     h_fifo_satus_ch3 = d_fifo_status.Histo1D("fifo_status_ch3")
     h_rbof = d_rbof.Histo1D("rbof")
-    h_tail = d_tail.Histo1D("tail")
+    h_frame_index = d_tail.Histo1D("frame_index")
     h_ch_data = d_ch_data.Histo1D("ch_data")
     h_fifo_oc = d_ch_data.Histo1D("fifo_oc")
     h_ch0_data = d_ch0_data.Histo1D("ch0_data")
@@ -71,7 +71,11 @@ def draw_data(data_file):
     h_fifo_satus_ch2.Write()
     h_fifo_satus_ch3.Write()
     h_rbof.Write()
-    h_tail.Write()
+    # h_frame_index.SetLineColor(5);
+    # h_frame_index.SetMarkerColor(4);
+    # h_frame_index.SetOption("b")
+    # h_frame_index.Draw()
+    h_frame_index.Write()
     h_ch_data.Write()
     h_fifo_oc.Write()
     h_ch0_data.Write()
