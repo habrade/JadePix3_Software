@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # time.sleep(20)
 
     """ From here we can test rolling shutter """
-    frame_number = 640*2
+    frame_number = 640*1 + 1
     jadepix_dev.set_gs_plse(is_dplse=True)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                           hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
 
-    slice_size = int(rfifo_depth)  # try largest slice as possible
+    slice_size = int(rfifo_depth-1)  # try largest slice as possible
 
     num_token = 10 * 1
     num_data_wanted = num_token * slice_size
