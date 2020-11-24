@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import time
 import logging
+import os
 
 import coloredlogs
 
@@ -9,9 +10,6 @@ from lib.dac70004_device import Dac70004Device
 from lib.dac70004_defs import *
 from lib.ipbus_link import IPbusLink
 from lib.jadepix_device import JadePixDevice
-
-import ROOT
-from array import array
 
 from data_analysis import data_analysis
 
@@ -34,10 +32,10 @@ if __name__ == '__main__':
     global_dev = GlobalDevice(ipbus_link)
     dac70004_dev = Dac70004Device(ipbus_link)
 
-    # Soft global reset
+    ''' Soft global reset '''
     global_dev.set_soft_rst()
 
-    # DAC70004 Config
+    ''' DAC70004 Config '''
     dac70004_dev.soft_reset()
     dac70004_dev.soft_clr()
     dac70004_dev.w_power_chn(DAC70004_PW_UP, 0xf)  # Power up all channels
@@ -46,7 +44,7 @@ if __name__ == '__main__':
     dac70004_dev.w_ana_chn_update_chn(
         DAC70004_CHN_B, 2.0)  # Set channle B to 2.0V
 
-    # SPI master config
+    ''' SPI master config '''
     jadepix_dev.reset_spi()
     jadepix_dev.set_spi(data_len=200, ie=False, ass=True,
                         lsb=False, rx_neg=False, tx_neg=True, div=0, ss=0x01)
@@ -55,7 +53,7 @@ if __name__ == '__main__':
     # Load Config
     jadepix_dev.load_config_soft()
 
-    # JadePix Control
+    ''' JadePix Control '''
 
     """ From here we can test configuration """
     # start = time.process_time()
@@ -66,7 +64,7 @@ if __name__ == '__main__':
     # time.sleep(20)
 
     """ From here we can test rolling shutter """
-    frame_number = 640*1 + 1
+    frame_number = 640 * 30 + 1
     jadepix_dev.set_gs_plse(is_dplse=True)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                           hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
@@ -87,9 +85,9 @@ if __name__ == '__main__':
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
 
-    slice_size = int(rfifo_depth-1)  # try largest slice as possible
+    slice_size = int(rfifo_depth)  # try largest slice as possible
 
-    num_token = 10 * 1
+    num_token = 10 * 30
     num_data_wanted = num_token * slice_size
 
     if num_data_wanted > num_valid_data:
@@ -110,26 +108,23 @@ if __name__ == '__main__':
     trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
     log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
-    # Write data to .root
-    log.info("Write data to .root ...")
-    data_file = "data/data.root"
-    hfile = ROOT.gROOT.FindObject(data_file)
-    if hfile:
-        hfile.Close()
-    hfile = ROOT.TFile(data_file, 'RECREATE', 'Data ROOT file')
-
-    data = array("I", [0])
-    d_tree = ROOT.TTree('root_tree', 'Data_Stream')
-    d_branch = d_tree.Branch('data', data, 'data/i')
-    for data_vector in data_list:
-        for data_in in data_vector:
-            data[0] = data_in
-            d_tree.Fill()
-        del data_vector
+    ''' Write to txt '''
+    log.info("Write data to .txt ...")
+    data_txt_file = "data/data.txt"
+    if os.path.exists(data_txt_file):
+        os.remove(data_txt_file)
+    start = time.process_time()
+    with open(data_txt_file, "a") as f:
+        for data_vector in data_list:
+            for data_stream in data_vector:
+                f.write(str(data_stream)+'\n')
+    trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
+    log.info("Write file speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
+    log.info("Write to .txt end.")
     del data_list
-    d_tree.Write()
 
-    hfile.Close()
-    log.info("Write to .root end.")
+    ''' Load .txt to .root and draw some plots '''
+    data_ana = data_analysis.DataAnalysis(data_txt_file)
+    data_ana.load_data_to_root()
+    data_ana.draw_data()
 
-    data_analysis.draw_data(data_file)
