@@ -17,6 +17,8 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 class IPbusLink:
     def __init__(self):
         self.device_ip = "192.168.3.17"
+        # self.device_uri = "chtcp-2.0://localhost:10203?target=192.168.3.17:50001"
+        # < connection id = "JadePix3.udp.0" uri = "chtcp-2.0://localhost:10203?target=127.0.0.1:50001" address_table = "file://address.xml" / >
         self.device_uri = "ipbusudp-2.0://" + self.device_ip + ":50001"
         self.address_table_name = "etc/address.xml"
         self.address_table_uri = "file://" + self.address_table_name

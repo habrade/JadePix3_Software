@@ -3,6 +3,8 @@ import time
 import logging
 import os
 
+from pathlib import Path
+
 import coloredlogs
 
 from lib.global_device import GlobalDevice
@@ -63,14 +65,6 @@ if __name__ == '__main__':
     #
     # time.sleep(20)
 
-    """ From here we can test rolling shutter """
-    frame_number = 640 * 30 + 1
-    jadepix_dev.set_gs_plse(is_dplse=True)
-    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
-                          hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
-    jadepix_dev.reset_rfifo()
-    jadepix_dev.start_rs()
-
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
@@ -78,31 +72,41 @@ if __name__ == '__main__':
     # jadepix_dev.gs_config(pulse_delay=4, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
     # jadepix_dev.start_gs()
 
+    """ From here we can test rolling shutter """
     test_valid_pattern = 1
-    num_valid_data = frame_number * jadepix_defs.ROW * \
-                     jadepix_defs.BLK * test_valid_pattern + 2 * frame_number - 1
+    frame_per_slice = 64
+    num_token = 1000
+
+    frame_number = frame_per_slice * num_token
+    num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
+    num_valid_data_stream = num_data + 2 * frame_number - 1
 
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
 
     slice_size = int(rfifo_depth)  # try largest slice as possible
-
-    num_token = 10 * 30
     num_data_wanted = num_token * slice_size
+    data_size = num_data_wanted * 32  # Unit: bit
 
-    if num_data_wanted > num_valid_data:
-        new_num_token = int(num_valid_data / slice_size)
-        log.warning("Token number {:d} should be less than valid number {:d}, set new tolken number to {:d}".format(
-            num_data_wanted, num_valid_data, new_num_token))
-    else:
-        new_num_token = num_token
+    jadepix_dev.set_gs_plse(is_dplse=True)
+    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
+                          hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
+    jadepix_dev.reset_rfifo()
+    # jadepix_dev.start_rs()
 
-    num_data_got = new_num_token * slice_size
-    data_size = num_data_got * 32  # Unit: bit
-    # Get Data Stream and Write to txt
+    # if num_data_wanted > num_valid_data_stream:
+    #     new_num_token = int(num_valid_data_stream / slice_size)
+    #     log.warning("Token number {:d} should be less than valid number {:d}, set new tolken number to {:d}".format(
+    #         num_data_wanted, num_valid_data_stream, new_num_token))
+    # else:
+    #     new_num_token = num_token
+
+    lost = 0
+    ''' Get Data Stream and Write to txt '''
+    jadepix_dev.start_rs()
     data_list = []
     start = time.process_time()
-    for i in range(new_num_token):
+    for j in range(num_token):
         mem = jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False)
         data_list.append(mem)
     trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
@@ -116,15 +120,19 @@ if __name__ == '__main__':
     start = time.process_time()
     with open(data_txt_file, "a") as f:
         for data_vector in data_list:
-            for data_stream in data_vector:
-                f.write(str(data_stream)+'\n')
-    trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
-    log.info("Write file speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
+            f.write(''.join((str(data_stream) + '\n') for data_stream in data_vector))
+    time_diff = time.process_time() - start
+    txt_size = Path(data_txt_file).stat().st_size
+    trans_speed = int(txt_size / time_diff)  # Unit: Bps
+    log.info("Write file speed: {:f} Mbps".format(8 * trans_speed / pow(10, 6)))
     log.info("Write to .txt end.")
     del data_list
 
     ''' Load .txt to .root and draw some plots '''
-    data_ana = data_analysis.DataAnalysis(data_txt_file)
+    data_ana = data_analysis.DataAnalysis(data_txt_file, frame_number, is_save_png=True)
     data_ana.load_data_to_root()
-    data_ana.draw_data()
-
+    lost_tmp, data_num_got = data_ana.draw_data()
+    data_lost = num_data - data_num_got
+    lost += lost_tmp
+    log.info("Lost data num: {:}".format(data_lost))
+    log.info("Lost frames: {:}".format(lost))
