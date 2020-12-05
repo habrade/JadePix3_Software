@@ -17,6 +17,9 @@ from data_analysis import data_analysis
 
 from lib import jadepix_defs
 
+import numpy as np
+from root_numpy import array2root
+
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
@@ -75,7 +78,7 @@ if __name__ == '__main__':
     """ From here we can test rolling shutter """
     test_valid_pattern = 1
     frame_per_slice = 64
-    num_token = 1000
+    num_token = 1
 
     frame_number = frame_per_slice * num_token
     num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
@@ -84,7 +87,10 @@ if __name__ == '__main__':
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
 
+    # slice_size = int(rf
+    # ifo_depth)  # try largest slice as possible
     slice_size = int(rfifo_depth)  # try largest slice as possible
+    log.debug("slice size {:}".format(slice_size))
     num_data_wanted = num_token * slice_size
     data_size = num_data_wanted * 32  # Unit: bit
 

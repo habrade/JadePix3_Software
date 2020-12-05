@@ -16,16 +16,19 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 
 class IPbusLink:
     def __init__(self):
-        self.device_ip = "192.168.3.17"
-        # self.device_uri = "chtcp-2.0://localhost:10203?target=192.168.3.17:50001"
+        self.device_ip = "192.168.3.18"
+        # self.device_uri = "chtcp-2.0://localhost:10203?target=192.168.3.18:50001"
         # < connection id = "JadePix3.udp.0" uri = "chtcp-2.0://localhost:10203?target=127.0.0.1:50001" address_table = "file://address.xml" / >
         self.device_uri = "ipbusudp-2.0://" + self.device_ip + ":50001"
         self.address_table_name = "etc/address.xml"
         self.address_table_uri = "file://" + self.address_table_name
         self._hw = self.get_hw()
+        # self._hw.setTimeoutPeriod(1000)
+        log.info("IPbus timeout period: {:}".format(self._hw.getTimeoutPeriod()))
 
     def get_hw(self):
-        uhal.setLogLevelTo(uhal.LogLevel.INFO)
+        # uhal.setLogLevelTo(uhal.LogLevel.DEBUG)
+        uhal.disableLogging()
         hw = uhal.getDevice("JadePix3.udp.0", self.device_uri, self.address_table_uri)
         return hw
 
@@ -60,7 +63,7 @@ class IPbusLink:
                 valid_len = valid_len & 0x7fffffff
             print("Slow ctrl cmd {:#08x} has been sent".format(cmd[i]))
             time.sleep(0.2)
-            
+
     def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_style):
         mem = []
         if safe_style:
