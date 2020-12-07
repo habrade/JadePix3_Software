@@ -17,6 +17,8 @@ from data_analysis import data_analysis
 
 from lib import jadepix_defs
 
+import ROOT
+
 import numpy as np
 from root_numpy import array2root
 
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     """ From here we can test rolling shutter """
     test_valid_pattern = 1
     frame_per_slice = 64
-    num_token = 1
+    num_token = 2
 
     frame_number = frame_per_slice * num_token
     num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
@@ -87,8 +89,6 @@ if __name__ == '__main__':
     rfifo_depth_width = 17
     rfifo_depth = pow(2, rfifo_depth_width)
 
-    # slice_size = int(rf
-    # ifo_depth)  # try largest slice as possible
     slice_size = int(rfifo_depth)  # try largest slice as possible
     log.debug("slice size {:}".format(slice_size))
     num_data_wanted = num_token * slice_size
@@ -118,25 +118,28 @@ if __name__ == '__main__':
     trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
     log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
-    ''' Write to txt '''
-    log.info("Write data to .txt ...")
-    data_txt_file = "data/data.txt"
-    if os.path.exists(data_txt_file):
-        os.remove(data_txt_file)
+    log.info("Write data to .root ...")
+    data_root_file = "data/data.root"
+    hfile = ROOT.gROOT.FindObject(data_root_file)
+    if hfile:
+        hfile.Close()
+    hfile = ROOT.TFile(data_root_file, 'RECREATE', 'Data ROOT file')
+    if os.path.exists(data_root_file):
+        os.remove(data_root_file)
     start = time.process_time()
-    with open(data_txt_file, "a") as f:
-        for data_vector in data_list:
-            f.write(''.join((str(data_stream) + '\n') for data_stream in data_vector))
+    for data_vector in data_list:
+        data_arr = np.array(data_vector, dtype=[('data', np.uint32)], order='K')
+        array2root(data_arr, data_root_file, treename='data', mode='update')
+        del data_vector
     time_diff = time.process_time() - start
-    txt_size = Path(data_txt_file).stat().st_size
-    trans_speed = int(txt_size / time_diff)  # Unit: Bps
+    root_file_size = Path(data_root_file).stat().st_size
+    trans_speed = int(root_file_size / time_diff)  # Unit: Bps
     log.info("Write file speed: {:f} Mbps".format(8 * trans_speed / pow(10, 6)))
     log.info("Write to .txt end.")
     del data_list
 
-    ''' Load .txt to .root and draw some plots '''
-    data_ana = data_analysis.DataAnalysis(data_txt_file, frame_number, is_save_png=True)
-    data_ana.load_data_to_root()
+    ''' Draw some plots '''
+    data_ana = data_analysis.DataAnalysis(data_root_file, frame_number, is_save_png=True)
     lost_tmp, data_num_got = data_ana.draw_data()
     data_lost = num_data - data_num_got
     lost += lost_tmp

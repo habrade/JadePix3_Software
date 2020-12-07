@@ -3,8 +3,6 @@ import logging
 
 import ROOT
 
-from array import array
-
 from lib import jadepix_defs
 
 logging.basicConfig(level=logging.DEBUG,
@@ -15,29 +13,11 @@ coloredlogs.install(level='INFO', logger=log)
 
 
 class DataAnalysis:
-    def __init__(self, data_txt_file, frame_num, is_save_png):
-        self._data_txt_file = data_txt_file
+    def __init__(self, data_root_file, frame_num, is_save_png):
+        # self._data_txt_file = data_txt_file
         self._is_save_png = is_save_png
         self._frame_num = frame_num
-
-        self.data_root_file = "data/data.root"
-        self.hfile = ROOT.gROOT.FindObject(self.data_root_file)
-        if self.hfile:
-            self.hfile.Close()
-        self.hfile = ROOT.TFile(self.data_root_file, 'RECREATE', 'Data ROOT file')
-
-    def load_data_to_root(self):
-        log.info("Write data to .root ...")
-        data = array("I", [0])
-        d_tree = ROOT.TTree('root_tree', 'Data_Stream')
-        d_tree.Branch('data', data, 'data/i')
-        with open(self._data_txt_file, 'r') as fo:
-            for line in fo.readlines():
-                data[0] = int(line, 10)
-                d_tree.Fill()
-        d_tree.Write()
-        self.hfile.Close()
-        log.info("Write to .root end.")
+        self.data_root_file = data_root_file
 
     def draw_data(self):
         log.info("Start drawing plots...")
@@ -52,7 +32,7 @@ class DataAnalysis:
         dfile = ROOT.TFile(drawing_file, 'RECREATE', 'Drawing plots')
 
         ''' Try DataFrame '''
-        df = ROOT.RDataFrame("root_tree", self.data_root_file)
+        df = ROOT.RDataFrame("data", self.data_root_file)
         d_valid = df.Filter("data < 0x1FFFFFF").Define("data_stream", "data")
 
         d_dummy_data = d_valid.Filter("data == 0xFFFFFFFF").Define("dummy_data", "data - 1")
@@ -62,7 +42,7 @@ class DataAnalysis:
             "fifo_status_ch0", "(fifo_status & 0xc0)").Define("fifo_status_ch1", "(fifo_status & 0x30)").Define(
             "fifo_status_ch2", "(fifo_status & 0x0c)").Define("fifo_status_ch3", "(fifo_status & 0x03)")
         d_rbof = d_head.Filter("(data >> 23) == 1").Define("rbof", "head & 0x7FFF")
-        d_tail = d_valid.Filter("(data >> 23) == 0").Define("frame_index", "data & 0x3FFFF")
+        d_tail = d_valid.Filter("(data >> 23) == 0").Define("frame_index", "data & 0x3FFFFF")
         d_ch_data = d_valid.Filter("(data >> 23) == 2").Define("ch_data", "data").Define("fifo_oc",
                                                                                          "((ch_data >> 18) & 0x1F)")
 
@@ -171,7 +151,7 @@ class DataAnalysis:
         ''' Write file and close file '''
         dfile.Write()
         dfile.Close()
-        self.hfile.Close()
+        # self.hfile.Close()
         log.info("Drawing plots end.")
 
         data_num = h_ch_data.GetEntries()
@@ -181,7 +161,7 @@ class DataAnalysis:
 if __name__ == "__main__":
     test_valid_pattern = 1
     frame_per_slice = 64
-    num_token = 1000
+    num_token = 10000
 
     frame_number = frame_per_slice * num_token
     num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
@@ -195,7 +175,7 @@ if __name__ == "__main__":
     data_size = num_data_wanted * 32  # Unit: bit
     data_file = "data/data.txt"
     data_ana = DataAnalysis(data_file, frame_num=6400, is_save_png=True)
-    data_ana.load_data_to_root()
+    # data_ana.load_data_to_root()
     data_ana.draw_data()
     lost_tmp, data_num_got = data_ana.draw_data()
     data_lost = num_data - data_num_got
