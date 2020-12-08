@@ -22,6 +22,8 @@ import ROOT
 import numpy as np
 from root_numpy import array2root
 
+from queue import SimpleQueue
+
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
@@ -80,7 +82,7 @@ if __name__ == '__main__':
     """ From here we can test rolling shutter """
     test_valid_pattern = 1
     frame_per_slice = 64
-    num_token = 2
+    num_token = 20
 
     frame_number = frame_per_slice * num_token
     num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
@@ -90,7 +92,6 @@ if __name__ == '__main__':
     rfifo_depth = pow(2, rfifo_depth_width)
 
     slice_size = int(rfifo_depth)  # try largest slice as possible
-    log.debug("slice size {:}".format(slice_size))
     num_data_wanted = num_token * slice_size
     data_size = num_data_wanted * 32  # Unit: bit
 
@@ -98,7 +99,7 @@ if __name__ == '__main__':
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                           hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
     jadepix_dev.reset_rfifo()
-    # jadepix_dev.start_rs()
+    jadepix_dev.start_rs()
 
     # if num_data_wanted > num_valid_data_stream:
     #     new_num_token = int(num_valid_data_stream / slice_size)
@@ -108,13 +109,12 @@ if __name__ == '__main__':
     #     new_num_token = num_token
 
     lost = 0
-    ''' Get Data Stream and Write to txt '''
-    jadepix_dev.start_rs()
-    data_list = []
+    ''' Get Data Stream '''
+    data_que = SimpleQueue()
     start = time.process_time()
     for j in range(num_token):
         mem = jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False)
-        data_list.append(mem)
+        data_que.put(mem)
     trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
     log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
@@ -127,16 +127,19 @@ if __name__ == '__main__':
     if os.path.exists(data_root_file):
         os.remove(data_root_file)
     start = time.process_time()
-    for data_vector in data_list:
+    for i in range(num_token):
+        data_vector = data_que.get()
         data_arr = np.array(data_vector, dtype=[('data', np.uint32)], order='K')
         array2root(data_arr, data_root_file, treename='data', mode='update')
         del data_vector
     time_diff = time.process_time() - start
     root_file_size = Path(data_root_file).stat().st_size
     trans_speed = int(root_file_size / time_diff)  # Unit: Bps
+    start = time.process_time()
+    data_path = "./data"
     log.info("Write file speed: {:f} Mbps".format(8 * trans_speed / pow(10, 6)))
-    log.info("Write to .txt end.")
-    del data_list
+    log.info("Write to .root end.")
+    del data_que
 
     ''' Draw some plots '''
     data_ana = data_analysis.DataAnalysis(data_root_file, frame_number, is_save_png=True)
