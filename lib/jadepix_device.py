@@ -208,6 +208,11 @@ class JadePixDevice:
         reg_name = "PDB"
         self.w_reg(reg_name, pdb, is_pulse=False, go_dispatch=go_dispatch)
 
+    def set_sn_oen(self, sn_oen, go_dispatch):
+        log.info("Set SN_OEn to {:}".format(sn_oen))
+        reg_name = "SN_OEn"
+        self.w_reg(reg_name, sn_oen, is_pulse=False, go_dispatch=go_dispatch)
+
     def set_matrix_grst(self, matrix_grst, go_dispatch):
         log.info("Set MATRIX_GRST to {:}".format(matrix_grst))
         reg_name = "MATRIX_GRST"

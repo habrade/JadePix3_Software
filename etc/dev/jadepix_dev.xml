@@ -31,6 +31,7 @@
     <node address="0x11" id="aplse_soft" mask="0x2000000" permission="rw"/>
     <node address="0x11" id="dplse_soft" mask="0x4000000" permission="rw"/>
     <node address="0x11" id="gshutter_soft" mask="0x8000000" permission="rw"/>
+    <node address="0x11" id="SN_OEn" mask="0x10000000" permission="rw"/>
 
     <node address="0x12" id="rs_frame_number" permission="rw"/>
 
