@@ -2,6 +2,8 @@
 import time
 import logging
 import os
+import gc
+
 
 from pathlib import Path
 
@@ -82,7 +84,7 @@ if __name__ == '__main__':
     """ From here we can test rolling shutter """
     test_valid_pattern = 1
     frame_per_slice = 64
-    num_token = 20
+    num_token = 20000
 
     frame_number = frame_per_slice * num_token
     num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
@@ -94,6 +96,7 @@ if __name__ == '__main__':
     slice_size = int(rfifo_depth)  # try largest slice as possible
     num_data_wanted = num_token * slice_size
     data_size = num_data_wanted * 32  # Unit: bit
+    log.warning("The data will take {} MB memory".format(data_size/8/2**20))
 
     jadepix_dev.set_gs_plse(is_dplse=True)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
@@ -129,9 +132,11 @@ if __name__ == '__main__':
     start = time.process_time()
     for i in range(num_token):
         data_vector = data_que.get()
-        data_arr = np.array(data_vector, dtype=[('data', np.uint32)], order='K')
+        data_arr = np.asarray(data_vector, dtype=[('data', np.uint32)], order='K')
         array2root(data_arr, data_root_file, treename='data', mode='update')
         del data_vector
+        gc.collect()
+
     time_diff = time.process_time() - start
     root_file_size = Path(data_root_file).stat().st_size
     trans_speed = int(root_file_size / time_diff)  # Unit: Bps

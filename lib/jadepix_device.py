@@ -203,6 +203,21 @@ class JadePixDevice:
         reg_name = "CACHE_BIT_SET"
         self.w_reg(reg_name, cache_bit, is_pulse=False, go_dispatch=go_dispatch)
 
+    def set_clk_sel(self, clk_sel, go_dispatch):
+        log.info("Set CLK_SEL to {:}".format(clk_sel))
+        reg_name = "CLK_SEL"
+        self.w_reg(reg_name, clk_sel, is_pulse=False, go_dispatch=go_dispatch)
+
+    def set_d_rst(self, d_rst, go_dispatch):
+        log.info("Set D_RST to {:}".format(d_rst))
+        reg_name = "D_RST"
+        self.w_reg(reg_name, d_rst, is_pulse=False, go_dispatch=go_dispatch)
+
+    def set_s_rst(self, s_rst, go_dispatch):
+        log.info("Set SERIALIZER_RST to {:}".format(s_rst))
+        reg_name = "SERIALIZER_RST"
+        self.w_reg(reg_name, s_rst, is_pulse=False, go_dispatch=go_dispatch)
+
     def set_pdb(self, pdb, go_dispatch):
         log.info("Set PDB to {:}".format(pdb))
         reg_name = "PDB"
@@ -212,6 +227,21 @@ class JadePixDevice:
         log.info("Set SN_OEn to {:}".format(sn_oen))
         reg_name = "SN_OEn"
         self.w_reg(reg_name, sn_oen, is_pulse=False, go_dispatch=go_dispatch)
+
+    def set_por(self, por, go_dispatch):
+        log.info("Set POR to {:}".format(por))
+        reg_name = "POR"
+        self.w_reg(reg_name, por, is_pulse=False, go_dispatch=go_dispatch)
+
+    def set_en_diff(self, en_diff, go_dispatch):
+        log.info("Set EN_diff to {:}".format(en_diff))
+        reg_name = "EN_diff"
+        self.w_reg(reg_name, en_diff, is_pulse=False, go_dispatch=go_dispatch)
+
+    def set_refclk_1G(self, refclk_1G, go_dispatch):
+        log.info("Set Ref_clk_1G_f to {:}".format(refclk_1G))
+        reg_name = "Ref_clk_1G_f"
+        self.w_reg(reg_name, refclk_1G, is_pulse=False, go_dispatch=go_dispatch)
 
     def set_matrix_grst(self, matrix_grst, go_dispatch):
         log.info("Set MATRIX_GRST to {:}".format(matrix_grst))

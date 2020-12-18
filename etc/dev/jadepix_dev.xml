@@ -20,6 +20,7 @@
     <node address="0x11" id="rs_start" mask="0x2" permission="rw"/>
     <node address="0x11" id="gs_start" mask="0x4" permission="rw"/>
     <node address="0x11" id="spi_rst" mask="0x8" permission="rw"/>
+    <node address="0x11" id="CLK_SEL" mask="0x10" permission="rw"/>
     <node address="0x11" id="PDB" mask="0x20" permission="rw"/>
     <node address="0x11" id="LOAD" mask="0x40" permission="rw"/>
     <node address="0x11" id="cfg_fifo_rst" mask="0x80" permission="rw"/>
@@ -32,6 +33,9 @@
     <node address="0x11" id="dplse_soft" mask="0x4000000" permission="rw"/>
     <node address="0x11" id="gshutter_soft" mask="0x8000000" permission="rw"/>
     <node address="0x11" id="SN_OEn" mask="0x10000000" permission="rw"/>
+    <node address="0x11" id="POR" mask="0x20000000" permission="rw"/>
+    <node address="0x11" id="EN_diff" mask="0x40000000" permission="rw"/>
+    <node address="0x11" id="Ref_clk_1G_f" mask="0x80000000" permission="rw"/>
 
     <node address="0x12" id="rs_frame_number" permission="rw"/>
 
@@ -49,9 +53,10 @@
     <node id="gs_deassert_cnt" address="0x18" mask="0x1ff" permission="rw"/>
 
     <node id="rst_rfifo" address="0x19" mask="0x1" permission="rw"/>
+    <node id="SERIALIZER_RST" address="0x19" mask="0x2" permission="rw"/>
 
-    <node id="SLCTRL_FIFO"   module="file://../slave/wfifo.xml"   address="0x20" tags="slave"/>
-    <node id="DATA_FIFO"     module="file://../slave/rfifo.xml"   address="0x24" tags="slave"/>
+    <node id="SLCTRL_FIFO" module="file://../slave/wfifo.xml" address="0x20" tags="slave"/>
+    <node id="DATA_FIFO" module="file://../slave/rfifo.xml" address="0x24" tags="slave"/>
 
 
 </node>
