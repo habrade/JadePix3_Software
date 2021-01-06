@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import time
 import logging
 import os
@@ -67,24 +68,28 @@ if __name__ == '__main__':
     ''' JadePix Control '''
 
     """ From here we can test configuration """
-    # start = time.process_time()
-    # jadepix_dev.w_cfg()
-    # jadepix_dev.start_cfg(go_dispatch=True)
-    # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+    start = time.process_time()
+    jadepix_dev.w_cfg()
+    jadepix_dev.start_cfg(go_dispatch=True)
+    print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
     #
-    # time.sleep(20)
+    time.sleep(20)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     """Will change to real time later"""
-    # jadepix_dev.gs_config(pulse_delay=4, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=224)
-    # jadepix_dev.start_gs()
+    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
+                          hitmap_col_high=341, hitmap_en=True, frame_number=1)
+    jadepix_dev.gs_config(pulse_delay=4, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=340)
+    jadepix_dev.start_gs()
+
+    sys.exit(0)
 
     """ From here we can test rolling shutter """
     test_valid_pattern = 1
     frame_per_slice = 64
-    num_token = 20000
+    num_token = 2
 
     frame_number = frame_per_slice * num_token
     num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern

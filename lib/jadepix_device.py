@@ -23,7 +23,7 @@ class JadePixDevice:
         self.spi_dev = SpiDevice(self._ipbus_link)
         self.spi_reg = bitarray(200 * "0")
 
-        self.cfg_file_path = "./config/jadepix_config.txt"
+        self.cfg_file_path = "./etc/config/jadepix_config.txt"
 
     def w_reg(self, reg_name, reg_val, is_pulse, go_dispatch):
         self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
