@@ -10,8 +10,8 @@ def gen_config(data_file):
                                    quotechar=' ', quoting=csv.QUOTE_MINIMAL)
         
         CON_SELM = 0
-        CON_SELP = 0
-        CON_DATA = 0
+        CON_SELP = 1
+        CON_DATA = 1
         for i in range(jadepix_defs.ROW * jadepix_defs.COL):
             config_writer.writerow([CON_SELM, CON_SELP, CON_DATA])
 

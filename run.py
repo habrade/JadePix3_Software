@@ -5,7 +5,6 @@ import logging
 import os
 import gc
 
-
 from pathlib import Path
 
 import coloredlogs
@@ -52,9 +51,13 @@ if __name__ == '__main__':
     dac70004_dev.soft_clr()
     dac70004_dev.w_power_chn(DAC70004_PW_UP, 0xf)  # Power up all channels
     dac70004_dev.w_ana_chn_update_chn(
-        DAC70004_CHN_A, 1.5)  # Set channle A to 1.5V
+        DAC70004_CHN_A, 1.3)  # Set channle A to 1.3V, LOW
     dac70004_dev.w_ana_chn_update_chn(
-        DAC70004_CHN_B, 2.0)  # Set channle B to 2.0V
+        DAC70004_CHN_B, 1.7)  # Set channle B to 1.7V, High
+    dac70004_dev.w_ana_chn_update_chn(
+        DAC70004_CHN_C, 1.4)  # Set channle C to 1.4V, Reset1
+    dac70004_dev.w_ana_chn_update_chn(
+        DAC70004_CHN_D, 1.4)  # Set channle D to 1.4V, Reset2
 
     ''' SPI master config '''
     jadepix_dev.reset_spi()
@@ -68,25 +71,30 @@ if __name__ == '__main__':
     ''' JadePix Control '''
 
     """ From here we can test configuration """
-    start = time.process_time()
-    jadepix_dev.w_cfg()
-    jadepix_dev.start_cfg(go_dispatch=True)
-    print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-    #
-    time.sleep(20)
+    # start = time.process_time()
+    # jadepix_dev.w_cfg()
+    # jadepix_dev.start_cfg(go_dispatch=True)
+    # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+    # #
+    # time.sleep(20)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     """Will change to real time later"""
+    jadepix_dev.digsel_en(1)
+    jadepix_dev.anasel_en(1)
+    jadepix_dev.set_dplse_soft(True)  # if false: DPLSE force to low
+    jadepix_dev.set_aplse_soft(True)  # if false: APLSE force to low
+    jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
-                          hitmap_col_high=341, hitmap_en=True, frame_number=1)
-    jadepix_dev.gs_config(pulse_delay=4, width_low=3, width_high=0, pulse_deassert=2, deassert=5, col=340)
+                          hitmap_col_high=348, hitmap_en=True, frame_number=1)
+    jadepix_dev.gs_config(pulse_delay=4, width_low=2000, width_high=0, pulse_deassert=2, deassert=5, col=340)
     jadepix_dev.start_gs()
 
     sys.exit(0)
 
-    """ From here we can test rolling shutter """
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
     test_valid_pattern = 1
     frame_per_slice = 64
     num_token = 2
@@ -101,9 +109,9 @@ if __name__ == '__main__':
     slice_size = int(rfifo_depth)  # try largest slice as possible
     num_data_wanted = num_token * slice_size
     data_size = num_data_wanted * 32  # Unit: bit
-    log.warning("The data will take {} MB memory".format(data_size/8/2**20))
+    log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
 
-    jadepix_dev.set_gs_plse(is_dplse=True)
+    jadepix_dev.dig_sel(False)
     jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                           hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
     jadepix_dev.reset_rfifo()
