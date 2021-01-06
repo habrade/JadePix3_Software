@@ -1,5 +1,7 @@
 import time
 
+import csv
+
 import coloredlogs
 import logging
 
@@ -23,7 +25,7 @@ class JadePixDevice:
         self.spi_dev = SpiDevice(self._ipbus_link)
         self.spi_reg = bitarray(200 * "0")
 
-        self.cfg_file_path = "./etc/config/jadepix_config.txt"
+        self.cfg_file_path = "./etc/config/config.csv"
 
     def w_reg(self, reg_name, reg_val, is_pulse, go_dispatch):
         self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
@@ -141,10 +143,14 @@ class JadePixDevice:
         fifo_count = self.g_cfg_fifo_count()
         log.debug("Fifo status: empty {} \t prog_full {}, count {}".format(fifo_empty, fifo_pfull, fifo_count))
         cnt = 0
-        with open(self.cfg_file_path, mode='r') as fp:
-            log.info("Start read configuration from file, and write to FPGA FIFO...")
-            for line in fp:
-                data = int(line, 2)
+        log.info("Start read configuration from file, and write to FPGA FIFO...")
+        with open(self.cfg_file_path, newline='') as csvfile:
+            config_reader = csv.reader(csvfile, delimiter=' ', quotechar=' ')
+            for line in config_reader:
+                con_data = int(line[0])
+                con_selp = int(line[1])
+                con_selm = int(line[2])
+                data = (con_data << 2) + (con_selp << 1) + (con_selm << 0)
                 row, col = self.calc_row_col(cnt)
                 log.debug("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))
                 self.w_cfg_fifo(data=data, go_dispatch=False)
@@ -338,3 +344,15 @@ class JadePixDevice:
     def reset_rfifo(self):
         log.info("Reset readout FIFO.")
         self.w_reg("rst_rfifo", 0, is_pulse=True, go_dispatch=True)
+    
+    def digsel_en(self, enable):
+        self.w_reg("digsel_en", enable, is_pulse=False, go_dispatch=True)
+
+    def anasel_en(self, enable):
+        self.w_reg("anasel_en", enable, is_pulse=False, go_dispatch=True)
+
+    def set_dplse_soft(self, enable):
+        self.w_reg("dplse_soft", 0, is_pulse=enable, go_dispatch=True)
+
+    def set_aplse_soft(self, enable):
+        self.w_reg("aplse_soft", 0, is_pulse=enable, go_dispatch=True)
