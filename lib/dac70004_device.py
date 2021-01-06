@@ -1,3 +1,4 @@
+import sys
 import time
 import coloredlogs
 import logging
@@ -76,7 +77,11 @@ class Dac70004Device:
         return self.cmd(0, DAC70004_CMD_W_UPDATE, chn, din, 0)
 
     def w_ana_chn_update_chn(self, chn, vout):
-        self.w_chn_update_chn(chn, self.anaVal_2_digVal(vout))
+        if vout > 1.8 or vout < 0:
+            log.error("Voltage shouldn't larger than 1.8 and less than 0, now: {:}".format(vout))
+            sys.exit(0)
+        else:
+            self.w_chn_update_chn(chn, self.anaVal_2_digVal(vout))
 
     def w_power_chn(self, pd_bits, chn_map):
         # mode = chn_map, mode[0]=ch-A, mode[1]=ch-B, mode[2]=ch-C, mode[3]=ch-D
