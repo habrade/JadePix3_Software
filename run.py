@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import sys
+import threading
 import time
 import logging
 import os
 import gc
+
+import pvaccess
 
 from pathlib import Path
 
@@ -36,6 +39,70 @@ coloredlogs.install(level='DEBUG', logger=log)
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
+
+class JadepixSrc(object):
+    def __init__(self):
+        super(JadepixSrc, self).__init__(ipbus_link)
+
+        self.jadepix_dev = JadePixDevice(ipbus_link)
+        self.global_dev = GlobalDevice(ipbus_link)
+        self.dac70004_dev = Dac70004Device(ipbus_link)
+
+        self.__PREFIX = "HEP:Jadepix3:"
+        self.__dac70004_channel_lst = ["DAC70004:ALL_ENABLE", "DAC70004:RESET", "DAC70004:CLR",
+                                       "DAC70004:CHA", "DAC70004:CHB", "DAC70004:CHC", "DAC70004:CHD"]
+        self.ca_dac70004_all_enable = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[0])
+        self.ca_dac70004_reset = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[1])
+        self.ca_dac70004_clr = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[2])
+        self.ca_dac70004_cha_vplse_low = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[3])
+        self.ca_dac70004_chb_vplse_high = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[4])
+        self.ca_dac70004_chc_reset1 = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[5])
+        self.ca_dac70004_chd_reset2 = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[6])
+
+        self.__spi_channel_lst = []
+
+    def dac_thread(self):
+        # GPIO Direction Set
+        if self.ca_dac70004_reset.get().getInt() == 1:
+            self.dac70004_dev.soft_reset()
+
+        if self.ca_dac70004_clr.get().getInt() == 1:
+            self.dac70004_dev.soft_clr()
+
+        switches = self.ca_dac70004_all_enable.get().getInt()
+        self.dac70004_dev.w_power_chn(DAC70004_PW_UP, switches)  # Power up all channels
+
+        vol_a = self.ca_dac70004_cha_vplse_low.get().getDouble()
+        vol_b = self.ca_dac70004_chb_vplse_high.get().getDouble()
+        vol_c = self.ca_dac70004_chc_reset1.get().getDouble()
+        vol_d = self.ca_dac70004_chd_reset2.get().getDouble()
+        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_A, vol_a)  # Set channle A to 1.3V, LOW
+        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_B, vol_b)  # Set channle B to 1.7V, HIGH
+        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_C, vol_c)  # Set channle C to 1.4V, RESET1
+        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_D, vol_d)  # Set channle D to 1.4V, RESET2
+
+    def create_threads(self):
+        # global thread_function
+        num_threads = 1
+        threads = []
+        for index_t in range(num_threads):
+            if index_t == 0:
+                thread_function = self.dac_thread
+            # elif index_t == 1:
+            #     thread_function = self.adc_thread_func
+            # elif index_t == 2:
+            #     thread_function = self.bme280_thread_func
+
+            t = threading.Thread(target=thread_function, args=())
+            t.daemon = True
+            threads.append(t)
+
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+
 if __name__ == '__main__':
     ipbus_link = IPbusLink()
 
@@ -66,7 +133,6 @@ if __name__ == '__main__':
     # Set JadePix SPI configuration
     jadepix_dev.start_spi_config()
     # Load Config
-    jadepix_dev.load_config_soft()
 
     ''' JadePix Control '''
 
@@ -75,29 +141,42 @@ if __name__ == '__main__':
     # jadepix_dev.w_cfg()
     # jadepix_dev.start_cfg(go_dispatch=True)
     # print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-    # #
-    # time.sleep(20)
+
+    # time.sleep(10)
+
+    """ Set digital front-end """
+    jadepix_dev.is_debug(True)
+    jadepix_dev.set_gshutter_soft(False)
+    jadepix_dev.digsel_en(True)
+    jadepix_dev.anasel_en(True)
+    jadepix_dev.set_dplse_soft(True)  # if false: DPLSE force to low
+    jadepix_dev.set_aplse_soft(False)  # if false: APLSE force to low
+    jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
+    jadepix_dev.set_ca_soft(402)
+    jadepix_dev.set_ca_en_soft(True)
+
+    sys.exit(0)
+
+    """ Enable clock link """
+    jadepix_dev.set_sn_oen(0, go_dispatch=True)
+    jadepix_dev.set_en_diff(1, go_dispatch=True)
+
+    """ Set INQUIRE """
+    jadepix_dev.set_d_rst(1, go_dispatch=True)
+    jadepix_dev.set_inquiry(1)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
-    """Will change to real time later"""
-    jadepix_dev.digsel_en(1)
-    jadepix_dev.anasel_en(1)
-    jadepix_dev.set_dplse_soft(True)  # if false: DPLSE force to low
-    jadepix_dev.set_aplse_soft(True)  # if false: APLSE force to low
-    jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
-    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
-                          hitmap_col_high=348, hitmap_en=True, frame_number=1)
-    jadepix_dev.gs_config(pulse_delay=4, width_low=2000, width_high=0, pulse_deassert=2, deassert=5, col=340)
+    # TODO: Will change to real time later
+    jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
+                          hitmap_col_high=351, hitmap_en=True, frame_number=1)
+    jadepix_dev.gs_config(pulse_delay=4, width_low=2, width_high=0, pulse_deassert=2, deassert=5, col=340)
     jadepix_dev.start_gs()
 
-    sys.exit(0)
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-    test_valid_pattern = 1
-    frame_per_slice = 64
-    num_token = 2
+    test_valid_pattern = 12
+    frame_per_slice = 4
+    num_token = 20
 
     frame_number = frame_per_slice * num_token
     num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
@@ -110,12 +189,12 @@ if __name__ == '__main__':
     num_data_wanted = num_token * slice_size
     data_size = num_data_wanted * 32  # Unit: bit
     log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
-
-    jadepix_dev.dig_sel(False)
-    jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
-                          hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
-    jadepix_dev.reset_rfifo()
-    jadepix_dev.start_rs()
+    #
+    # jadepix_dev.dig_sel(False)
+    # jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
+    #                       hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
+    # jadepix_dev.reset_rfifo()
+    # jadepix_dev.start_rs()
 
     # if num_data_wanted > num_valid_data_stream:
     #     new_num_token = int(num_valid_data_stream / slice_size)

@@ -9,7 +9,7 @@ def gen_config(data_file):
         config_writer = csv.writer(csvfile, delimiter=' ',
                                    quotechar=' ', quoting=csv.QUOTE_MINIMAL)
         
-        CON_SELM = 0
+        CON_SELM = 1
         CON_SELP = 1
         CON_DATA = 1
         for i in range(jadepix_defs.ROW * jadepix_defs.COL):

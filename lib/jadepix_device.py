@@ -202,7 +202,7 @@ class JadePixDevice:
         reg_name = "rs_frame_number"
         self.w_reg(reg_name, frame_number, is_pulse=False, go_dispatch=go_dispatch)
 
-    def cache_bit_set(self, cache_bit, go_dispatch=True):
+    def set_cache_bit(self, cache_bit, go_dispatch=True):
         log.info("Set CACHE_BIT_SET to {:#03x}".format(cache_bit))
         if cache_bit < 0 or cache_bit > 15:
             log.error("CACHE_BIT_SET error, should between 0x0 - 0xF!")
@@ -269,11 +269,12 @@ class JadePixDevice:
         self.set_hitmap_num(hitmap_num=hitmap_num, go_dispatch=go_dispatch)
 
     def hitmap_en(self, enable, go_dispatch=True):
-        log.info("Enabel Hitmap")
         reg_name = "hitmap.en"
         if enable:
+            log.info("Enabel Hitmap")
             self.w_reg(reg_name, 1, is_pulse=False, go_dispatch=go_dispatch)
         else:
+            log.info("Disable Hitmap")
             self.w_reg(reg_name, 0, is_pulse=False, go_dispatch=go_dispatch)
 
     def set_hitmap_num(self, hitmap_num, go_dispatch):
@@ -322,7 +323,7 @@ class JadePixDevice:
         self.w_reg(reg_name, col, is_pulse=False, go_dispatch=go_dispatch)
 
     def rs_config(self, cache_bit, hitmap_col_low, hitmap_col_high, hitmap_en, frame_number):
-        self.cache_bit_set(cache_bit=cache_bit)
+        self.set_cache_bit(cache_bit=cache_bit)
         self.set_hitmap_addr(hitmap_col_low=hitmap_col_low, hitmap_col_high=hitmap_col_high)
         self.set_rs_frame_number(frame_number=frame_number)
         self.hitmap_en(enable=hitmap_en)
@@ -344,7 +345,7 @@ class JadePixDevice:
     def reset_rfifo(self):
         log.info("Reset readout FIFO.")
         self.w_reg("rst_rfifo", 0, is_pulse=True, go_dispatch=True)
-    
+
     def digsel_en(self, enable):
         self.w_reg("digsel_en", enable, is_pulse=False, go_dispatch=True)
 
@@ -352,7 +353,32 @@ class JadePixDevice:
         self.w_reg("anasel_en", enable, is_pulse=False, go_dispatch=True)
 
     def set_dplse_soft(self, enable):
-        self.w_reg("dplse_soft", 0, is_pulse=enable, go_dispatch=True)
+        self.w_reg("dplse_soft", enable, is_pulse=False, go_dispatch=True)
 
     def set_aplse_soft(self, enable):
-        self.w_reg("aplse_soft", 0, is_pulse=enable, go_dispatch=True)
+        self.w_reg("aplse_soft", enable, is_pulse=False, go_dispatch=True)
+
+    def set_gshutter_soft(self, enable):
+        self.w_reg("gshutter_soft", enable, is_pulse=False, go_dispatch=True)
+
+    def set_inquiry(self, inquiry):
+        """
+        Set chip code output
+
+        :param inquiry:
+        :return: 00-K28.5, 01-FIFO, 10-FIFO Status, 11-Reserved
+        """
+        log.debug("Set INQUIRY : {:}".format(inquiry))
+        self.w_reg("INQUIRY", inquiry, is_pulse=False, go_dispatch=True)
+
+    def is_debug(self, enable):
+        log.warning(
+            "DEBUG mode is {:}, DPLSE, APLSE, DIGSEL_EN, ANASEL_EN, GSHUTTER, CA, CA_EN will set by software.".format(
+                enable))
+        self.w_reg("DEBUG", enable, is_pulse=False, go_dispatch=True)
+
+    def set_ca_soft(self, ca_soft):
+        self.w_reg("CA_SOFT", ca_soft, is_pulse=False, go_dispatch=True)
+
+    def set_ca_en_soft(self, ca_soft):
+        self.w_reg("CA_EN_SOFT", ca_soft, is_pulse=False, go_dispatch=True)
