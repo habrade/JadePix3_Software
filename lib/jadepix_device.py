@@ -7,6 +7,7 @@ import logging
 
 from lib.jadepix_defs import *
 from lib.spi_device import SpiDevice
+from lib.gen_config import gen_config
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
@@ -136,7 +137,9 @@ class JadePixDevice:
         reg_name = "cfg_fifo_rst"
         self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
-    def w_cfg(self):
+    def w_cfg(self, config, is_mask, sel_mask_en, sel_pulse_en, sel_row, sel_col, sel_data):
+        gen_config(self.cfg_file_path, config, is_mask, sel_mask_en, sel_pulse_en, sel_row, sel_col, sel_data)
+        # Write to fifo
         self.clear_fifo(go_dispatch=True)
         fifo_empty = self.g_cfg_fifo_empty()
         fifo_pfull = self.g_cfg_fifo_pfull()
@@ -151,8 +154,8 @@ class JadePixDevice:
                 con_selp = int(line[1])
                 con_selm = int(line[2])
                 data = (con_data << 2) + (con_selp << 1) + (con_selm << 0)
-                row, col = self.calc_row_col(cnt)
-                log.debug("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))
+                # row, col = self.calc_row_col(cnt)
+                # log.debug("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))
                 self.w_cfg_fifo(data=data, go_dispatch=False)
                 self.wr_en_fifo(go_dispatch=True)
                 cnt += 1
@@ -382,3 +385,7 @@ class JadePixDevice:
 
     def set_ca_en_soft(self, ca_soft):
         self.w_reg("CA_EN_SOFT", ca_soft, is_pulse=False, go_dispatch=True)
+
+    def set_hit_rst_soft(self, hit_rst_soft):
+        log.warning("Hit reset software: {:}".format(hit_rst_soft))
+        self.w_reg("HIT_RST_SOFT", hit_rst_soft, is_pulse=False, go_dispatch=True)
