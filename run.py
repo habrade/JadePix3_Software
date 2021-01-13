@@ -107,9 +107,9 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.DAC70004_INTTIAL = True
+        self.DAC70004_INTTIAL = False
         self.JADEPIX_SPI_CONF = False
-        self.JADEPIX_CONFIG = True
+        self.JADEPIX_CONFIG = False
         self.JADEPIX_RUN_GS = True
         self.JADEPIX_RUN_RS = False
         self.JADEPIX_GET_DATA = True
@@ -207,18 +207,19 @@ if __name__ == '__main__':
     """For pulse width, width = (high<<32 + low) * Period"""
     if main_config.JADEPIX_RUN_GS:
         # TODO: Will change to real time later
+        jadepix_dev.reset_rfifo()
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
                               hitmap_col_high=351, hitmap_en=True, frame_number=1)
         jadepix_dev.gs_config(pulse_delay=4, width_low=65535, width_high=0, pulse_deassert=2, deassert=5, col=313)
         jadepix_dev.start_gs()
 
-        test_valid_pattern = 12
-        frame_per_slice = 4
+        # test_valid_pattern = 12
+        # frame_per_slice = 4
         num_token = 1
 
-        frame_number = frame_per_slice * num_token
-        num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
-        num_valid_data_stream = num_data + 2 * frame_number - 1
+        # frame_number = frame_per_slice * num_token
+        # num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
+        # num_valid_data_stream = num_data + 2 * frame_number - 1
 
         rfifo_depth_width = 17
         rfifo_depth = pow(2, rfifo_depth_width)
@@ -227,26 +228,12 @@ if __name__ == '__main__':
         num_data_wanted = num_token * slice_size
         data_size = num_data_wanted * 32  # Unit: bit
         log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
-        #
-        # jadepix_dev.dig_sel(False)
-        # jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
-        #                       hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
-        # jadepix_dev.reset_rfifo()
-        # jadepix_dev.start_rs()
 
-        # if num_data_wanted > num_valid_data_stream:
-        #     new_num_token = int(num_valid_data_stream / slice_size)
-        #     log.warning("Token number {:d} should be less than valid number {:d}, set new tolken number to {:d}".format(
-        #         num_data_wanted, num_valid_data_stream, new_num_token))
-        # else:
-        #     new_num_token = num_token
-
-        lost = 0
         ''' Get Data Stream '''
         data_que = SimpleQueue()
         start = time.process_time()
         for j in range(num_token):
-            mem = jadepix_dev.read_ipb_data_fifo(slice_size, safe_style=False)
+            mem = jadepix_dev.read_ipb_data_fifo(1, safe_style=True)
             if main_config.W_TXT:
                 with open('data/data.txt', 'w+') as data_file:
                     for data in mem:
@@ -254,6 +241,14 @@ if __name__ == '__main__':
             data_que.put(mem)
         trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
         log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
+
+    if main_config.JADEPIX_RUN_RS:
+        frame_number = 1
+        # jadepix_dev.dig_sel(False)
+        jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
+                              hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
+        jadepix_dev.reset_rfifo()
+        jadepix_dev.start_rs()
 
     if main_config.JADEPIX_GET_DATA:
         log.info("Write data to .root ...")
@@ -282,9 +277,9 @@ if __name__ == '__main__':
         del data_que
 
         ''' Draw some plots '''
-        data_ana = data_analysis.DataAnalysis(data_root_file, frame_number, is_save_png=True)
+        data_ana = data_analysis.DataAnalysis(data_root_file, num_token, is_save_png=True)
         lost_tmp, data_num_got = data_ana.draw_data()
-        data_lost = num_data - data_num_got
-        lost += lost_tmp
-        log.info("Lost data num: {:}".format(data_lost))
-        log.info("Lost frames: {:}".format(lost))
+        # data_lost = num_data - data_num_got
+        # lost += lost_tmp
+        # log.info("Lost data num: {:}".format(data_lost))
+        # log.info("Lost frames: {:}".format(lost))
