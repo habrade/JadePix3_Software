@@ -107,7 +107,7 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.DAC70004_INTTIAL = False
+        self.DAC70004_INITIAL = False
         self.JADEPIX_SPI_CONF = False
         self.JADEPIX_CONFIG = True
         self.JADEPIX_RUN_GS = True
@@ -184,7 +184,7 @@ def main(enable_config=0):
         global_dev.set_soft_rst()
 
     ''' DAC70004 Config '''
-    if main_config.DAC70004_INTTIAL:
+    if main_config.DAC70004_INITIAL:
         dac70004_dev.soft_reset()
         dac70004_dev.soft_clr()
         dac70004_dev.w_power_chn(DAC70004_PW_UP, 0xf)  # Power up all channels
