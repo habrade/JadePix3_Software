@@ -107,8 +107,8 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.DAC70004_INITIAL = False
-        self.JADEPIX_SPI_CONF = False
+        self.DAC70004_INITIAL = True
+        self.JADEPIX_SPI_CONF = True
         self.JADEPIX_CONFIG = True
         self.JADEPIX_RUN_GS = True
         self.JADEPIX_RUN_RS = False
