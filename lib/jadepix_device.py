@@ -387,3 +387,9 @@ class JadePixDevice:
     def set_hit_rst_soft(self, hit_rst_soft):
         log.warning("Hit reset software: {:}".format(hit_rst_soft))
         self.w_reg("HIT_RST_SOFT", hit_rst_soft, is_pulse=False, go_dispatch=True)
+
+    def set_chip_clk(self, sel):
+        if sel==0:
+            log.warning("Selec")
+        log.warning("Chip system clock select: {:}".format(sel))
+        self.w_reg("SEL_CHIP_CLK", sel, is_pulse=False, go_dispatch=True)

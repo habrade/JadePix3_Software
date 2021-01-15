@@ -30,20 +30,19 @@ from root_numpy import array2root
 
 from queue import SimpleQueue
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-coloredlogs.install(level='DEBUG')
+log.setLevel(logging.INFO)
 coloredlogs.install(level='DEBUG', logger=log)
 
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
-class JadepixSrc(object):
+class JadepixSrv(object):
     def __init__(self):
-        super(JadepixSrc, self).__init__(ipbus_link)
+        super(JadepixSrv, self).__init__(ipbus_link)
 
         self.jadepix_dev = JadePixDevice(ipbus_link)
         self.global_dev = GlobalDevice(ipbus_link)
@@ -172,7 +171,7 @@ def gen_test_pattern(config_arr):
     return line_num
 
 
-if __name__ == '__main__':
+def main(is_config):
     ipbus_link = IPbusLink()
     main_config = MainConfig()
 
@@ -211,7 +210,8 @@ if __name__ == '__main__':
 
     """ From here we can test configuration """
     data_num = 0
-    if main_config.JADEPIX_CONFIG:
+    if is_config:
+        log.warning("Start configure the PULSE and MASK of each pixel...")
         CONFIG_SHAPE = [jadepix_defs.ROW, jadepix_defs.COL, 3]
         MASK_DEFAULT = (1, 0, 0)  # no mask
         PLSE_DEFAULT = (0, 1, 0)  # all pulse out
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
         plse_arr[:, :] = PLSE_DEFAULT
 
-        set_con_data(config_arr=plse_arr, row_low=2, row_high=105, col_low=12, col_high=18, data=1)
+        set_con_data(config_arr=plse_arr, row_low=0, row_high=51, col_low=0, col_high=19, data=1)
         data_num = gen_test_pattern(plse_arr)
 
         start = time.process_time()
@@ -264,6 +264,9 @@ if __name__ == '__main__':
     jadepix_dev.set_d_rst(0, go_dispatch=True)
     jadepix_dev.set_d_rst(1, go_dispatch=True)
     jadepix_dev.set_inquiry(1)
+
+    """ Set jadepix chip clock"""
+    jadepix_dev.set_chip_clk(0)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
@@ -353,3 +356,13 @@ if __name__ == '__main__':
         # lost += lost_tmp
         # log.info("Lost data num: {:}".format(data_lost))
         # log.info("Lost frames: {:}".format(lost))
+
+
+if __name__ == '__main__':
+    if len(sys.argv) > 2 or len(sys.argv) < 0:
+        print("Usage: ./run.py [is config]")
+        print("Example: ./run.py True or ./run.py 1. Vise versa.")
+        log.error("only one parameter is accept!")
+        sys.exit(0)
+    else:
+        main(int(sys.argv[1]))
