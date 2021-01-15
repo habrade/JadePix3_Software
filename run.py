@@ -127,7 +127,7 @@ set_con_data = partial(set_config, bit_nr=2)
 
 
 def calc_blk(col):
-    return int(col / 3)
+    return int((col % 48) / 3)
 
 
 def calc_pix_out(config):
@@ -265,7 +265,7 @@ def main(enable_config=0):
     jadepix_dev.set_inquiry(1)
 
     """ Set jadepix chip clock"""
-    jadepix_dev.set_chip_clk(0)
+    jadepix_dev.set_chip_clk(1)
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
