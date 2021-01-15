@@ -209,22 +209,21 @@ def main(is_config):
     ''' JadePix Control '''
 
     """ From here we can test configuration """
-    data_num = 0
+    CONFIG_SHAPE = [jadepix_defs.ROW, jadepix_defs.COL, 3]
+    MASK_DEFAULT = (1, 0, 0)  # no mask
+    PLSE_DEFAULT = (0, 1, 0)  # all pulse out
+
+    mask_arr = np.empty(CONFIG_SHAPE, dtype=int)
+    mask_arr[:, :] = MASK_DEFAULT
+
+    plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
+    plse_arr[:, :] = PLSE_DEFAULT
+
+    set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=0, col_high=2, data=1)
+    data_num = gen_test_pattern(plse_arr)
+
     if is_config:
         log.warning("Start configure the PULSE and MASK of each pixel...")
-        CONFIG_SHAPE = [jadepix_defs.ROW, jadepix_defs.COL, 3]
-        MASK_DEFAULT = (1, 0, 0)  # no mask
-        PLSE_DEFAULT = (0, 1, 0)  # all pulse out
-
-        mask_arr = np.empty(CONFIG_SHAPE, dtype=int)
-        mask_arr[:, :] = MASK_DEFAULT
-
-        plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
-        plse_arr[:, :] = PLSE_DEFAULT
-
-        set_con_data(config_arr=plse_arr, row_low=0, row_high=51, col_low=0, col_high=19, data=1)
-        data_num = gen_test_pattern(plse_arr)
-
         start = time.process_time()
         # CON_SELM, CON_SELP, CON_DATA
 
@@ -350,7 +349,7 @@ def main(is_config):
         del data_que
 
         ''' Draw some plots '''
-        data_ana = data_analysis.DataAnalysis(data_root_file, 1, is_save_png=True)
+        data_ana = data_analysis.DataAnalysis(data_root_file, 1, is_save_png=False)
         lost_tmp, data_num_got = data_ana.draw_data()
         # data_lost = num_data - data_num_got
         # lost += lost_tmp
