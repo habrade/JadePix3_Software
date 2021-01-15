@@ -171,7 +171,7 @@ def gen_test_pattern(config_arr):
     return line_num
 
 
-def main(is_config):
+def main(enable_config=0):
     ipbus_link = IPbusLink()
     main_config = MainConfig()
 
@@ -222,7 +222,7 @@ def main(is_config):
     set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=0, col_high=2, data=1)
     data_num = gen_test_pattern(plse_arr)
 
-    if is_config:
+    if enable_config:
         log.warning("Start configure the PULSE and MASK of each pixel...")
         start = time.process_time()
         # CON_SELM, CON_SELP, CON_DATA
@@ -358,10 +358,12 @@ def main(is_config):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 2 or len(sys.argv) < 0:
-        print("Usage: ./run.py [is config]")
-        print("Example: ./run.py True or ./run.py 1. Vise versa.")
-        log.error("only one parameter is accept!")
+    if len(sys.argv) > 2:
+        print("Usage: ./run.py [enable config]")
+        log.error("only one parameter is accept at most!")
+        print("Example: ./run.py 1, enable config; or ./run.py 0, disable config.")
         sys.exit(0)
+    elif len(sys.argv) == 1:
+        main(enable_config=0)
     else:
-        main(int(sys.argv[1]))
+        main(enable_config=int(sys.argv[1]))
