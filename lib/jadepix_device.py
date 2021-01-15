@@ -1,13 +1,12 @@
 import time
 
-import csv
-
 import coloredlogs
 import logging
 
+import numpy as np
+
 from lib.jadepix_defs import *
 from lib.spi_device import SpiDevice
-from lib.gen_config import gen_config
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
@@ -137,8 +136,7 @@ class JadePixDevice:
         reg_name = "cfg_fifo_rst"
         self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
 
-    def w_cfg(self, config, is_mask, sel_mask_en, sel_pulse_en, sel_row, sel_col, sel_data):
-        gen_config(self.cfg_file_path, config, is_mask, sel_mask_en, sel_pulse_en, sel_row, sel_col, sel_data)
+    def w_cfg(self, configs):
         # Write to fifo
         self.clear_fifo(go_dispatch=True)
         fifo_empty = self.g_cfg_fifo_empty()
@@ -146,13 +144,13 @@ class JadePixDevice:
         fifo_count = self.g_cfg_fifo_count()
         log.debug("Fifo status: empty {} \t prog_full {}, count {}".format(fifo_empty, fifo_pfull, fifo_count))
         cnt = 0
-        log.info("Start read configuration from file, and write to FPGA FIFO...")
-        with open(self.cfg_file_path, newline='') as csvfile:
-            config_reader = csv.reader(csvfile, delimiter=' ', quotechar=' ')
-            for line in config_reader:
-                con_data = int(line[0])
-                con_selp = int(line[1])
-                con_selm = int(line[2])
+        log.info("Send configurations to FPGA FIFO...")
+        for row in range(ROW):
+            for col in range(COL):
+                one_config = configs[row, col]
+                con_data = int(one_config[0])
+                con_selp = int(one_config[1])
+                con_selm = int(one_config[2])
                 data = (con_data << 2) + (con_selp << 1) + (con_selm << 0)
                 # row, col = self.calc_row_col(cnt)
                 # log.debug("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))

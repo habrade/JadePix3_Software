@@ -9,6 +9,7 @@ import gc
 import pvaccess
 
 from pathlib import Path
+from functools import partial
 
 import coloredlogs
 
@@ -109,12 +110,66 @@ class MainConfig(object):
         self.GLOBAL_RESET = True
         self.DAC70004_INTTIAL = False
         self.JADEPIX_SPI_CONF = False
-        self.JADEPIX_CONFIG = False
+        self.JADEPIX_CONFIG = True
         self.JADEPIX_RUN_GS = True
         self.JADEPIX_RUN_RS = False
         self.JADEPIX_GET_DATA = True
 
         self.W_TXT = True
+
+
+def set_config(config_arr, row_low, row_high, col_low, col_high, bit_nr, data):
+    config_arr[row_low:row_high, col_low:col_high, bit_nr] = data
+
+
+set_con_selm = partial(set_config, bit_nr=0)
+set_con_selp = partial(set_config, bit_nr=1)
+set_con_data = partial(set_config, bit_nr=2)
+
+
+def calc_blk(col):
+    return int(col / 3)
+
+
+def calc_pix_out(config):
+    """ dout = ~CON_MASK & CON_PLSE & CON_DATA """
+    return ((not config[0]) & config[1] & config[2])
+
+
+def calc_data_out(row, blk, pix_data):
+    return (row << 7) + (blk << 3) + pix_data
+
+
+def gen_test_pattern(config_arr):
+    line_num = 0
+    test_patter_path = "data/test_pattern.txt"
+    dout_arr = np.zeros(3, int)
+    data_string = []
+    try:
+        os.remove(test_patter_path)
+    except OSError:
+        pass
+    with open(test_patter_path, "w+") as f:
+        for row in range(jadepix_defs.ROW):
+            for col in range(jadepix_defs.COL):
+                blk = calc_blk(col)
+                pix_bit = col % 3
+                pix_out = calc_pix_out(config_arr[row, col])
+
+                block = int(col / 48)
+
+                dout_arr[pix_bit] = pix_out
+                if pix_bit == 2:
+                    pix_data = int((dout_arr[2] << 2) | (dout_arr[1] << 1) | dout_arr[0])
+                    dout_arr = np.empty((3, 1), int)
+                    if pix_data > 0:
+                        log.debug("row: {} col: {} data: {}".format(row, col, pix_data))
+                        data_out = calc_data_out(row, blk, pix_data)
+                        line_num += 1
+                        data_flag = 2
+                        data_string.append("{:#010x}\n".format((data_flag << 23) + (block << 16) + data_out))
+        f.write("".join(data_string))
+    return line_num
 
 
 if __name__ == '__main__':
@@ -155,26 +210,34 @@ if __name__ == '__main__':
     ''' JadePix Control '''
 
     """ From here we can test configuration """
+    data_num = 0
     if main_config.JADEPIX_CONFIG:
+        CONFIG_SHAPE = [jadepix_defs.ROW, jadepix_defs.COL, 3]
+        MASK_DEFAULT = (1, 0, 0)  # no mask
+        PLSE_DEFAULT = (0, 1, 0)  # all pulse out
+
+        mask_arr = np.empty(CONFIG_SHAPE, dtype=int)
+        mask_arr[:, :] = MASK_DEFAULT
+
+        plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
+        plse_arr[:, :] = PLSE_DEFAULT
+
+        set_con_data(config_arr=plse_arr, row_low=2, row_high=105, col_low=12, col_high=18, data=1)
+        data_num = gen_test_pattern(plse_arr)
+
         start = time.process_time()
         # CON_SELM, CON_SELP, CON_DATA
-        configs = [(1, 0, 0),  # Set mask = 0
-                   (0, 1, 0)]  # Set pulse = 1
-        for i, one_config in zip(range(len(configs)), configs):
-            # gen configuration file first
-            sel_mask_en = False
-            sel_pulse_en = True
-            sel_row = 1
-            sel_col = 5
-            sel_data = 1
-            is_mask = False
-            if i == 0:
-                is_mask = True
-            jadepix_dev.w_cfg(one_config, is_mask, sel_mask_en, sel_pulse_en, sel_row, sel_col, sel_data)
-            # write to FIFO
-            jadepix_dev.start_cfg(go_dispatch=True)
-            print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-            time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
+
+        # Write Mask to FIFO and start config
+        jadepix_dev.w_cfg(mask_arr)
+        jadepix_dev.start_cfg(go_dispatch=True)
+        print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+        time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
+        # Write PULSE to FIFO and start config
+        jadepix_dev.w_cfg(plse_arr)
+        jadepix_dev.start_cfg(go_dispatch=True)
+        print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+        time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
 
     """ Set digital front-end """
     jadepix_dev.is_debug(main_config.DEBUG_MODE)
@@ -215,7 +278,7 @@ if __name__ == '__main__':
 
         # test_valid_pattern = 12
         # frame_per_slice = 4
-        num_token = 1
+        # num_token = 1
 
         # frame_number = frame_per_slice * num_token
         # num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
@@ -225,22 +288,29 @@ if __name__ == '__main__':
         rfifo_depth = pow(2, rfifo_depth_width)
 
         slice_size = int(rfifo_depth)  # try largest slice as possible
-        num_data_wanted = num_token * slice_size
-        data_size = num_data_wanted * 32  # Unit: bit
-        log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
+        # num_data_wanted = num_token * slice_size
+        # data_size = num_data_wanted * 32  # Unit: bit
+        # log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
 
         ''' Get Data Stream '''
         data_que = SimpleQueue()
         start = time.process_time()
-        for j in range(num_token):
-            mem = jadepix_dev.read_ipb_data_fifo(1, safe_style=True)
+        for j in range(1):
+            mem = jadepix_dev.read_ipb_data_fifo(data_num, safe_style=True)
             if main_config.W_TXT:
-                with open('data/data.txt', 'w+') as data_file:
+                data_string = []
+                data_file = "data/data.txt"
+                try:
+                    os.remove(data_file)
+                except OSError:
+                    pass
+                with open(data_file, 'w+') as data_file:
                     for data in mem:
-                        data_file.write(str(hex(data)) + '\n')
+                        data_string.append("{:#010x}\n".format(data))
+                    data_file.write("".join(data_string))
             data_que.put(mem)
-        trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
-        log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
+        # trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
+        # log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
     if main_config.JADEPIX_RUN_RS:
         frame_number = 1
@@ -260,7 +330,7 @@ if __name__ == '__main__':
         if os.path.exists(data_root_file):
             os.remove(data_root_file)
         start = time.process_time()
-        for one_config in range(num_token):
+        for one_config in range(1):
             data_vector = data_que.get()
             data_arr = np.asarray(data_vector, dtype=[('data', np.uint32)], order='K')
             array2root(data_arr, data_root_file, treename='data', mode='update')
@@ -277,7 +347,7 @@ if __name__ == '__main__':
         del data_que
 
         ''' Draw some plots '''
-        data_ana = data_analysis.DataAnalysis(data_root_file, num_token, is_save_png=True)
+        data_ana = data_analysis.DataAnalysis(data_root_file, 1, is_save_png=True)
         lost_tmp, data_num_got = data_ana.draw_data()
         # data_lost = num_data - data_num_got
         # lost += lost_tmp
