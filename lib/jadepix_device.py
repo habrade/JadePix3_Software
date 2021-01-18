@@ -389,7 +389,10 @@ class JadePixDevice:
         self.w_reg("HIT_RST_SOFT", hit_rst_soft, is_pulse=False, go_dispatch=True)
 
     def set_chip_clk(self, sel):
-        if sel==0:
+        if sel == 0:
             log.warning("Selec")
         log.warning("Chip system clock select: {:}".format(sel))
         self.w_reg("SEL_CHIP_CLK", sel, is_pulse=False, go_dispatch=True)
+
+    def set_blk_sel_def(self, blk_sel_def):
+        self.w_reg("BLK_SEL_DEF", blk_sel_def, is_pulse=False, go_dispatch=True)

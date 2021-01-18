@@ -62,10 +62,10 @@
     <node id="CA_EN_SOFT" address="0x19" mask="0x4000" permission="rw"/>
     <node id="HIT_RST_SOFT" address="0x19" mask="0x8000" permission="rw"/>
     <node id="SEL_CHIP_CLK" address="0x19" mask="0x10000" permission="rw"/>
+    <node id="BLK_SEL_DEF" address="0x19" mask="0x60000" permission="rw"/>
 
     <node id="SLCTRL_FIFO" module="file://../slave/wfifo.xml" address="0x20" tags="slave"/>
     <node id="DATA_FIFO" module="file://../slave/rfifo.xml" address="0x24" tags="slave"/>
-
 
 
 </node>
