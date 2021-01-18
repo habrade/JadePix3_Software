@@ -219,20 +219,38 @@ def main(enable_config=0):
     plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
     plse_arr[:, :] = PLSE_DEFAULT
 
-    set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=0, col_high=2, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=16, col_high=17, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=35, col_high=37, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=115, row_high=117, col_low=32, col_high=33, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=221, row_high=223, col_low=45, col_high=47, data=1)
+ 
+    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=64, col_high=65, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=79, col_high=80, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=255, row_high=257, col_low=95, col_high=96, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=254, row_high=256, col_low=71, col_high=73, data=1)
+
+    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=112, col_high=113, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=134, row_high=135, col_low=115, col_high=117, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=335, row_high=337, col_low=123, col_high=124, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=222, row_high=224, col_low=135, col_high=137, data=1)
+    #
+    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=160, col_high=161, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=111, row_high=112, col_low=167, col_high=169, data=1)
+    # set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
+    set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
+
     data_num = gen_test_pattern(plse_arr)
 
     if enable_config:
         log.warning("Start configure the PULSE and MASK of each pixel...")
         start = time.process_time()
-        # CON_SELM, CON_SELP, CON_DATA
-
         # Write Mask to FIFO and start config
         jadepix_dev.w_cfg(mask_arr)
         jadepix_dev.start_cfg(go_dispatch=True)
         print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
         time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
         # Write PULSE to FIFO and start config
+        start = time.process_time()
         jadepix_dev.w_cfg(plse_arr)
         jadepix_dev.start_cfg(go_dispatch=True)
         print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
@@ -268,12 +286,12 @@ def main(enable_config=0):
     jadepix_dev.set_chip_clk(1)  # 1: clk_sys 0: clk_fpga
 
     """ Set BLK_SELECT default value """
-    jadepix_dev.set_blk_sel_def(blk_sel_def=0)
+    jadepix_dev.set_blk_sel_def(blk_sel_def=3)
 
     """ Set configuration timing dactor """
-    jadepix_dev.set_cfg_multi_factor_t0(t0_factor=20)  # 1-255
-    jadepix_dev.set_cfg_multi_factor_t1(t1_factor=200)  # 1-65536
-    jadepix_dev.set_cfg_multi_factor_t2(t2_factor=20)  # 1-255
+    jadepix_dev.set_cfg_multi_factor_t0(t0_factor=83)  # 1-255
+    jadepix_dev.set_cfg_multi_factor_t1(t1_factor=83)  # 1-65535
+    jadepix_dev.set_cfg_multi_factor_t2(t2_factor=83)  # 1-255
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
@@ -283,7 +301,7 @@ def main(enable_config=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
                               hitmap_col_high=351, hitmap_en=True, frame_number=1)
-        jadepix_dev.gs_config(pulse_delay=4, width_low=65535, width_high=0, pulse_deassert=2, deassert=5, col=313)
+        jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=0, pulse_deassert=256, deassert=5, col=313)
         jadepix_dev.start_gs()
 
         # test_valid_pattern = 12
