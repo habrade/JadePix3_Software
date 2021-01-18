@@ -270,6 +270,11 @@ def main(enable_config=0):
     """ Set BLK_SELECT default value """
     jadepix_dev.set_blk_sel_def(blk_sel_def=0)
 
+    """ Set configuration timing dactor """
+    jadepix_dev.set_cfg_multi_factor_t0(t0_factor=20)  # 1-255
+    jadepix_dev.set_cfg_multi_factor_t1(t1_factor=200)  # 1-65536
+    jadepix_dev.set_cfg_multi_factor_t2(t2_factor=20)  # 1-255
+
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""

@@ -396,3 +396,12 @@ class JadePixDevice:
 
     def set_blk_sel_def(self, blk_sel_def):
         self.w_reg("BLK_SEL_DEF", blk_sel_def, is_pulse=False, go_dispatch=True)
+
+    def set_cfg_multi_factor_t0(self, t0_factor):
+        self.w_reg("CFG_MULTI_FACTOR_T0", t0_factor, is_pulse=False, go_dispatch=True)
+
+    def set_cfg_multi_factor_t1(self, t1_factor):
+        self.w_reg("CFG_MULTI_FACTOR_T1", t1_factor, is_pulse=False, go_dispatch=True)
+
+    def set_cfg_multi_factor_t2(self, t2_factor):
+        self.w_reg("CFG_MULTI_FACTOR_T2", t2_factor, is_pulse=False, go_dispatch=True)
