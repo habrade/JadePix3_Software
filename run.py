@@ -239,7 +239,7 @@ def main(enable_config=0):
     # set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
     set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    data_num = gen_test_pattern(plse_arr)
+    data_per_frame = gen_test_pattern(plse_arr)
 
     if enable_config:
         log.warning("Start configure the PULSE and MASK of each pixel...")
@@ -249,14 +249,14 @@ def main(enable_config=0):
             jadepix_dev.w_cfg(mask_arr)
             jadepix_dev.start_cfg(go_dispatch=True)
             print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-        time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
+        time.sleep(1.2)  # 100K(512 * 192) * 10us = 1s, FIFO -> Chip
         # Write PULSE to FIFO and start config
         start = time.process_time()
         if not jadepix_dev.is_busy_cfg():
             jadepix_dev.w_cfg(plse_arr)
             jadepix_dev.start_cfg(go_dispatch=True)
         print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
-        time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
+        time.sleep(1.2)  # 100K(512 * 192) * 10us = 1s, FIFO -> Chip
 
     """ Set digital front-end """
     jadepix_dev.is_debug(main_config.DEBUG_MODE)
@@ -298,11 +298,12 @@ def main(enable_config=0):
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
+    frame_number = 1
     if main_config.JADEPIX_RUN_GS:
         # TODO: Will change to real time later
         jadepix_dev.reset_rfifo()
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
-                              hitmap_col_high=351, hitmap_en=True, frame_number=1)
+                              hitmap_col_high=351, hitmap_en=True, frame_number=frame_number)
         jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=0, pulse_deassert=256, deassert=5, col=313)
         jadepix_dev.start_gs()
 
@@ -325,26 +326,26 @@ def main(enable_config=0):
         ''' Get Data Stream '''
         data_que = SimpleQueue()
         start = time.process_time()
-        for j in range(1):
-            mem = jadepix_dev.read_ipb_data_fifo(data_num, safe_style=True)
-            if main_config.W_TXT:
-                data_string = []
-                data_file = "data/data.txt"
-                try:
-                    os.remove(data_file)
-                except OSError:
-                    pass
-                with open(data_file, 'w+') as data_file:
-                    for data in mem:
-                        data_string.append("{:#010x}\n".format(data))
-                    data_file.write("".join(data_string))
-            data_que.put(mem)
+        data_in_total = data_per_frame * frame_number
+        mem = jadepix_dev.read_ipb_data_fifo(1, safe_style=True)
+        if main_config.W_TXT:
+            data_string = []
+            data_file = "data/data.txt"
+            try:
+                os.remove(data_file)
+            except OSError:
+                pass
+            with open(data_file, 'w+') as data_file:
+                for data in mem:
+                    data_string.append("{:#010x}\n".format(data))
+                data_file.write("".join(data_string))
+        data_que.put(mem)
         # trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
         # log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 1
-        # jadepix_dev.dig_sel(False)
+        frame_number = 20
+        data_in_total = data_per_frame * frame_number
         jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
                               hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
@@ -377,7 +378,7 @@ def main(enable_config=0):
         del data_que
 
         ''' Draw some plots '''
-        data_ana = data_analysis.DataAnalysis(data_root_file, 1, is_save_png=False)
+        data_ana = data_analysis.DataAnalysis(data_root_file, 1, is_save_png=True)
         lost_tmp, data_num_got = data_ana.draw_data()
         # data_lost = num_data - data_num_got
         # lost += lost_tmp
