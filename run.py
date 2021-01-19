@@ -245,14 +245,16 @@ def main(enable_config=0):
         log.warning("Start configure the PULSE and MASK of each pixel...")
         start = time.process_time()
         # Write Mask to FIFO and start config
-        jadepix_dev.w_cfg(mask_arr)
-        jadepix_dev.start_cfg(go_dispatch=True)
-        print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+        if not jadepix_dev.is_busy_cfg():
+            jadepix_dev.w_cfg(mask_arr)
+            jadepix_dev.start_cfg(go_dispatch=True)
+            print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
         time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
         # Write PULSE to FIFO and start config
         start = time.process_time()
-        jadepix_dev.w_cfg(plse_arr)
-        jadepix_dev.start_cfg(go_dispatch=True)
+        if not jadepix_dev.is_busy_cfg():
+            jadepix_dev.w_cfg(plse_arr)
+            jadepix_dev.start_cfg(go_dispatch=True)
         print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
         time.sleep(0.2)  # 512*192*50*16ns = 78.64 ms, FIFO -> Chip
 
@@ -289,9 +291,9 @@ def main(enable_config=0):
     jadepix_dev.set_blk_sel_def(blk_sel_def=3)
 
     """ Set configuration timing dactor """
-    jadepix_dev.set_cfg_multi_factor_t0(t0_factor=83)  # 1-255
-    jadepix_dev.set_cfg_multi_factor_t1(t1_factor=83)  # 1-65535
-    jadepix_dev.set_cfg_multi_factor_t2(t2_factor=83)  # 1-255
+    jadepix_dev.set_cfg_add_factor_t0(t0_factor=83)  # 1-255
+    jadepix_dev.set_cfg_add_factor_t1(t1_factor=83)  # 1-65535
+    jadepix_dev.set_cfg_add_factor_t2(t2_factor=83)  # 1-255
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""

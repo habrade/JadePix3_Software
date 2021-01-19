@@ -64,9 +64,9 @@
     <node id="SEL_CHIP_CLK" address="0x19" mask="0x10000" permission="rw"/>
     <node id="BLK_SEL_DEF" address="0x19" mask="0x60000" permission="rw"/>
 
-    <node id="CFG_MULTI_FACTOR_T0" address="0x1a" mask="0xff" permission="rw"/>
-    <node id="CFG_MULTI_FACTOR_T1" address="0x1a" mask="0xffff00" permission="rw"/>
-    <node id="CFG_MULTI_FACTOR_T2" address="0x1a" mask="0xff000000" permission="rw"/>
+    <node id="CFG_ADD_FACTOR_T0" address="0x1a" mask="0xff" permission="rw"/>
+    <node id="CFG_ADD_FACTOR_T1" address="0x1a" mask="0xffff00" permission="rw"/>
+    <node id="CFG_ADD_FACTOR_T2" address="0x1a" mask="0xff000000" permission="rw"/>
 
     <node id="SLCTRL_FIFO" module="file://../slave/wfifo.xml" address="0x20" tags="slave"/>1a
     <node id="DATA_FIFO" module="file://../slave/rfifo.xml" address="0x24" tags="slave"/>
