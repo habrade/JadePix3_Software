@@ -64,15 +64,20 @@ class IPbusLink:
             print("Slow ctrl cmd {:#08x} has been sent".format(cmd[i]))
             time.sleep(0.2)
 
-    def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_style):
+    def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_mode, try_time=100):
+        read_empty_time = 0
         mem = []
-        if safe_style:
+        if safe_mode:
             left = num
             while left > 0:
+                if read_empty_time > try_time:
+                    log.error("Too many times that data fifo is empty, quit!")
+                    break
                 read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
                 self._hw.dispatch()
                 # time.sleep(0.01)
                 if read_len == 0:
+                    read_empty_time += 1
                     continue
                 read_len = min(left, int(read_len))
                 mem0 = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(read_len)

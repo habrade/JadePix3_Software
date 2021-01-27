@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 import sys
-import threading
 import time
 import logging
 import os
 import gc
-
-import pvaccess
 
 from pathlib import Path
 from functools import partial
@@ -18,6 +15,7 @@ from lib.dac70004_device import Dac70004Device
 from lib.dac70004_defs import *
 from lib.ipbus_link import IPbusLink
 from lib.jadepix_device import JadePixDevice
+from lib.s_curve import SCurve
 
 from data_analysis import data_analysis
 
@@ -40,69 +38,6 @@ __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
 
-class JadepixSrv(object):
-    def __init__(self):
-        super(JadepixSrv, self).__init__(ipbus_link)
-
-        self.jadepix_dev = JadePixDevice(ipbus_link)
-        self.global_dev = GlobalDevice(ipbus_link)
-        self.dac70004_dev = Dac70004Device(ipbus_link)
-
-        self.__PREFIX = "HEP:Jadepix3:"
-        self.__dac70004_channel_lst = ["DAC70004:ALL_ENABLE", "DAC70004:RESET", "DAC70004:CLR",
-                                       "DAC70004:CHA", "DAC70004:CHB", "DAC70004:CHC", "DAC70004:CHD"]
-        self.ca_dac70004_all_enable = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[0])
-        self.ca_dac70004_reset = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[1])
-        self.ca_dac70004_clr = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[2])
-        self.ca_dac70004_cha_vplse_low = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[3])
-        self.ca_dac70004_chb_vplse_high = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[4])
-        self.ca_dac70004_chc_reset1 = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[5])
-        self.ca_dac70004_chd_reset2 = pvaccess.Channel(self.__PREFIX + self.__dac70004_channel_lst[6])
-
-        self.__spi_channel_lst = []
-
-    def dac_thread(self):
-        # GPIO Direction Set
-        if self.ca_dac70004_reset.get().getInt() == 1:
-            self.dac70004_dev.soft_reset()
-
-        if self.ca_dac70004_clr.get().getInt() == 1:
-            self.dac70004_dev.soft_clr()
-
-        switches = self.ca_dac70004_all_enable.get().getInt()
-        self.dac70004_dev.w_power_chn(DAC70004_PW_UP, switches)  # Power up all channels
-
-        vol_a = self.ca_dac70004_cha_vplse_low.get().getDouble()
-        vol_b = self.ca_dac70004_chb_vplse_high.get().getDouble()
-        vol_c = self.ca_dac70004_chc_reset1.get().getDouble()
-        vol_d = self.ca_dac70004_chd_reset2.get().getDouble()
-        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_A, vol_a)  # Set channle A to 1.3V, LOW
-        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_B, vol_b)  # Set channle B to 1.7V, HIGH
-        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_C, vol_c)  # Set channle C to 1.4V, RESET1
-        self.dac70004_dev.w_ana_chn_update_chn(DAC70004_CHN_D, vol_d)  # Set channle D to 1.4V, RESET2
-
-    def create_threads(self):
-        # global thread_function
-        num_threads = 1
-        threads = []
-        for index_t in range(num_threads):
-            if index_t == 0:
-                thread_function = self.dac_thread
-            # elif index_t == 1:
-            #     thread_function = self.adc_thread_func
-            # elif index_t == 2:
-            #     thread_function = self.bme280_thread_func
-
-            t = threading.Thread(target=thread_function, args=())
-            t.daemon = True
-            threads.append(t)
-
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
-
-
 class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
@@ -111,8 +46,9 @@ class MainConfig(object):
         self.JADEPIX_SPI_CONF = True
         self.JADEPIX_CONFIG = True
         self.JADEPIX_RUN_GS = True
+        self.JADEPIX_SCURVE_TEST = True
         self.JADEPIX_RUN_RS = False
-        self.JADEPIX_GET_DATA = True
+        self.JADEPIX_ANA_DATA = True
 
         self.W_TXT = True
 
@@ -178,6 +114,7 @@ def main(enable_config=0):
     jadepix_dev = JadePixDevice(ipbus_link)
     global_dev = GlobalDevice(ipbus_link)
     dac70004_dev = Dac70004Device(ipbus_link)
+    s_curve = SCurve(ipbus_link)
 
     ''' Soft global reset '''
     if main_config.GLOBAL_RESET:
@@ -223,7 +160,7 @@ def main(enable_config=0):
     # set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=35, col_high=37, data=1)
     # set_con_data(config_arr=plse_arr, row_low=115, row_high=117, col_low=32, col_high=33, data=1)
     # set_con_data(config_arr=plse_arr, row_low=221, row_high=223, col_low=45, col_high=47, data=1)
- 
+
     # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=64, col_high=65, data=1)
     # set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=79, col_high=80, data=1)
     # set_con_data(config_arr=plse_arr, row_low=255, row_high=257, col_low=95, col_high=96, data=1)
@@ -327,7 +264,7 @@ def main(enable_config=0):
         data_que = SimpleQueue()
         start = time.process_time()
         data_in_total = data_per_frame * frame_number
-        mem = jadepix_dev.read_ipb_data_fifo(1, safe_style=True)
+        mem = jadepix_dev.read_ipb_data_fifo(slice_size, safe_mode=True)
         if main_config.W_TXT:
             data_string = []
             data_file = "data/data.txt"
@@ -343,6 +280,14 @@ def main(enable_config=0):
         # trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
         # log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
+    if main_config.JADEPIX_SCURVE_TEST:
+        jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
+                              hitmap_col_high=351, hitmap_en=True, frame_number=1)
+        jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=0, pulse_deassert=256, deassert=5, col=313)
+
+        s_curve.run_scurve_pulse_low_test(pulse_hi=1.7, pulse_lo_init=1.4, pulse_lo_target=1.5, lo_step=0.01,
+                                          test_num=50)
+
     if main_config.JADEPIX_RUN_RS:
         frame_number = 20
         data_in_total = data_per_frame * frame_number
@@ -351,7 +296,7 @@ def main(enable_config=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
 
-    if main_config.JADEPIX_GET_DATA:
+    if main_config.JADEPIX_ANA_DATA:
         log.info("Write data to .root ...")
         data_root_file = "data/data.root"
         hfile = ROOT.gROOT.FindObject(data_root_file)

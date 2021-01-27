@@ -3,8 +3,6 @@ import time
 import coloredlogs
 import logging
 
-import numpy as np
-
 from lib.jadepix_defs import *
 from lib.spi_device import SpiDevice
 
@@ -25,7 +23,8 @@ class JadePixDevice:
         self.spi_dev = SpiDevice(self._ipbus_link)
         self.spi_reg = bitarray(200 * "0")
 
-        self.cfg_file_path = "./etc/config/config.csv"
+        self._gs_exposure_time = 0
+        self._gs_time = 0
 
     def w_reg(self, reg_name, reg_val, is_pulse, go_dispatch):
         self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
@@ -291,6 +290,11 @@ class JadePixDevice:
             log.info("Start global shutter...")
             reg_name = "gs_start"
             self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
+            log.info("Waiting for global shutter end...")
+            time.sleep(self._gs_time / pow(10, 9))
+            while self.is_busy_gs():
+                continue
+            log.info("Global shutter end!")
 
     def set_gs_pulse_delay(self, pulse_delay, go_dispatch=True):
         reg_name = "gs_pulse_delay_cnt"
@@ -330,6 +334,11 @@ class JadePixDevice:
         self.hitmap_en(enable=hitmap_en)
 
     def gs_config(self, pulse_delay, width_low, width_high, pulse_deassert, deassert, col):
+        self._gs_exposure_time = (width_low + (width_high << 32)) * SYS_CLK_PERIOD  # Unit: ns
+        self._gs_time = (pulse_delay + pulse_deassert + deassert) * SYS_CLK_PERIOD + self._gs_exposure_time
+        log.info("Global shutter setting: exposure time: {} ns. total time: {} ns".format(self._gs_exposure_time,
+                                                                                          self._gs_time))
+
         self.set_gs_pulse_delay(pulse_delay=pulse_delay)
         self.set_gs_width_low(width_low=width_low)
         self.set_gs_width_high(width_high=width_high)
@@ -340,8 +349,8 @@ class JadePixDevice:
     def send_slow_ctrl_cmd(self, cmd):
         self._ipbus_link.send_slow_ctrl_cmd(self.reg_name_base, "SLCTRL_FIFO", cmd)
 
-    def read_ipb_data_fifo(self, num, safe_style):
-        return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num, safe_style)
+    def read_ipb_data_fifo(self, num, safe_mode):
+        return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num, safe_mode)
 
     def reset_rfifo(self):
         log.info("Reset readout FIFO.")

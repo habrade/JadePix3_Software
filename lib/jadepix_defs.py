@@ -5,6 +5,8 @@ ROW = 512
 COL = 192
 BLK = 4
 
+SYS_CLK_PERIOD = 12  # Unit: ns
+
 ## SPI config
 idac1_data = bitarray("10000000")
 idac2_data = bitarray("00101010")
