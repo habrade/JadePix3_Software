@@ -114,7 +114,7 @@ def main(enable_config=0):
     jadepix_dev = JadePixDevice(ipbus_link)
     global_dev = GlobalDevice(ipbus_link)
     dac70004_dev = Dac70004Device(ipbus_link)
-    s_curve = SCurve(ipbus_link)
+    s_curve = SCurve(dac70004_dev, jadepix_dev)
 
     ''' Soft global reset '''
     if main_config.GLOBAL_RESET:
