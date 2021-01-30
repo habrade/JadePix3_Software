@@ -2,7 +2,8 @@ import logging
 import os
 import coloredlogs
 
-from lib.dac70004_defs import *
+from lib import dac70004_defs
+from lib import jadepix_defs
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -22,11 +23,11 @@ class SCurve():
 
     def set_pulse_hi(self, pulse_high):
         log.info("Set S-Curve pulse high: {:}".format(pulse_high))
-        self._dac_dev.w_ana_chn_update_chn(DAC70004_CHN_B, pulse_high)
+        self._dac_dev.w_ana_chn_update_chn(dac70004_defs.DAC70004_CHN_B, pulse_high)
 
     def set_pulse_lo(self, pulse_low):
         log.info("Set S-Curve pulse low: {:}".format(pulse_low))
-        self._dac_dev.w_ana_chn_update_chn(DAC70004_CHN_A, pulse_low)
+        self._dac_dev.w_ana_chn_update_chn(dac70004_defs.DAC70004_CHN_A, pulse_low)
 
     def run_scurve_pulse_low_test(self, pulse_hi, pulse_lo_init, pulse_lo_target, lo_step, test_num):
         data_file_prefix = "./data/scurve/data_pulse_low_test/"
@@ -37,7 +38,7 @@ class SCurve():
                 self.set_pulse_lo(pulse_lo)
                 self._jadepix_dev.reset_rfifo()
                 self._jadepix_dev.start_gs()
-                mem = self._jadepix_dev.read_ipb_data_fifo(1, safe_mode=True)
+                mem = self._jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
                 data_string = []
                 data_file_path = "{:s}{:3d}_{:3d}_{:03d}_{:d}.txt".format(data_file_prefix, int(pulse_hi * 1000),
                                                                           int(pulse_lo * 1000),

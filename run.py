@@ -252,10 +252,6 @@ def main(enable_config=0):
         # num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
         # num_valid_data_stream = num_data + 2 * frame_number - 1
 
-        rfifo_depth_width = 17
-        rfifo_depth = pow(2, rfifo_depth_width)
-
-        slice_size = int(rfifo_depth)  # try largest slice as possible
         # num_data_wanted = num_token * slice_size
         # data_size = num_data_wanted * 32  # Unit: bit
         # log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
@@ -264,7 +260,7 @@ def main(enable_config=0):
         data_que = SimpleQueue()
         start = time.process_time()
         data_in_total = data_per_frame * frame_number
-        mem = jadepix_dev.read_ipb_data_fifo(slice_size, safe_mode=True)
+        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
         if main_config.W_TXT:
             data_string = []
             data_file = "data/data.txt"
