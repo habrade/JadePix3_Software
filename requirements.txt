@@ -2,3 +2,4 @@ coloredlogs~=14.0
 setuptools~=49.6.0
 bitarray~=1.5.2
 numpy~=1.17.4
+root-numpy~=4.8.0
