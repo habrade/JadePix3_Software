@@ -27,12 +27,33 @@ class SpiDevice:
         self.ctrl = 0x00000000
 
     def w_reg(self, reg_name, reg_val, is_pulse, go_dispatch):
+        """
+        The register write function for SPI device.
+
+        :param reg_name:
+        :param reg_val:
+        :param is_pulse:
+        :param go_dispatch:
+        :return:
+        """
         self._ipbus_link.w_reg(self.reg_name_base, reg_name, reg_val, is_pulse, go_dispatch)
 
     def r_reg(self, reg_name):
+        """
+        The register write function for SPI device.
+
+        :param reg_name:
+        :return: 
+        """
         return self._ipbus_link.r_reg(self.reg_name_base, reg_name)
 
     def set_data_len(self, data_len):
+        """
+        Set how many data to be sent to slave.
+
+        :param data_len:  maximum is 255.
+        :return:
+        """
         if data_len not in range(0, 256):
             raise ValueError('Unexpected char_len number: {0}, should be less than 256'.format(data_len))
         self.data_len = data_len
@@ -40,6 +61,12 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_rx_neg(self, enabled):
+        """
+        Set miso_pad_i signal latched on which sclk_pad_o edge.
+
+        :param enabled: True: Falling edge. False: Rising edge.
+        :return:
+        """
         if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
@@ -51,6 +78,12 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_tx_neg(self, enabled):
+        """
+        Set mosi_pad_o signal latched on which sclk_pad_o edge.
+
+        :param enabled: True: Falling edge. False: Rising edge.
+        :return:
+        """
         if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
@@ -62,6 +95,12 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_go_busy(self, enabled=True):
+        """
+        Start transfer.
+
+        :param enabled: True: Start. False: No effect.
+        :return:
+        """
         if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
@@ -73,6 +112,12 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_lsb(self, enabled):
+        """
+        Set LSB/MSB sent first on the line.
+
+        :param enabled: True: LSB; False: MSB
+        :return:
+        """
         if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
@@ -86,6 +131,12 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_ie(self, enabled):
+        """
+        The interrupt output is set active after a transfer is finished.
+
+        :param enabled: False: No effect.
+        :return:
+        """
         if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
@@ -97,6 +148,12 @@ class SpiDevice:
         self.update_ctrl()
 
     def set_ass(self, enabled):
+        """
+        Set how ss signal is generated.
+
+        :param enabled: True: automatically; False: Slave select signals are asserted and de-aserted by writing and clearing bits in SS register
+        :return:
+        """
         if not isinstance(enabled, bool):
             raise ValueError('Unexpected parameter, it must be boolean: {}'.format(enabled))
         if enabled:
@@ -146,7 +203,7 @@ class SpiDevice:
         self.w_reg(reg_name, reg_val=divider, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_div(self):
-        """Write to divider reg"""
+        """Read divider reg"""
         reg_name = "divider"
         divider_val = self.r_reg(reg_name)
         log.debug("SPI clock divider val: {:d}".format(divider_val))
@@ -158,18 +215,19 @@ class SpiDevice:
         self.w_reg(reg_name, reg_val=ss, is_pulse=False, go_dispatch=go_dispatch)
 
     def r_ss(self):
-        """Write to ss reg"""
+        """Read ss reg"""
         reg_name = "ss"
         ss_val = self.r_reg(reg_name)
         log.debug("SPI ss val: {:d}".format(ss_val))
         return ss_val
 
     def start(self):
+        """ Start SPI transfer"""
         self.set_go_busy()
         self.w_ctrl(go_dispatch=True)
 
     def w_data_regs(self, spi_data, go_dispatch=True):
-        log.info("Writing SPI configuration data to SPI data registers...")
+        """Writing SPI configuration data to SPI data registers..."""
         for i in range(0, 8):
             reg_name = "d" + str(i)
             data = spi_data[i]

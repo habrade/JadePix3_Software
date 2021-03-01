@@ -17,10 +17,26 @@ class GlobalDevice:
         self.reg_name_base = "global_dev."
 
     def set_bit(self, reg_name):
+        """
+        Base method for send reset pulse.
+
+        :param reg_name:
+        :return:
+        """
         self._ipbus_link.w_reg(self.reg_name_base, reg_name, 0, is_pulse=True, go_dispatch=True)
 
     def set_nuke(self):
+        """
+        All clock domain in FPGA sync reset.
+
+        :return:
+        """
         return self.set_bit("nuke")
 
     def set_soft_rst(self):
+        """
+        IPbus clock(31.25MHz) sync reset.
+
+        :return:
+        """
         return self.set_bit("soft_rst")

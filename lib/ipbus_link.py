@@ -27,12 +27,23 @@ class IPbusLink:
         log.info("IPbus timeout period: {:}".format(self._hw.getTimeoutPeriod()))
 
     def get_hw(self):
+        """
+        :return: IPbus Device
+        """
         # uhal.setLogLevelTo(uhal.LogLevel.DEBUG)
         uhal.disableLogging()
         hw = uhal.getDevice("JadePix3.udp.0", self.device_uri, self.address_table_uri)
         return hw
 
     def w_reg(self, reg_name_base, reg_name, reg_val, is_pulse, go_dispatch=True):
+        """
+        :param reg_name_base: Register name base, usually device name.
+        :param reg_name: Register name.
+        :param reg_val: Value be to send.
+        :param is_pulse: Whether generate pulse.
+        :param go_dispatch: Whether send this command. Defalut = True
+        :return: None
+        """
         node_name = reg_name_base + reg_name
         node = self._hw.getNode(node_name)
         if is_pulse:
@@ -45,6 +56,11 @@ class IPbusLink:
             self._hw.dispatch()
 
     def r_reg(self, reg_name_base, reg_name):
+        """
+        :param reg_name_base:
+        :param reg_name:
+        :return:
+        """
         node_name = reg_name_base + reg_name
         node = self._hw.getNode(node_name)
         ret = node.read()
@@ -53,6 +69,12 @@ class IPbusLink:
         return ret_val
 
     def send_slow_ctrl_cmd(self, reg_name_base, fifo_name, cmd):
+        """
+        :param reg_name_base:
+        :param fifo_name:
+        :param cmd:
+        :return:
+        """
         for i in range(len(cmd)):
             self._hw.getNode(reg_name_base + fifo_name + ".WFIFO_DATA").write(cmd[i])
             self._hw.dispatch()
@@ -64,7 +86,23 @@ class IPbusLink:
             print("Slow ctrl cmd {:#08x} has been sent".format(cmd[i]))
             time.sleep(0.2)
 
+    def write_ipb_slow_ctrl_fifo(self, reg_name_base, fifo_name, data_list):
+        """
+        :param reg_name_base:
+        :param fifo_name:
+        :param data_list:
+        :return:
+        """
+        self._hw.getNode(reg_name_base + fifo_name + ".SLCTRL_FIFO").writeBlock(data_list)
+
     def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_mode, try_time=100):
+        """
+          :param reg_name_base:
+          :param fifo_name:
+          :param num:
+          :param safe_style: True: safe read data from FIFO. False: Just read, error may happen, but the speed is fast!
+          :return:
+          """
         read_empty_time = 0
         mem = []
         if safe_mode:
