@@ -51,6 +51,14 @@ You may want to plot data later individually
     2. JadePix configuration
         The location of configuration file: *config/jadepix_config.txt*
 
+Documentation
+-------------
+
+.. code-block:: shell
+
+    sphinx-build -b html doc/source doc/build
+    cd doc && make html
+
 License
 -------
 
