@@ -217,23 +217,17 @@ class JadePixDevice:
         fifo_pfull = self.g_cfg_fifo_pfull()
         fifo_count = self.g_cfg_fifo_count()
         log.debug("Fifo status: empty {} \t prog_full {}, count {}".format(fifo_empty, fifo_pfull, fifo_count))
-        cnt = 0
         log.info("Send configurations to FPGA FIFO...")
-        for row in range(ROW):
-            for col in range(COL):
-                one_config = configs[row, col]
-                con_data = int(one_config[0])
-                con_selp = int(one_config[1])
-                con_selm = int(one_config[2])
-                data = (con_data << 2) + (con_selp << 1) + (con_selm << 0)
-                # row, col = self.calc_row_col(cnt)
-                # log.debug("JadePix config Row {} Col {} : {:#05b}".format(row, col, data))
-                self.w_cfg_fifo(data=data, go_dispatch=False)
-                self.wr_en_fifo(go_dispatch=True)
-                cnt += 1
-        log.info("...write to FPGA FIFO....\nEnding!")
-        if cnt != (ROW * COL):
-            log.error("Data count {} is not right, should be {}".format(cnt, ROW * COL))
+        config_list = []
+        for i in range(configs.size):
+            one_config = configs.flat[i]
+            con_data = int(one_config[0])
+            con_selp = int(one_config[1])
+            con_selm = int(one_config[2])
+            data = (con_data << 0) + (con_selp << 1) + (con_selm << 2)
+            config_list.append(data)
+        self.write_ipb_data_fifo(config_list)
+        log.info("...write to FPGA FIFO....\nEnd!")
         fifo_empty = self.g_cfg_fifo_empty()
         fifo_pfull = self.g_cfg_fifo_pfull()
         fifo_count = self.g_cfg_fifo_count()
@@ -639,7 +633,7 @@ class JadePixDevice:
         :return:
         """
         self._ipbus_link.send_slow_ctrl_cmd(self.reg_name_base, "SLCTRL_FIFO", cmd)
-    
+
     def write_ipb_data_fifo(self, data_list):
         """
         Write to WFIFO (Block write).
