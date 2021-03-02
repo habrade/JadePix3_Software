@@ -227,7 +227,7 @@ def main(enable_config=0):
     """ Set BLK_SELECT default value """
     jadepix_dev.set_blk_sel_def(blk_sel_def=3)
 
-    """ Set configuration timing dactor """
+    """ Set configuration timing factor """
     jadepix_dev.set_cfg_add_factor_t0(t0_factor=83)  # 1-255
     jadepix_dev.set_cfg_add_factor_t1(t1_factor=83)  # 1-65535
     jadepix_dev.set_cfg_add_factor_t2(t2_factor=83)  # 1-255
