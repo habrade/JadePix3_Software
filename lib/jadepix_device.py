@@ -194,7 +194,7 @@ class JadePixDevice:
         reg_name = "cfg_fifo_status.data_count"
         return self.r_reg(reg_name)
 
-    def clear_fifo(self, go_dispatch):
+    def reset_wfifo(self):
         """
         Clear config FIFO.
 
@@ -203,7 +203,7 @@ class JadePixDevice:
         """
         log.debug("Clear jadepix configuration FIFO!")
         reg_name = "cfg_fifo_rst"
-        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=True)
 
     def w_cfg(self, configs):
         """
@@ -212,20 +212,22 @@ class JadePixDevice:
         :return:
         """
         # Write to fifo
-        self.clear_fifo(go_dispatch=True)
+        self.reset_wfifo()
+        # Chech Status
         fifo_empty = self.g_cfg_fifo_empty()
         fifo_pfull = self.g_cfg_fifo_pfull()
         fifo_count = self.g_cfg_fifo_count()
         log.debug("Fifo status: empty {} \t prog_full {}, count {}".format(fifo_empty, fifo_pfull, fifo_count))
         log.info("Send configurations to FPGA FIFO...")
         config_list = []
-        for i in range(configs.size):
-            one_config = configs.flat[i]
-            con_data = int(one_config[0])
-            con_selp = int(one_config[1])
-            con_selm = int(one_config[2])
-            data = (con_data << 0) + (con_selp << 1) + (con_selm << 2)
-            config_list.append(data)
+        for i in range(ROW):
+            for j in range(COL):
+                one_config = configs[i, j]
+                con_data = int(one_config[0])
+                con_selp = int(one_config[1])
+                con_selm = int(one_config[2])
+                data = (con_data << 0) + (con_selp << 1) + (con_selm << 2)
+                config_list.append(data)
         self.write_ipb_data_fifo(config_list)
         log.info("...write to FPGA FIFO....\nEnd!")
         fifo_empty = self.g_cfg_fifo_empty()

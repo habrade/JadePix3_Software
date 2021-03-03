@@ -42,13 +42,13 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.DAC70004_INITIAL = True
-        self.JADEPIX_SPI_CONF = True
+        self.DAC70004_INITIAL = False
+        self.JADEPIX_SPI_CONF = False
         self.JADEPIX_CONFIG = True
-        self.JADEPIX_RUN_GS = True
-        self.JADEPIX_SCURVE_TEST = True
+        self.JADEPIX_RUN_GS = False
+        self.JADEPIX_SCURVE_TEST = False
         self.JADEPIX_RUN_RS = False
-        self.JADEPIX_ANA_DATA = True
+        self.JADEPIX_ANA_DATA = False
 
         self.W_TXT = True
 
