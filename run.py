@@ -179,6 +179,11 @@ def main(enable_config=0):
     data_per_frame = gen_test_pattern(plse_arr)
 
     if enable_config:
+        """ Set configuration timing factor """
+        jadepix_dev.set_cfg_add_factor_t0(t0_factor=83)  # 1-255
+        jadepix_dev.set_cfg_add_factor_t1(t1_factor=83)  # 1-65535
+        jadepix_dev.set_cfg_add_factor_t2(t2_factor=83)  # 1-255
+
         log.warning("Start configure the PULSE and MASK of each pixel...")
         start = time.process_time()
         # Write Mask to FIFO and start config
@@ -227,10 +232,6 @@ def main(enable_config=0):
     """ Set BLK_SELECT default value """
     jadepix_dev.set_blk_sel_def(blk_sel_def=3)
 
-    """ Set configuration timing factor """
-    jadepix_dev.set_cfg_add_factor_t0(t0_factor=83)  # 1-255
-    jadepix_dev.set_cfg_add_factor_t1(t1_factor=83)  # 1-65535
-    jadepix_dev.set_cfg_add_factor_t2(t2_factor=83)  # 1-255
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
