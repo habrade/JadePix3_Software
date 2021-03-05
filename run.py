@@ -42,10 +42,10 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.DAC70004_INITIAL = False
-        self.JADEPIX_SPI_CONF = False
+        self.DAC70004_INITIAL = True
+        self.JADEPIX_SPI_CONF = True
         self.JADEPIX_CONFIG = True
-        self.JADEPIX_RUN_GS = False
+        self.JADEPIX_RUN_GS = True
         self.JADEPIX_SCURVE_TEST = False
         self.JADEPIX_RUN_RS = False
         self.JADEPIX_ANA_DATA = False
@@ -173,7 +173,7 @@ def main(enable_config=0):
     #
     # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=160, col_high=161, data=1)
     # set_con_data(config_arr=plse_arr, row_low=111, row_high=112, col_low=167, col_high=169, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
+    set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
     set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
     data_per_frame = gen_test_pattern(plse_arr)
@@ -184,21 +184,23 @@ def main(enable_config=0):
         jadepix_dev.set_cfg_add_factor_t1(t1_factor=83)  # 1-65535
         jadepix_dev.set_cfg_add_factor_t2(t2_factor=83)  # 1-255
 
-        log.warning("Start configure the PULSE and MASK of each pixel...")
-        start = time.process_time()
+        log.info("Start configure the PULSE and MASK of each pixel...")
         # Write Mask to FIFO and start config
-        if not jadepix_dev.is_busy_cfg():
-            jadepix_dev.w_cfg(mask_arr)
-            jadepix_dev.start_cfg(go_dispatch=True)
-            print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+        if jadepix_dev.is_busy_cfg():
+            log.error("\rConfiguration is busy!")
+        jadepix_dev.w_cfg(mask_arr)
+        jadepix_dev.start_cfg()
         time.sleep(1.2)  # 100K(512 * 192) * 10us = 1s, FIFO -> Chip
+        if not jadepix_dev.is_busy_cfg():
+            log.info("\rConfiguration mask finished!")
         # Write PULSE to FIFO and start config
-        start = time.process_time()
-        if not jadepix_dev.is_busy_cfg():
-            jadepix_dev.w_cfg(plse_arr)
-            jadepix_dev.start_cfg(go_dispatch=True)
-        print("It takes {:} secends to write configurations to FIFO".format(time.process_time() - start))
+        if jadepix_dev.is_busy_cfg():
+            log.error("\rConfiguration is busy!")
+        jadepix_dev.w_cfg(plse_arr)
+        jadepix_dev.start_cfg()
         time.sleep(1.2)  # 100K(512 * 192) * 10us = 1s, FIFO -> Chip
+        if not jadepix_dev.is_busy_cfg():
+            log.info("\rConfiguration pulse finished!")
 
     """ Set digital front-end """
     jadepix_dev.is_debug(main_config.DEBUG_MODE)

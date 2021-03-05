@@ -122,7 +122,7 @@ class IPbusLink:
             left = num
             while left > 0:
                 if read_empty_time > try_time:
-                    log.error("Too many times that data fifo is empty, quit!")
+                    log.warning("Data fifo is empty, quit!")
                     break
                 read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
                 self._hw.dispatch()

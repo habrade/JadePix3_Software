@@ -226,16 +226,19 @@ class JadePixDevice:
                 con_data = int(one_config[0])
                 con_selp = int(one_config[1])
                 con_selm = int(one_config[2])
-                data = (con_data << 0) + (con_selp << 1) + (con_selm << 2)
-                config_list.append(data)
+                data = (con_data << 2) + (con_selp << 1) + (con_selm << 0)
+                config_list.append(data)                
         self.write_ipb_data_fifo(config_list)
-        log.info("...write to FPGA FIFO....\nEnd!")
+        config_list.clear()
+        log.info("...write to FPGA FIFO....!")
         fifo_empty = self.g_cfg_fifo_empty()
         fifo_pfull = self.g_cfg_fifo_pfull()
         fifo_count = self.g_cfg_fifo_count()
         log.debug("Fifo status: empty {} \t prog_full {} \t count {}".format(fifo_empty, fifo_pfull, fifo_count))
+        if fifo_count != ROW*COL:
+            log.error("{} was sent to FPGA FIFO, should be {}".format(fifo_count, ROW*COL))
 
-    def start_cfg(self, go_dispatch):
+    def start_cfg(self):
         """
         Send a start pulse to trigger FSM in FPGA.
 
@@ -244,7 +247,7 @@ class JadePixDevice:
         """
         log.info("Read configuration from FIFO, and write to JadePix3")
         reg_name = "cfg_start"
-        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=go_dispatch)
+        self.w_reg(reg_name, 0, is_pulse=True, go_dispatch=True)
 
     def is_busy_cfg(self):
         """
