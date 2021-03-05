@@ -98,14 +98,7 @@ class IPbusLink:
         :param data_list:
         :return:
         """
-        # valid_len = self._hw.getNode(reg_name_base + fifo_name + ".WVALID_LEN").read()
-        # fifo_len = self._hw.getNode(reg_name_base + fifo_name + ".WFIFO_LEN").read()
-        # log.debug("Valid len: {} FIFO len: {}".format(valid_len, fifo_len))
         self._hw.getNode(reg_name_base + fifo_name + ".WFIFO_DATA").writeBlock(data_list)
-        # valid_len = self._hw.getNode(reg_name_base + fifo_name + ".WVALID_LEN").read()
-        # fifo_len = self._hw.getNode(reg_name_base + fifo_name + ".WFIFO_LEN").read()
-        # print("Valid len: {} FIFO len: {}".format(valid_len, 0))
-
 
     def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_mode, try_time=100):
         """
