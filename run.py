@@ -16,6 +16,7 @@ from lib.dac70004_defs import *
 from lib.ipbus_link import IPbusLink
 from lib.jadepix_device import JadePixDevice
 from lib.s_curve import SCurve
+from lib.gen_pattern import GenPattern
 
 from data_analysis import data_analysis
 
@@ -52,61 +53,6 @@ class MainConfig(object):
 
         self.W_TXT = True
 
-
-def set_config(config_arr, row_low, row_high, col_low, col_high, bit_nr, data):
-    config_arr[row_low:row_high, col_low:col_high, bit_nr] = data
-
-
-set_con_selm = partial(set_config, bit_nr=0)
-set_con_selp = partial(set_config, bit_nr=1)
-set_con_data = partial(set_config, bit_nr=2)
-
-
-def calc_blk(col):
-    return int((col % 48) / 3)
-
-
-def calc_pix_out(config):
-    """ dout = ~CON_MASK & CON_PLSE & CON_DATA """
-    return ((not config[0]) & config[1] & config[2])
-
-
-def calc_data_out(row, blk, pix_data):
-    return (row << 7) + (blk << 3) + pix_data
-
-
-def gen_test_pattern(config_arr):
-    line_num = 0
-    test_patter_path = "data/test_pattern.txt"
-    dout_arr = np.zeros(3, int)
-    data_string = []
-    try:
-        os.remove(test_patter_path)
-    except OSError:
-        pass
-    with open(test_patter_path, "w+") as f:
-        for row in range(jadepix_defs.ROW):
-            for col in range(jadepix_defs.COL):
-                blk = calc_blk(col)
-                pix_bit = col % 3
-                pix_out = calc_pix_out(config_arr[row, col])
-
-                block = int(col / 48)
-
-                dout_arr[pix_bit] = pix_out
-                if pix_bit == 2:
-                    pix_data = int((dout_arr[2] << 2) | (dout_arr[1] << 1) | dout_arr[0])
-                    dout_arr = np.empty((3, 1), int)
-                    if pix_data > 0:
-                        log.debug("row: {} col: {} data: {}".format(row, col, pix_data))
-                        data_out = calc_data_out(row, blk, pix_data)
-                        line_num += 1
-                        data_flag = 2
-                        data_string.append("{:#010x}\n".format((data_flag << 23) + (block << 16) + data_out))
-        f.write("".join(data_string))
-    return line_num
-
-
 def main(enable_config=0):
     ipbus_link = IPbusLink()
     main_config = MainConfig()
@@ -115,6 +61,8 @@ def main(enable_config=0):
     global_dev = GlobalDevice(ipbus_link)
     dac70004_dev = Dac70004Device(ipbus_link)
     s_curve = SCurve(dac70004_dev, jadepix_dev)
+
+    test_pattern_generator = GenPattern()
 
     ''' Soft global reset '''
     if main_config.GLOBAL_RESET:
@@ -145,7 +93,7 @@ def main(enable_config=0):
 
     ''' JadePix Control '''
 
-    """ From here we can test configuration """
+    """ From here we can test pixel register (PULSE/MASK) configuration """
     CONFIG_SHAPE = [jadepix_defs.ROW, jadepix_defs.COL, 3]
     MASK_DEFAULT = (1, 0, 0)  # no mask
     PLSE_DEFAULT = (0, 1, 0)  # all pulse out
@@ -156,27 +104,29 @@ def main(enable_config=0):
     plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
     plse_arr[:, :] = PLSE_DEFAULT
 
-    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=16, col_high=17, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=35, col_high=37, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=115, row_high=117, col_low=32, col_high=33, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=221, row_high=223, col_low=45, col_high=47, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=16, col_high=17, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=35, col_high=37, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=115, row_high=117, col_low=32, col_high=33, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=221, row_high=223, col_low=45, col_high=47, data=1)
 
-    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=64, col_high=65, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=79, col_high=80, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=255, row_high=257, col_low=95, col_high=96, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=254, row_high=256, col_low=71, col_high=73, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=64, col_high=65, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=79, col_high=80, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=255, row_high=257, col_low=95, col_high=96, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=254, row_high=256, col_low=71, col_high=73, data=1)
 
-    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=112, col_high=113, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=134, row_high=135, col_low=115, col_high=117, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=335, row_high=337, col_low=123, col_high=124, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=222, row_high=224, col_low=135, col_high=137, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=112, col_high=113, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=134, row_high=135, col_low=115, col_high=117, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=335, row_high=337, col_low=123, col_high=124, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=222, row_high=224, col_low=135, col_high=137, data=1)
     #
-    # set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=160, col_high=161, data=1)
-    # set_con_data(config_arr=plse_arr, row_low=111, row_high=112, col_low=167, col_high=169, data=1)
-    set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
-    set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=160, col_high=161, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=111, row_high=112, col_low=167, col_high=169, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    data_per_frame = gen_test_pattern(plse_arr)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=189, col_high=192, data=1)
+
+    data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
     if enable_config:
         """ Set configuration timing factor """
