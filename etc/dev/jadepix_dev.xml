@@ -56,7 +56,6 @@
     <node id="CA_EN_SOFT" address="0x18" mask="0x4000" permission="rw"/>
     <node id="HIT_RST_SOFT" address="0x18" mask="0x8000" permission="rw"/>
     <node id="SEL_CHIP_CLK" address="0x18" mask="0x10000" permission="rw"/>
-    <node id="BLK_SEL_DEF" address="0x18" mask="0x60000" permission="rw"/>
 
     <node id="CFG_ADD_FACTOR_T0" address="0x19" mask="0xff" permission="rw"/>
     <node id="CFG_ADD_FACTOR_T1" address="0x19" mask="0xffff00" permission="rw"/>

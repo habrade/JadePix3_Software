@@ -714,9 +714,6 @@ class JadePixDevice:
         log.warning("Chip system clock select: {:}".format(sel))
         self.w_reg("SEL_CHIP_CLK", sel, is_pulse=False, go_dispatch=True)
 
-    def set_blk_sel_def(self, blk_sel_def):
-        self.w_reg("BLK_SEL_DEF", blk_sel_def, is_pulse=False, go_dispatch=True)
-
     def set_cfg_add_factor_t0(self, t0_factor):
         self.w_reg("CFG_ADD_FACTOR_T0", t0_factor, is_pulse=False, go_dispatch=True)
 

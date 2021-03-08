@@ -181,9 +181,6 @@ def main(enable_config=0):
     """ Set jadepix chip clock"""
     jadepix_dev.set_chip_clk(1)  # 1: clk_sys 0: clk_fpga
 
-    """ Set BLK_SELECT default value """
-    # jadepix_dev.set_blk_sel_def(blk_sel_def=0)
-
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
