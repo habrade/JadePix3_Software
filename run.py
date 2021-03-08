@@ -109,7 +109,7 @@ def main(enable_config=0):
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=115, row_high=117, col_low=32, col_high=33, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=221, row_high=223, col_low=45, col_high=47, data=1)
 
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=64, col_high=65, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=144, col_high=192, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=79, col_high=80, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=255, row_high=257, col_low=95, col_high=96, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=254, row_high=256, col_low=71, col_high=73, data=1)
@@ -119,12 +119,12 @@ def main(enable_config=0):
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=335, row_high=337, col_low=123, col_high=124, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=222, row_high=224, col_low=135, col_high=137, data=1)
     #
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=160, col_high=161, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=168, col_high=192, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=111, row_high=112, col_low=167, col_high=169, data=1)
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=189, col_high=192, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=0, col_high=192, data=1)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
@@ -182,7 +182,7 @@ def main(enable_config=0):
     jadepix_dev.set_chip_clk(1)  # 1: clk_sys 0: clk_fpga
 
     """ Set BLK_SELECT default value """
-    jadepix_dev.set_blk_sel_def(blk_sel_def=3)
+    # jadepix_dev.set_blk_sel_def(blk_sel_def=0)
 
 
     """From here we can test global shutter """
@@ -210,13 +210,12 @@ def main(enable_config=0):
         # log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
 
         ''' Get Data Stream '''
-        data_que = SimpleQueue()
         start = time.process_time()
         data_in_total = data_per_frame * frame_number
         mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
         if main_config.W_TXT:
             data_string = []
-            data_file = "data/data.txt"
+            data_file = "data/data_gs.txt"
             try:
                 os.remove(data_file)
             except OSError:
@@ -225,9 +224,6 @@ def main(enable_config=0):
                 for data in mem:
                     data_string.append("{:#010x}\n".format(data))
                 data_file.write("".join(data_string))
-        data_que.put(mem)
-        # trans_speed = int(data_size / (time.process_time() - start))  # Unit: bps
-        # log.info("Transfer speed: {:f} Mbps".format(trans_speed / pow(10, 6)))
 
     if main_config.JADEPIX_SCURVE_TEST:
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
@@ -238,12 +234,24 @@ def main(enable_config=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 20
-        data_in_total = data_per_frame * frame_number
-        jadepix_dev.rs_config(cache_bit=0xf, hitmap_col_low=340,
-                              hitmap_col_high=341, hitmap_en=False, frame_number=frame_number)
+        frame_number = 1
+        # data_in_total = data_per_frame * frame_number
+        jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
+                              hitmap_col_high=351, hitmap_en=True, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
+        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
+        if main_config.W_TXT:
+            data_string = []
+            data_file = "data/data_rs.txt"
+            try:
+                os.remove(data_file)
+            except OSError:
+                pass
+            with open(data_file, 'w+') as data_file:
+                for data in mem:
+                    data_string.append("{:#010x}\n".format(data))
+                data_file.write("".join(data_string))
 
     if main_config.JADEPIX_ANA_DATA:
         log.info("Write data to .root ...")
