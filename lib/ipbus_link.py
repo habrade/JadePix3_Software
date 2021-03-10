@@ -100,18 +100,21 @@ class IPbusLink:
         """
         self._hw.getNode(reg_name_base + fifo_name + ".WFIFO_DATA").writeBlock(data_list)
 
-    def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_mode, try_time=100):
+    def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_mode, wait_time, try_time):
         """
 
         :param reg_name_base:
         :param fifo_name:
         :param num:
         :param safe_style: True: safe read data from FIFO. False: Just read, error may happen, but the speed is fast!
+        :param wait_time: rolling shutter period, unit: ns
+        :param try_time: how many times to try to read
         :return:
         """
         read_empty_time = 0
         mem = []
         if safe_mode:
+            start = time.process_time_ns()
             left = num
             while left > 0:
                 if read_empty_time > try_time:
@@ -119,14 +122,13 @@ class IPbusLink:
                     break
                 read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
                 self._hw.dispatch()
-                # time.sleep(0.01)
                 if read_len == 0:
-                    read_empty_time += 1
+                    if (time.process_time_ns() - start) > wait_time:
+                        read_empty_time += 1
                     continue
                 read_len = min(left, int(read_len))
                 mem0 = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(read_len)
                 self._hw.dispatch()
-                #      print read_len
                 mem.extend(mem0)
                 left = left - read_len
             return mem

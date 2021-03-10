@@ -43,12 +43,12 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.DAC70004_INITIAL = True
+        self.DAC70004_INITIAL = False
         self.JADEPIX_SPI_CONF = True
         self.JADEPIX_CONFIG = True
-        self.JADEPIX_RUN_GS = True
+        self.JADEPIX_RUN_GS = False
         self.JADEPIX_SCURVE_TEST = False
-        self.JADEPIX_RUN_RS = False
+        self.JADEPIX_RUN_RS = True
         self.JADEPIX_ANA_DATA = False
 
         self.W_TXT = True
@@ -81,6 +81,7 @@ def main(enable_config=0):
             DAC70004_CHN_C, 1.4)  # Set channle C to 1.4V, Reset1
         dac70004_dev.w_ana_chn_update_chn(
             DAC70004_CHN_D, 1.4)  # Set channle D to 1.4V, Reset2
+            
 
     ''' SPI master config '''
     if main_config.JADEPIX_SPI_CONF:
@@ -124,7 +125,7 @@ def main(enable_config=0):
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=0, col_high=192, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=0, col_high=192, data=1)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
@@ -156,12 +157,12 @@ def main(enable_config=0):
     jadepix_dev.is_debug(main_config.DEBUG_MODE)
 
     ## only work at debug mode ##
-    jadepix_dev.set_hit_rst_soft(False)  # Do not reset
+    jadepix_dev.set_hit_rst_soft(True)  # Do not reset
     jadepix_dev.set_ca_soft(313)
     jadepix_dev.set_ca_en_soft(True)
 
     ## software settting has influence with firmware logic ##
-    jadepix_dev.set_gshutter_soft(False)  # if true : GSHUTTER force to high
+    jadepix_dev.set_gshutter_soft(True)  # if true : GSHUTTER force to high
     jadepix_dev.digsel_en(True)  # and logic
     jadepix_dev.anasel_en(True)  # and logic
     jadepix_dev.set_dplse_soft(True)  # if false: DPLSE force to low
@@ -208,8 +209,8 @@ def main(enable_config=0):
 
         ''' Get Data Stream '''
         start = time.process_time()
-        data_in_total = data_per_frame * frame_number
-        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
+        # data_in_total = data_per_frame * frame_number
+        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True, wait_time=0, try_time=100)
         if main_config.W_TXT:
             data_string = []
             data_file = "data/data_gs.txt"
@@ -231,13 +232,19 @@ def main(enable_config=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 1
-        # data_in_total = data_per_frame * frame_number
-        jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
-                              hitmap_col_high=351, hitmap_en=True, frame_number=frame_number)
+        frame_number = 250000
+        hitmap_col_low = 340
+        hitmap_col_high = 351
+        hitmap_en = True
+        rs_frame_period_no_hitmap = 16 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW # Unit: ns
+        rs_hitmap_period = (hitmap_col_high-hitmap_col_low)*4*jadepix_defs.SYS_CLK_PERIOD*jadepix_defs.ROW # Unit: ns
+        rs_frame_period =  (rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
+        wait_time = rs_frame_period * frame_number
+        jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=hitmap_col_low,
+                              hitmap_col_high=hitmap_col_high, hitmap_en=hitmap_en, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
-        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
+        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size*4, safe_mode=True, wait_time=wait_time, try_time=100)
         if main_config.W_TXT:
             data_string = []
             data_file = "data/data_rs.txt"
