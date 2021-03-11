@@ -43,7 +43,6 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.JADEPIX_CONFIG = True
         self.JADEPIX_RUN_GS = False
         self.JADEPIX_SCURVE_TEST = False
         self.JADEPIX_RUN_RS = True
