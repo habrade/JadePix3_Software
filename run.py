@@ -165,6 +165,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     jadepix_dev.anasel_en(True)  # if debug=False: ANASEL_EN=anasel_en_soft; if debug=True: ANASEL_EN=ana_sel_en_soft & ana_sel_en_firmware
     jadepix_dev.set_dplse_soft(True)  # if debug=False: DPLSE=dplse_soft; if debug=True: DPLSE=dplse_soft & dplse_firmware
     jadepix_dev.set_aplse_soft(True)  # if debug=False: APLSE=aplse_soft; if debug=True: APLSE=aplse_soft & aplse_firmware
+    jadepix_dev.set_matrix_grst_soft(False)
 
     jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
 

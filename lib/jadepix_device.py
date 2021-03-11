@@ -684,6 +684,9 @@ class JadePixDevice:
     def set_gshutter_soft(self, enable):
         self.w_reg("gshutter_soft", enable, is_pulse=False, go_dispatch=True)
 
+    def set_matrix_grst_soft(self, enable):
+        self.w_reg("matrix_grst_soft", enable, is_pulse=False, go_dispatch=True)
+
     def set_inquiry(self, inquiry):
         """
         Set chip code output
