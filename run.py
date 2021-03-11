@@ -43,8 +43,6 @@ class MainConfig(object):
     def __init__(self):
         self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
-        self.DAC70004_INITIAL = False
-        self.JADEPIX_SPI_CONF = True
         self.JADEPIX_CONFIG = True
         self.JADEPIX_RUN_GS = False
         self.JADEPIX_SCURVE_TEST = False
@@ -53,7 +51,8 @@ class MainConfig(object):
 
         self.W_TXT = True
 
-def main(enable_config=0):
+
+def main(enable_config=0, dac_initial=0, spi_initial=0):
     ipbus_link = IPbusLink()
     main_config = MainConfig()
 
@@ -69,7 +68,7 @@ def main(enable_config=0):
         global_dev.set_soft_rst()
 
     ''' DAC70004 Config '''
-    if main_config.DAC70004_INITIAL:
+    if dac_initial:
         dac70004_dev.soft_reset()
         dac70004_dev.soft_clr()
         dac70004_dev.w_power_chn(DAC70004_PW_UP, 0xf)  # Power up all channels
@@ -81,10 +80,9 @@ def main(enable_config=0):
             DAC70004_CHN_C, 1.4)  # Set channle C to 1.4V, Reset1
         dac70004_dev.w_ana_chn_update_chn(
             DAC70004_CHN_D, 1.4)  # Set channle D to 1.4V, Reset2
-            
 
     ''' SPI master config '''
-    if main_config.JADEPIX_SPI_CONF:
+    if spi_initial:
         jadepix_dev.reset_spi()
         jadepix_dev.set_spi(data_len=200, ie=False, ass=True,
                             lsb=False, rx_neg=False, tx_neg=True, div=0, ss=0x01)
@@ -182,7 +180,6 @@ def main(enable_config=0):
     """ Set jadepix chip clock"""
     jadepix_dev.set_chip_clk(1)  # 1: clk_sys 0: clk_fpga
 
-
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
@@ -236,15 +233,18 @@ def main(enable_config=0):
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = True
-        rs_frame_period_no_hitmap = 16 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW # Unit: ns
-        rs_hitmap_period = (hitmap_col_high-hitmap_col_low)*4*jadepix_defs.SYS_CLK_PERIOD*jadepix_defs.ROW # Unit: ns
-        rs_frame_period =  (rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
+        rs_frame_period_no_hitmap = 16 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
+        rs_hitmap_period = (
+                                       hitmap_col_high - hitmap_col_low) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
+        rs_frame_period = (
+                    rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
         wait_time = rs_frame_period * frame_number
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=hitmap_col_low,
                               hitmap_col_high=hitmap_col_high, hitmap_en=hitmap_en, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
-        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size*4, safe_mode=True, wait_time=wait_time, try_time=100)
+        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size * 4, safe_mode=True, wait_time=wait_time,
+                                             try_time=100)
         if main_config.W_TXT:
             data_string = []
             data_file = "data/data_rs.txt"
@@ -293,12 +293,12 @@ def main(enable_config=0):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 2:
-        print("Usage: ./run.py [enable config]")
-        log.error("only one parameter is accept at most!")
-        print("Example: ./run.py 1, enable config; or ./run.py 0, disable config.")
+    if len(sys.argv) > 4:
+        print("Usage: ./run.py [enable config] [dac initial] [spi_initial]")
+        log.error("only three parameters is accepted at most!")
+        print("Example: ./run.py 1 0 0, enable config, do not set dac, do not set spi")
         sys.exit(0)
     elif len(sys.argv) == 1:
-        main(enable_config=0)
+        main(enable_config=0, dac_initial=0, spi_initial=0)
     else:
-        main(enable_config=int(sys.argv[1]))
+        main(enable_config=int(sys.argv[1]), dac_initial=int(sys.argv[2]), spi_initial=int(sys.argv[3]))
