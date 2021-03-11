@@ -155,16 +155,16 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
 
     ## only work @debug mode ##
     ## Set by software only ##
-    jadepix_dev.set_hit_rst_soft(False)
-    jadepix_dev.set_ca_soft(313)
-    jadepix_dev.set_ca_en_soft(False)
+    jadepix_dev.set_hit_rst_soft(False) # if debug=True: hit_rst=hit_rst_soft; if debug=false: hit_rst=hit_rst_firmware
+    jadepix_dev.set_ca_soft(313) # if debug=True: CA=ca_soft; if debug=false: CA=ca_firmware
+    jadepix_dev.set_ca_en_soft(False)# if debug=True: CA_EN=ca_en_soft; if debug=false: CA_EN=ca_en_firmware
 
     ## software settting has influence with firmware logic ##
-    jadepix_dev.set_gshutter_soft(False)  # if true : GSHUTTER force to high
-    jadepix_dev.digsel_en(True)  # if false: force to low
-    jadepix_dev.anasel_en(True)  # if false: force to low
-    jadepix_dev.set_dplse_soft(True)  # if false: DPLSE force to low
-    jadepix_dev.set_aplse_soft(True)  # if false: APLSE force to low
+    jadepix_dev.set_gshutter_soft(False)  # if debug=False : GSHUTTER=gshutter_soft or gshutter_firmware; if debug=True: GSHUTTER=gshutter_firmware
+    jadepix_dev.digsel_en(True)  # if debug=False: DIGSEL_EN=digsel_en_soft; if debug=True: DIGSEL_EN=dig_sel_en_soft & dig_sel_en_firmware
+    jadepix_dev.anasel_en(True)  # if debug=False: ANASEL_EN=anasel_en_soft; if debug=True: ANASEL_EN=ana_sel_en_soft & ana_sel_en_firmware
+    jadepix_dev.set_dplse_soft(True)  # if debug=False: DPLSE=dplse_soft; if debug=True: DPLSE=dplse_soft & dplse_firmware
+    jadepix_dev.set_aplse_soft(True)  # if debug=False: APLSE=aplse_soft; if debug=True: APLSE=aplse_soft & aplse_firmware
 
     jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
 
