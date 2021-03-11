@@ -189,7 +189,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
                               hitmap_col_high=351, hitmap_en=True, frame_number=frame_number)
-        jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=0, pulse_deassert=256, deassert=5, col=313)
+        jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=3, pulse_deassert=256, deassert=5, col=313)
         jadepix_dev.start_gs()
 
         # test_valid_pattern = 12
@@ -234,17 +234,14 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         hitmap_col_high = 351
         hitmap_en = True
         rs_frame_period_no_hitmap = 16 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
-        rs_hitmap_period = (
-                                       hitmap_col_high - hitmap_col_low) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
-        rs_frame_period = (
-                    rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
+        rs_hitmap_period = (hitmap_col_high - hitmap_col_low) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
+        rs_frame_period = (rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
         wait_time = rs_frame_period * frame_number
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=hitmap_col_low,
                               hitmap_col_high=hitmap_col_high, hitmap_en=hitmap_en, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
-        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size * 4, safe_mode=True, wait_time=wait_time,
-                                             try_time=100)
+        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size * 4, safe_mode=True, wait_time=wait_time, try_time=100)
         if main_config.W_TXT:
             data_string = []
             data_file = "data/data_rs.txt"

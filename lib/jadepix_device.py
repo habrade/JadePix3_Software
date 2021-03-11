@@ -1,4 +1,5 @@
 import time
+import sys
 
 import coloredlogs
 import logging
@@ -297,6 +298,7 @@ class JadePixDevice:
         """
         if self.is_busy_rs():
             log.error("RS is busy now! Stop!")
+            sys.exit(0)
             return False
         else:
             log.info("Start rolling shutter")
