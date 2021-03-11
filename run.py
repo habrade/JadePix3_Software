@@ -160,9 +160,9 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     jadepix_dev.set_ca_en_soft(True)
 
     ## software settting has influence with firmware logic ##
-    jadepix_dev.set_gshutter_soft(True)  # if true : GSHUTTER force to high
-    jadepix_dev.digsel_en(True)  # and logic
-    jadepix_dev.anasel_en(True)  # and logic
+    jadepix_dev.set_gshutter_soft(False)  # if true : GSHUTTER force to high
+    jadepix_dev.digsel_en(True)  # if false: force to low
+    jadepix_dev.anasel_en(True)  # if false: force to low
     jadepix_dev.set_dplse_soft(True)  # if false: DPLSE force to low
     jadepix_dev.set_aplse_soft(True)  # if false: APLSE force to low
 
