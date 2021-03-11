@@ -154,10 +154,11 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     """ Set digital front-end """
     jadepix_dev.is_debug(main_config.DEBUG_MODE)
 
-    ## only work at debug mode ##
-    jadepix_dev.set_hit_rst_soft(True)  # Do not reset
+    ## only work @debug mode ##
+    ## Set by software only ##
+    jadepix_dev.set_hit_rst_soft(False)
     jadepix_dev.set_ca_soft(313)
-    jadepix_dev.set_ca_en_soft(True)
+    jadepix_dev.set_ca_en_soft(False)
 
     ## software settting has influence with firmware logic ##
     jadepix_dev.set_gshutter_soft(False)  # if true : GSHUTTER force to high
