@@ -90,6 +90,54 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         # Load Config
 
     ''' JadePix Control '''
+    """ Settings for some tests """
+    jadepix_dev.set_rx_fpga_oe(1)
+
+    jadepix_dev.set_digsel_en_manually(0)
+    jadepix_dev.set_aplse_soft(True)
+
+    jadepix_dev.set_anasel_en_manually(0)
+    jadepix_dev.set_aplse_soft(True)
+
+    jadepix_dev.set_dplse_manually(0)
+    jadepix_dev.digsel_en(True)
+
+    jadepix_dev.set_aplse_manually(0)
+    jadepix_dev.anasel_en(True)
+
+    jadepix_dev.set_matrix_grst_manually(0)
+    jadepix_dev.set_matrix_grst_soft(False)
+
+    jadepix_dev.set_gshutter_manually(0)
+    jadepix_dev.set_gshutter_soft(False)
+
+    jadepix_dev.set_ca_soft_manually(0)
+    jadepix_dev.set_ca_soft(313)
+
+    jadepix_dev.set_ca_en_manually(0)
+    jadepix_dev.set_ca_en_soft(False)
+
+    jadepix_dev.set_hit_rst_manually(0)
+    jadepix_dev.set_hit_rst_soft(False)
+
+    jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
+
+    """ Enable clock link """
+    jadepix_dev.set_sn_oen(0, go_dispatch=True)
+    jadepix_dev.set_en_diff(1, go_dispatch=True)
+
+    """ Set INQUIRY """
+    jadepix_dev.set_d_rst(0, go_dispatch=True)
+    jadepix_dev.set_d_rst(1, go_dispatch=True)
+    jadepix_dev.set_inquiry(1)
+
+    """ Set jadepix chip clock"""
+    jadepix_dev.set_chip_clk(1)  # 1: clk_sys 0: clk_fpga
+
+    """ PLL settings """
+    jadepix_dev.set_serializer_rst(0)
+    jadepix_dev.set_clk_sel(0)  # TODO: add some docs here
+    jadepix_dev.set_refclk_1G(1)  # the enable port of PLL reference clock
 
     """ From here we can test pixel register (PULSE/MASK) configuration """
     CONFIG_SHAPE = [jadepix_defs.ROW, jadepix_defs.COL, 3]
@@ -150,37 +198,6 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         if not jadepix_dev.is_busy_cfg():
             log.info("\rConfiguration pulse finished!")
 
-    """ Set digital front-end """
-    jadepix_dev.is_debug(main_config.DEBUG_MODE)
-
-    ## only work @debug mode ##
-    ## Set by software only ##
-    jadepix_dev.set_hit_rst_soft(False) # if debug=True: hit_rst=hit_rst_soft; if debug=false: hit_rst=hit_rst_firmware
-    jadepix_dev.set_ca_soft(313) # if debug=True: CA=ca_soft; if debug=false: CA=ca_firmware
-    jadepix_dev.set_ca_en_soft(False)# if debug=True: CA_EN=ca_en_soft; if debug=false: CA_EN=ca_en_firmware
-
-    ## software settting has influence with firmware logic ##
-    jadepix_dev.set_gshutter_soft(False)  # if debug=False : GSHUTTER=gshutter_soft or gshutter_firmware; if debug=True: GSHUTTER=gshutter_firmware
-    jadepix_dev.digsel_en(True)  # if debug=False: DIGSEL_EN=digsel_en_soft; if debug=True: DIGSEL_EN=dig_sel_en_soft & dig_sel_en_firmware
-    jadepix_dev.anasel_en(True)  # if debug=False: ANASEL_EN=anasel_en_soft; if debug=True: ANASEL_EN=ana_sel_en_soft & ana_sel_en_firmware
-    jadepix_dev.set_dplse_soft(True)  # if debug=False: DPLSE=dplse_soft; if debug=True: DPLSE=dplse_soft & dplse_firmware
-    jadepix_dev.set_aplse_soft(True)  # if debug=False: APLSE=aplse_soft; if debug=True: APLSE=aplse_soft & aplse_firmware
-    jadepix_dev.set_matrix_grst_soft(False)
-
-    jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
-
-    """ Enable clock link """
-    jadepix_dev.set_sn_oen(0, go_dispatch=True)
-    jadepix_dev.set_en_diff(1, go_dispatch=True)
-
-    """ Set INQUIRY """
-    jadepix_dev.set_d_rst(0, go_dispatch=True)
-    jadepix_dev.set_d_rst(1, go_dispatch=True)
-    jadepix_dev.set_inquiry(1)
-
-    """ Set jadepix chip clock"""
-    jadepix_dev.set_chip_clk(1)  # 1: clk_sys 0: clk_fpga
-
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
@@ -235,14 +252,17 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         hitmap_col_high = 351
         hitmap_en = True
         rs_frame_period_no_hitmap = 16 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
-        rs_hitmap_period = (hitmap_col_high - hitmap_col_low) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
-        rs_frame_period = (rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
+        rs_hitmap_period = (
+                                   hitmap_col_high - hitmap_col_low) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
+        rs_frame_period = (
+                rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
         wait_time = rs_frame_period * frame_number
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=hitmap_col_low,
                               hitmap_col_high=hitmap_col_high, hitmap_en=hitmap_en, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
-        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size * 4, safe_mode=True, wait_time=wait_time, try_time=100)
+        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size * 4, safe_mode=True, wait_time=wait_time,
+                                             try_time=100)
         if main_config.W_TXT:
             data_string = []
             data_file = "data/data_rs.txt"

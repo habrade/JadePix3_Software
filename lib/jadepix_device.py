@@ -228,7 +228,7 @@ class JadePixDevice:
                 con_selp = int(one_config[1])
                 con_selm = int(one_config[2])
                 data = (con_data << 2) + (con_selp << 1) + (con_selm << 0)
-                config_list.append(data)                
+                config_list.append(data)
         self.write_ipb_data_fifo(config_list)
         config_list.clear()
         log.info("...write to FPGA FIFO....!")
@@ -236,8 +236,8 @@ class JadePixDevice:
         fifo_pfull = self.g_cfg_fifo_pfull()
         fifo_count = self.g_cfg_fifo_count()
         log.debug("Fifo status: empty {} \t prog_full {} \t count {}".format(fifo_empty, fifo_pfull, fifo_count))
-        if fifo_count != ROW*COL:
-            log.error("{} was sent to FPGA FIFO, should be {}".format(fifo_count, ROW*COL))
+        if fifo_count != ROW * COL:
+            log.error("{} was sent to FPGA FIFO, should be {}".format(fifo_count, ROW * COL))
 
     def start_cfg(self):
         """
@@ -332,7 +332,7 @@ class JadePixDevice:
         reg_name = "CACHE_BIT_SET"
         self.w_reg(reg_name, cache_bit, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_clk_sel(self, clk_sel, go_dispatch):
+    def set_clk_sel(self, clk_sel):
         """
         Set CLK_SEL.
 
@@ -342,7 +342,7 @@ class JadePixDevice:
         """
         log.info("Set CLK_SEL to {:}".format(clk_sel))
         reg_name = "CLK_SEL"
-        self.w_reg(reg_name, clk_sel, is_pulse=False, go_dispatch=go_dispatch)
+        self.w_reg(reg_name, clk_sel, is_pulse=False, go_dispatch=True)
 
     def set_d_rst(self, d_rst, go_dispatch):
         """
@@ -356,7 +356,7 @@ class JadePixDevice:
         reg_name = "D_RST"
         self.w_reg(reg_name, d_rst, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_s_rst(self, s_rst, go_dispatch):
+    def set_serializer_rst(self, s_rst):
         """
         Set serializer reset.
 
@@ -366,7 +366,7 @@ class JadePixDevice:
         """
         log.info("Set SERIALIZER_RST to {:}".format(s_rst))
         reg_name = "SERIALIZER_RST"
-        self.w_reg(reg_name, s_rst, is_pulse=False, go_dispatch=go_dispatch)
+        self.w_reg(reg_name, s_rst, is_pulse=False, go_dispatch=True)
 
     def set_pdb(self, pdb, go_dispatch):
         """
@@ -417,7 +417,7 @@ class JadePixDevice:
         reg_name = "EN_diff"
         self.w_reg(reg_name, en_diff, is_pulse=False, go_dispatch=go_dispatch)
 
-    def set_refclk_1G(self, refclk_1G, go_dispatch):
+    def set_refclk_1G(self, refclk_1G):
         """
         The LMK1C110x is a modular, high-performance, low-skew, general-purpose clock buffer family from Texas Instruments.
         A synchronous output enable control (1G) which switches the outputs into a low state when 1G is low.
@@ -428,7 +428,7 @@ class JadePixDevice:
         """
         log.info("Set Ref_clk_1G_f to {:}".format(refclk_1G))
         reg_name = "Ref_clk_1G_f"
-        self.w_reg(reg_name, refclk_1G, is_pulse=False, go_dispatch=go_dispatch)
+        self.w_reg(reg_name, refclk_1G, is_pulse=False, go_dispatch=True)
 
     def set_matrix_grst(self, matrix_grst, go_dispatch):
         """
@@ -727,3 +727,33 @@ class JadePixDevice:
 
     def set_cfg_add_factor_t2(self, t2_factor):
         self.w_reg("CFG_ADD_FACTOR_T2", t2_factor, is_pulse=False, go_dispatch=True)
+
+    def set_rx_fpga_oe(self, rx_fpga_oe):
+        self.w_reg("rx_fpga_oe", rx_fpga_oe, is_pulse=False, go_dispatch=True)
+
+    def set_digsel_en_manually(self, digsel_en_man):
+        self.w_reg("digsel_en_manually", digsel_en_man, is_pulse=False, go_dispatch=True)
+
+    def set_anasel_en_manually(self, anasel_en_man):
+        self.w_reg("anasel_en_manually", anasel_en_man, is_pulse=False, go_dispatch=True)
+
+    def set_dplse_manually(self, dplse_man):
+        self.w_reg("dplse_manually", dplse_man, is_pulse=False, go_dispatch=True)
+
+    def set_aplse_manually(self, aplse_man):
+        self.w_reg("aplse_manually", aplse_man, is_pulse=False, go_dispatch=True)
+
+    def set_matrix_grst_manually(self, matrix_grst_man):
+        self.w_reg("matrix_grst_manually", matrix_grst_man, is_pulse=False, go_dispatch=True)
+
+    def set_gshutter_manually(self, gshutter_man):
+        self.w_reg("gshutter_manually", gshutter_man, is_pulse=False, go_dispatch=True)
+
+    def set_ca_soft_manually(self, ca_soft_man):
+        self.w_reg("ca_soft_manually", ca_soft_man, is_pulse=False, go_dispatch=True)
+
+    def set_ca_en_manually(self, ca_en_man):
+        self.w_reg("ca_en_manually", ca_en_man, is_pulse=False, go_dispatch=True)
+
+    def set_hit_rst_manually(self, hit_rst_man):
+        self.w_reg("hit_rst_manually", hit_rst_man, is_pulse=False, go_dispatch=True)

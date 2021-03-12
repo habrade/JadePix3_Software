@@ -51,12 +51,22 @@
     <node id="rst_rfifo" address="0x18" mask="0x1" permission="rw"/>
     <node id="SERIALIZER_RST" address="0x18" mask="0x2" permission="rw"/>
     <node id="INQUIRY" address="0x18" mask="0xc" permission="rw"/>
-    <node id="DEBUG" address="0x18" mask="0x10" permission="rw"/>
+    <!--    <node id="DEBUG" address="0x18" mask="0x10" permission="rw"/>-->
     <node id="CA_SOFT" address="0x18" mask="0x3fe0" permission="rw"/>
     <node id="CA_EN_SOFT" address="0x18" mask="0x4000" permission="rw"/>
     <node id="HIT_RST_SOFT" address="0x18" mask="0x8000" permission="rw"/>
     <node id="SEL_CHIP_CLK" address="0x18" mask="0x10000" permission="rw"/>
     <node id="matrix_grst_soft" address="0x18" mask="0x20000" permission="rw"/>
+    <node id="rx_fpga_oe" address="0x18" mask="0x40000" permission="rw"/>
+    <node id="digsel_en_manually" address="0x18" mask="0x80000" permission="rw"/>
+    <node id="anasel_en_manually" address="0x18" mask="0x100000" permission="rw"/>
+    <node id="dplse_manually" address="0x18" mask="0x200000" permission="rw"/>
+    <node id="aplse_manually" address="0x18" mask="0x400000" permission="rw"/>
+    <node id="matrix_grst_manually" address="0x18" mask="0x800000" permission="rw"/>
+    <node id="gshutter_manually" address="0x18" mask="0x1000000" permission="rw"/>
+    <node id="ca_soft_manually" address="0x18" mask="0x2000000" permission="rw"/>
+    <node id="ca_en_manually" address="0x18" mask="0x4000000" permission="rw"/>
+    <node id="hit_rst_manually" address="0x18" mask="0x8000000" permission="rw"/>
 
     <node id="CFG_ADD_FACTOR_T0" address="0x19" mask="0xff" permission="rw"/>
     <node id="CFG_ADD_FACTOR_T1" address="0x19" mask="0xffff00" permission="rw"/>
