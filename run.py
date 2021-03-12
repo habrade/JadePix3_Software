@@ -41,7 +41,6 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 
 class MainConfig(object):
     def __init__(self):
-        self.DEBUG_MODE = False
         self.GLOBAL_RESET = True
         self.JADEPIX_RUN_GS = False
         self.JADEPIX_SCURVE_TEST = False
@@ -72,7 +71,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         dac70004_dev.soft_clr()
         dac70004_dev.w_power_chn(DAC70004_PW_UP, 0xf)  # Power up all channels
         dac70004_dev.w_ana_chn_update_chn(
-            DAC70004_CHN_A, 1.3)  # Set channle A to 1.3V, LOW
+            DAC70004_CHN_A, 1.2)  # Set channle A to 1.3V, LOW
         dac70004_dev.w_ana_chn_update_chn(
             DAC70004_CHN_B, 1.7)  # Set channle B to 1.7V, High
         dac70004_dev.w_ana_chn_update_chn(
@@ -93,20 +92,20 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     """ Settings for some tests """
     jadepix_dev.set_rx_fpga_oe(1)
 
-    jadepix_dev.set_digsel_en_manually(1)
+    jadepix_dev.set_digsel_en_manually(0)
     jadepix_dev.digsel_en(True)
 
-    jadepix_dev.set_anasel_en_manually(1)
+    jadepix_dev.set_anasel_en_manually(0)
     jadepix_dev.anasel_en(True)
 
-    jadepix_dev.set_dplse_manually(1)
+    jadepix_dev.set_dplse_manually(0)
     jadepix_dev.set_dplse_soft(True)
 
-    jadepix_dev.set_aplse_manually(0)
+    jadepix_dev.set_aplse_manually(1)
     jadepix_dev.set_aplse_soft(True)
 
-    jadepix_dev.set_matrix_grst_manually(0)
-    jadepix_dev.set_matrix_grst_soft(False)
+    jadepix_dev.set_matrix_grst_manually(1)
+    jadepix_dev.set_matrix_grst_soft(True)
 
     jadepix_dev.set_gshutter_manually(0)
     jadepix_dev.set_gshutter_soft(False)
@@ -120,7 +119,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     jadepix_dev.set_hit_rst_manually(0)
     jadepix_dev.set_hit_rst_soft(False)
 
-    jadepix_dev.set_gs_plse(is_dplse=True)  # select digital or analog pulse out
+    jadepix_dev.set_gs_plse(is_dplse=False)  # select digital or analog pulse out
 
     """ Enable clock link """
     jadepix_dev.set_sn_oen(0, go_dispatch=True)
@@ -137,7 +136,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     """ PLL settings """
     jadepix_dev.set_serializer_rst(0)
     jadepix_dev.set_clk_sel(0)  # TODO: add some docs here
-    jadepix_dev.set_refclk_1G(1)  # the enable port of PLL reference clock
+    jadepix_dev.set_refclk_1G(0)  # the enable port of PLL reference clock
 
     """ From here we can test pixel register (PULSE/MASK) configuration """
     CONFIG_SHAPE = [jadepix_defs.ROW, jadepix_defs.COL, 3]
@@ -170,7 +169,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=0, col_high=192, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=0, col_high=192, data=1)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
@@ -207,7 +206,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
                               hitmap_col_high=351, hitmap_en=True, frame_number=frame_number)
-        jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=3, pulse_deassert=256, deassert=5, col=313)
+        jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=0, pulse_deassert=256, deassert=5, col=313)
         jadepix_dev.start_gs()
 
         # test_valid_pattern = 12
@@ -247,7 +246,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 250000
+        frame_number = 25000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = True
