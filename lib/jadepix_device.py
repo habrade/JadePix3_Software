@@ -650,15 +650,16 @@ class JadePixDevice:
         """
         self._ipbus_link.write_ipb_slow_ctrl_fifo(self.reg_name_base, "SLCTRL_FIFO", data_list)
 
-    def read_ipb_data_fifo(self, num, safe_mode, wait_time, try_time):
+    def read_ipb_data_fifo(self, num, safe_mode, try_time):
         """
         Read from RFIFO.
 
         :param num:
-        :param safe_style: True: safe read. False: not safe read for fast speed.
+        :param safe_mode: True: safe read. False: not safe read for fast speed.
+        :param try_time: How many times to try to read
         :return:
         """
-        return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num, safe_mode, wait_time, try_time)
+        return self._ipbus_link.read_ipb_data_fifo(self.reg_name_base, "DATA_FIFO", num, safe_mode, try_time)
 
     def reset_rfifo(self):
         """
