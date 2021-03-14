@@ -4,6 +4,7 @@ import uhal
 import coloredlogs
 import logging
 
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -25,6 +26,8 @@ class IPbusLink:
         self._hw = self.get_hw()
         # self._hw.setTimeoutPeriod(1000)
         log.info("IPbus timeout period: {:}".format(self._hw.getTimeoutPeriod()))
+
+        self._quit_reading = False
 
     def get_hw(self):
         """
@@ -100,7 +103,7 @@ class IPbusLink:
         """
         self._hw.getNode(reg_name_base + fifo_name + ".WFIFO_DATA").writeBlock(data_list)
 
-    def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_mode, try_time):
+    def read_ipb_data_fifo(self, reg_name_base, fifo_name, num, safe_mode):
         """
 
         :param reg_name_base:
@@ -110,26 +113,20 @@ class IPbusLink:
         :param try_time: how many times to try to read
         :return:
         """
-        read_empty_time = 0
         mem = []
         if safe_mode:
-            left = num
-            while left > 0:
-                if read_empty_time > try_time:
-                    log.warning("Data fifo is empty, quit!")
-                    break
-                read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
+            read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
+            self._hw.dispatch()
+            if read_len > 0:
+                mem = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(read_len)
                 self._hw.dispatch()
-                if read_len == 0:
-                    read_empty_time += 1
-                    continue
-                read_len = min(left, int(read_len))
-                mem0 = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(read_len)
-                self._hw.dispatch()
-                mem.extend(mem0)
-                left = left - read_len
             return mem
         else:
-            mem = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(num)
-            self._hw.dispatch()
-            return mem
+            try:
+                mem = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(num)
+                self._hw.dispatch()
+                return mem
+            except KeyboardInterrupt:
+                raise
+
+

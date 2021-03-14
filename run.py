@@ -10,6 +10,8 @@ from functools import partial
 
 import coloredlogs
 
+from pynput import keyboard
+
 from lib.global_device import GlobalDevice
 from lib.dac70004_device import Dac70004Device
 from lib.dac70004_defs import *
@@ -246,7 +248,12 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 25000
+        data_file = "data/data_rs.txt"
+        try:
+            os.remove(data_file)
+        except OSError:
+            pass
+        frame_number = 250000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = True
@@ -258,22 +265,26 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
         log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
-        while jadepix_dev.is_busy_rs():
-            time.sleep(rs_frame_period / pow(10, 9))  # wait for one rs frame period
-            continue
-        log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
-        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size * 4, safe_mode=True, try_time=100)
-        if main_config.W_TXT:
-            data_string = []
-            data_file = "data/data_rs.txt"
-            try:
-                os.remove(data_file)
-            except OSError:
-                pass
-            with open(data_file, 'w+') as data_file:
-                for data in mem:
-                    data_string.append("{:#010x}\n".format(data))
-                data_file.write("".join(data_string))
+        with open(data_file, 'a') as data_file:
+            while jadepix_dev.is_busy_rs():
+                mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
+                if main_config.W_TXT:
+                    data_string = []
+                    if len(mem) > 0:
+                        for data in mem:
+                            data_string.append("{:#010x}\n".format(data))
+                        data_file.write("".join(data_string))
+                continue
+            # try read the last time
+            for i in range(100):
+                mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
+                if main_config.W_TXT:
+                    data_string = []
+                    if len(mem) > 0:
+                        for data in mem:
+                            data_string.append("{:#010x}\n".format(data))
+                        data_file.write("".join(data_string))
+        log.info("Rolling shutter finished!")
 
     if main_config.JADEPIX_ANA_DATA:
         log.info("Write data to .root ...")
