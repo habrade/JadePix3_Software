@@ -763,13 +763,13 @@ class JadePixDevice:
         mem = []
         while self.is_busy_rs():
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
-            if len(mem) > 0:
+            if len(mem0) > 0:
                 mem.extend(mem0)
             continue
         # try read more data
         for i in range(100):
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
-            if len(mem) > 0:
+            if len(mem0) > 0:
                 mem.extend(mem0)
 
         with open(data_file, 'a') as data_file:
