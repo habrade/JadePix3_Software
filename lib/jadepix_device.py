@@ -758,3 +758,22 @@ class JadePixDevice:
 
     def set_hit_rst_manually(self, hit_rst_man):
         self.w_reg("hit_rst_manually", hit_rst_man, is_pulse=False, go_dispatch=True)
+
+    def read_data_write2txt(self, data_file):
+        with open(data_file, 'a') as data_file:
+            while self.is_busy_rs():
+                mem = self.read_ipb_data_fifo(slice_size, safe_mode=True)
+                data_string = []
+                if len(mem) > 0:
+                    for data in mem:
+                        data_string.append("{:#010x}\n".format(data))
+                    data_file.write("".join(data_string))
+                continue
+            # try read more data
+            for i in range(100):
+                mem = self.read_ipb_data_fifo(slice_size, safe_mode=True)
+                data_string = []
+                if len(mem) > 0:
+                    for data in mem:
+                        data_string.append("{:#010x}\n".format(data))
+                    data_file.write("".join(data_string))

@@ -6,11 +6,8 @@ import os
 import gc
 
 from pathlib import Path
-from functools import partial
 
 import coloredlogs
-
-from pynput import keyboard
 
 from lib.global_device import GlobalDevice
 from lib.dac70004_device import Dac70004Device
@@ -94,32 +91,32 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     """ Settings for some tests """
     jadepix_dev.set_rx_fpga_oe(1)
 
-    jadepix_dev.set_digsel_en_manually(0)
-    jadepix_dev.digsel_en(True)
+    jadepix_dev.set_digsel_en_manually(False)
+    jadepix_dev.digsel_en(1)
 
-    jadepix_dev.set_anasel_en_manually(0)
-    jadepix_dev.anasel_en(True)
+    jadepix_dev.set_anasel_en_manually(False)
+    jadepix_dev.anasel_en(1)
 
-    jadepix_dev.set_dplse_manually(0)
-    jadepix_dev.set_dplse_soft(True)
+    jadepix_dev.set_dplse_manually(False)
+    jadepix_dev.set_dplse_soft(1)
 
-    jadepix_dev.set_aplse_manually(1)
-    jadepix_dev.set_aplse_soft(True)
+    jadepix_dev.set_aplse_manually(True)
+    jadepix_dev.set_aplse_soft(1)
 
-    jadepix_dev.set_matrix_grst_manually(1)
-    jadepix_dev.set_matrix_grst_soft(True)
+    jadepix_dev.set_matrix_grst_manually(True)
+    jadepix_dev.set_matrix_grst_soft(0)
 
-    jadepix_dev.set_gshutter_manually(0)
-    jadepix_dev.set_gshutter_soft(False)
+    jadepix_dev.set_gshutter_manually(False)
+    jadepix_dev.set_gshutter_soft(0)
 
-    jadepix_dev.set_ca_soft_manually(0)
+    jadepix_dev.set_ca_soft_manually(False)
     jadepix_dev.set_ca_soft(313)
 
-    jadepix_dev.set_ca_en_manually(0)
-    jadepix_dev.set_ca_en_soft(False)
+    jadepix_dev.set_ca_en_manually(False)
+    jadepix_dev.set_ca_en_soft(0)
 
-    jadepix_dev.set_hit_rst_manually(0)
-    jadepix_dev.set_hit_rst_soft(False)
+    jadepix_dev.set_hit_rst_manually(False)
+    jadepix_dev.set_hit_rst_soft(0)
 
     jadepix_dev.set_gs_plse(is_dplse=False)  # select digital or analog pulse out
 
@@ -204,40 +201,21 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     """For pulse width, width = (high<<32 + low) * Period"""
     frame_number = 1
     if main_config.JADEPIX_RUN_GS:
-        # TODO: Will change to real time later
         jadepix_dev.reset_rfifo()
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
                               hitmap_col_high=351, hitmap_en=True, frame_number=frame_number)
         jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=0, pulse_deassert=256, deassert=5, col=313)
         jadepix_dev.start_gs()
 
-        # test_valid_pattern = 12
-        # frame_per_slice = 4
-        # num_token = 1
-
-        # frame_number = frame_per_slice * num_token
-        # num_data = frame_number * jadepix_defs.ROW * jadepix_defs.BLK * test_valid_pattern
-        # num_valid_data_stream = num_data + 2 * frame_number - 1
-
-        # num_data_wanted = num_token * slice_size
-        # data_size = num_data_wanted * 32  # Unit: bit
-        # log.warning("The data will take {} MB memory".format(data_size / 8 / 2 ** 20))
-
         ''' Get Data Stream '''
-        start = time.process_time()
         # data_in_total = data_per_frame * frame_number
-        mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True, try_time=100)
-        if main_config.W_TXT:
-            data_string = []
-            data_file = "data/data_gs.txt"
-            try:
-                os.remove(data_file)
-            except OSError:
-                pass
-            with open(data_file, 'w+') as data_file:
-                for data in mem:
-                    data_string.append("{:#010x}\n".format(data))
-                data_file.write("".join(data_string))
+        data_file = "data/data_gs.txt"
+        try:
+            os.remove(data_file)
+        except OSError:
+            pass
+        jadepix_dev.read_data_write2txt(data_file)
+        log.info("Global shutter finished!")
 
     if main_config.JADEPIX_SCURVE_TEST:
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
@@ -265,25 +243,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
         log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
-        with open(data_file, 'a') as data_file:
-            while jadepix_dev.is_busy_rs():
-                mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
-                if main_config.W_TXT:
-                    data_string = []
-                    if len(mem) > 0:
-                        for data in mem:
-                            data_string.append("{:#010x}\n".format(data))
-                        data_file.write("".join(data_string))
-                continue
-            # try read the last time
-            for i in range(100):
-                mem = jadepix_dev.read_ipb_data_fifo(jadepix_defs.slice_size, safe_mode=True)
-                if main_config.W_TXT:
-                    data_string = []
-                    if len(mem) > 0:
-                        for data in mem:
-                            data_string.append("{:#010x}\n".format(data))
-                        data_file.write("".join(data_string))
+        jadepix_dev.read_data_write2txt(data_file)
         log.info("Rolling shutter finished!")
 
     if main_config.JADEPIX_ANA_DATA:
