@@ -168,7 +168,10 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=0, col_high=10, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=1, col_high=2, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=50, col_high=51, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=100, col_high=101, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=168, col_high=169, data=1)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
@@ -231,10 +234,10 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
             os.remove(data_file)
         except OSError:
             pass
-        frame_number = 20
+        frame_number = 4000
         hitmap_col_low = 340
         hitmap_col_high = 351
-        hitmap_en = True
+        hitmap_en = False
         rs_frame_period_no_hitmap = 16 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
         rs_hitmap_period = (hitmap_col_high - hitmap_col_low) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
         rs_frame_period = (rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
