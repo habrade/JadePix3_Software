@@ -8,7 +8,7 @@ with open(data_file, 'r') as data_file:
     for line in lines:
         data = int(line, 16)
         if data > 0x0103ffff:
-            oc_lst.append(data_file)
+            oc_lst.append(data)
     print(oc_lst)
     
 data_oc = "data/data_oc.txt"
