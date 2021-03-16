@@ -12,7 +12,7 @@ coloredlogs.install(level='DEBUG', logger=log)
 __author__ = "Sheng Dong"
 __email__ = "s.dong@mails.ccnu.edu.cn"
 
-data_file = "../data/data.txt"
+data_file = "data/data_rs.txt"
 
 data_ch0 = []
 data_ch1 = []
