@@ -106,8 +106,8 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     jadepix_dev.set_matrix_grst_manually(True)
     jadepix_dev.set_matrix_grst_soft(0)
 
-    jadepix_dev.set_gshutter_manually(False)
-    jadepix_dev.set_gshutter_soft(0)
+    jadepix_dev.set_gshutter_manually(True)
+    jadepix_dev.set_gshutter_soft(1)
 
     jadepix_dev.set_ca_soft_manually(False)
     jadepix_dev.set_ca_soft(313)
@@ -168,7 +168,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=0, col_high=192, data=1)
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=0, col_high=10, data=1)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
@@ -231,7 +231,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
             os.remove(data_file)
         except OSError:
             pass
-        frame_number = 250000
+        frame_number = 20
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = True
