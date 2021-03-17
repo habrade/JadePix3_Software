@@ -4,6 +4,8 @@ import sys
 import coloredlogs
 import logging
 
+from queue import SimpleQueue
+
 from lib.jadepix_defs import *
 from lib.spi_device import SpiDevice
 
@@ -759,22 +761,25 @@ class JadePixDevice:
     def set_hit_rst_manually(self, hit_rst_man):
         self.w_reg("hit_rst_manually", hit_rst_man, is_pulse=False, go_dispatch=True)
 
-    def read_data_write2txt(self, data_file):
-        mem = []
+    def read_data(self, data_file, write2txt=False):
+        data_que = SimpleQueue()
         while self.is_busy_rs():
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
             if len(mem0) > 0:
-                mem.append(mem0)
+                data_que.put(mem0)
             continue
         # try read more data
         for i in range(100):
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
             if len(mem0) > 0:
-                mem.append(mem0)
-        
-        with open(data_file, 'a') as data_file:
-            data_string = []
-            for mem0 in mem:
-                for data in mem0:
-                    data_string.append("{:#010x}\n".format(data))
-            data_file.write("".join(data_string))
+                data_que.put(mem0)
+
+        if write2txt:
+            with open(data_file, 'a') as data_file:
+                data_string = []
+                for i in range(data_que.qsize()):
+                    for data in data_que.get():
+                        data_string.append("{:#010x}\n".format(data))
+                data_file.write("".join(data_string))
+        else:
+            return data_que

@@ -3,9 +3,7 @@ import sys
 import time
 import logging
 import os
-import gc
 
-from pathlib import Path
 
 import coloredlogs
 
@@ -17,16 +15,12 @@ from lib.jadepix_device import JadePixDevice
 from lib.s_curve import SCurve
 from lib.gen_pattern import GenPattern
 
-from data_analysis import data_analysis
+from data_analysis.data_analysis import DataAnalysis
 
 from lib import jadepix_defs
 
-import ROOT
 
 import numpy as np
-from root_numpy import array2root
-
-from queue import SimpleQueue
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -57,6 +51,8 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     global_dev = GlobalDevice(ipbus_link)
     dac70004_dev = Dac70004Device(ipbus_link)
     s_curve = SCurve(dac70004_dev, jadepix_dev)
+
+    data_analysis = DataAnalysis(is_save_png=True)
 
     test_pattern_generator = GenPattern()
 
@@ -217,7 +213,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
             os.remove(data_file)
         except OSError:
             pass
-        jadepix_dev.read_data_write2txt(data_file)
+        jadepix_dev.read_data(data_file, write2txt=True)
         log.info("Global shutter finished!")
 
     if main_config.JADEPIX_SCURVE_TEST:
@@ -246,42 +242,13 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
         log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
-        jadepix_dev.read_data_write2txt(data_file)
+        data_que = jadepix_dev.read_data(data_file, write2txt=False)
         log.info("Rolling shutter finished!")
-
-    if main_config.JADEPIX_ANA_DATA:
-        log.info("Write data to .root ...")
-        data_root_file = "data/data.root"
-        hfile = ROOT.gROOT.FindObject(data_root_file)
-        if hfile:
-            hfile.Close()
-        hfile = ROOT.TFile(data_root_file, 'RECREATE', 'Data ROOT file')
-        if os.path.exists(data_root_file):
-            os.remove(data_root_file)
-        start = time.process_time()
-        for one_config in range(1):
-            data_vector = data_que.get()
-            data_arr = np.asarray(data_vector, dtype=[('data', np.uint32)], order='K')
-            array2root(data_arr, data_root_file, treename='data', mode='update')
-            del data_vector
-            gc.collect()
-
-        time_diff = time.process_time() - start
-        root_file_size = Path(data_root_file).stat().st_size
-        trans_speed = int(root_file_size / time_diff)  # Unit: Bps
-        start = time.process_time()
-        data_path = "./data"
-        log.info("Write file speed: {:f} Mbps".format(8 * trans_speed / pow(10, 6)))
-        log.info("Write to .root end.")
-        del data_que
-
+        data_analysis.write2root(data_que)
         ''' Draw some plots '''
-        data_ana = data_analysis.DataAnalysis(data_root_file, 1, is_save_png=True)
-        lost_tmp, data_num_got = data_ana.draw_data()
-        # data_lost = num_data - data_num_got
-        # lost += lost_tmp
-        # log.info("Lost data num: {:}".format(data_lost))
-        # log.info("Lost frames: {:}".format(lost))
+        data_analysis.draw_data()
+
+    # if main_config.JAVDEPIX_AVNA_DATA:
 
 
 if __name__ == '__main__':

@@ -1,7 +1,12 @@
+import os
+import gc
 import coloredlogs
 import logging
 
+import numpy as np
+
 import ROOT
+from root_numpy import array2root
 
 from lib import jadepix_defs
 
@@ -13,11 +18,27 @@ coloredlogs.install(level='INFO', logger=log)
 
 
 class DataAnalysis:
-    def __init__(self, data_root_file, frame_num, is_save_png):
-        # self._data_txt_file = data_txt_file
+    def __init__(self, is_save_png):
         self._is_save_png = is_save_png
-        self._frame_num = frame_num
-        self.data_root_file = data_root_file
+        self._data_root_file = "data/data.root"
+
+    def write2root(self, data_que):
+        log.info("Write data to .root ...")
+        self._data_root_file = ""
+        hfile = ROOT.gROOT.FindObject(self._data_root_file)
+        if hfile:
+            hfile.Close()
+        hfile = ROOT.TFile(self._data_root_file, 'RECREATE', 'Data ROOT file')
+        if os.path.exists(self._data_root_file):
+            os.remove(self._data_root_file)
+
+        for i in range(data_que.qsize()):
+            data_vector = data_que.get()
+            data_arr = np.asarray(data_vector, dtype=[('data', np.uint32)], order='K')
+            array2root(data_arr, self._data_root_file, treename='data', mode='update')
+            del data_vector
+            gc.collect()
+            log.info("Write to .root end.")
 
     def draw_data(self):
         log.info("Start drawing plots...")
@@ -139,14 +160,14 @@ class DataAnalysis:
             c7.SaveAs("data/fig/ch_data.png")
 
         num_frame_lost = 0
-        for i in range(self._frame_num):
-            if h_frame_index.GetBinContent(i) == 0:
-                num_frame_lost += 1
-                log.debug(
-                    "Frame Index {:} Entries: {:}, Center: {:}, Width: {:}".format(i, h_frame_index.GetBinContent(i),
-                                                                                   h_frame_index.GetBinCenter(i),
-                                                                                   h_frame_index.GetBinWidth(i)))
-        log.info("Num of frame lost: {:}".format(num_frame_lost))
+        # for i in range(self._frame_num):
+        #     if h_frame_index.GetBinContent(i) == 0:
+        #         num_frame_lost += 1
+        #         log.debug(
+        #             "Frame Index {:} Entries: {:}, Center: {:}, Width: {:}".format(i, h_frame_index.GetBinContent(i),
+        #                                                                            h_frame_index.GetBinCenter(i),
+        #                                                                            h_frame_index.GetBinWidth(i)))
+        # log.info("Num of frame lost: {:}".format(num_frame_lost))
 
         ''' Write file and close file '''
         dfile.Write()
@@ -173,8 +194,7 @@ if __name__ == "__main__":
     slice_size = int(rfifo_depth)  # try largest slice as possible
     num_data_wanted = num_token * slice_size
     data_size = num_data_wanted * 32  # Unit: bit
-    data_file = "data/data.txt"
-    data_ana = DataAnalysis(data_file, frame_num=6400, is_save_png=True)
+    data_ana = DataAnalysis(is_save_png=True)
     # data_ana.load_data_to_root()
     data_ana.draw_data()
     lost_tmp, data_num_got = data_ana.draw_data()
