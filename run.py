@@ -52,7 +52,6 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     dac70004_dev = Dac70004Device(ipbus_link)
     s_curve = SCurve(dac70004_dev, jadepix_dev)
 
-    data_analysis = DataAnalysis(is_save_png=True)
 
     test_pattern_generator = GenPattern()
 
@@ -213,7 +212,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
             os.remove(data_file)
         except OSError:
             pass
-        jadepix_dev.read_data(data_file, write2txt=True)
+        jadepix_dev.read_data(data_file, write2txt=True, safe_mode=True)
         log.info("Global shutter finished!")
 
     if main_config.JADEPIX_SCURVE_TEST:
@@ -230,7 +229,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
             os.remove(data_file)
         except OSError:
             pass
-        frame_number = 4000
+        frame_number = 400
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False
@@ -242,8 +241,10 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
         log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
-        data_que = jadepix_dev.read_data(data_file, write2txt=False)
+        data_que = jadepix_dev.read_data(data_file, write2txt=False, safe_mode=False)
         log.info("Rolling shutter finished!")
+
+        data_analysis = DataAnalysis(frame_num=frame_number, is_save_png=True)
         data_analysis.write2root(data_que)
         ''' Draw some plots '''
         data_analysis.draw_data()

@@ -761,16 +761,16 @@ class JadePixDevice:
     def set_hit_rst_manually(self, hit_rst_man):
         self.w_reg("hit_rst_manually", hit_rst_man, is_pulse=False, go_dispatch=True)
 
-    def read_data(self, data_file, write2txt=False):
+    def read_data(self, data_file, write2txt=False, safe_mode=True):
         data_que = SimpleQueue()
         while self.is_busy_rs():
-            mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
+            mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=safe_mode)
             if len(mem0) > 0:
                 data_que.put(mem0)
             continue
         # try read more data
         for i in range(100):
-            mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
+            mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=safe_mode)
             if len(mem0) > 0:
                 data_que.put(mem0)
 
@@ -781,5 +781,5 @@ class JadePixDevice:
                     for data in data_que.get():
                         data_string.append("{:#010x}\n".format(data))
                 data_file.write("".join(data_string))
-        else:
-            return data_que
+
+        return data_que

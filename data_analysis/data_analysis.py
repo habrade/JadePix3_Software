@@ -18,27 +18,32 @@ coloredlogs.install(level='INFO', logger=log)
 
 
 class DataAnalysis:
-    def __init__(self, is_save_png):
+    def __init__(self, frame_num, is_save_png):
         self._is_save_png = is_save_png
+        self._frame_num = frame_num
         self._data_root_file = "data/data.root"
 
     def write2root(self, data_que):
         log.info("Write data to .root ...")
-        self._data_root_file = ""
-        hfile = ROOT.gROOT.FindObject(self._data_root_file)
-        if hfile:
-            hfile.Close()
-        hfile = ROOT.TFile(self._data_root_file, 'RECREATE', 'Data ROOT file')
-        if os.path.exists(self._data_root_file):
-            os.remove(self._data_root_file)
+        if data_que.qsize() == 0:
+            log.error("Data queue is emtpy, quit!")
+            return False
+        else:
+            hfile = ROOT.gROOT.FindObject(self._data_root_file)
+            if hfile:
+                hfile.Close()
+            hfile = ROOT.TFile(self._data_root_file, 'RECREATE', 'Data ROOT file')
+            if os.path.exists(self._data_root_file):
+                os.remove(self._data_root_file)
 
-        for i in range(data_que.qsize()):
-            data_vector = data_que.get()
-            data_arr = np.asarray(data_vector, dtype=[('data', np.uint32)], order='K')
-            array2root(data_arr, self._data_root_file, treename='data', mode='update')
-            del data_vector
-            gc.collect()
+            for i in range(data_que.qsize()):
+                data_vector = data_que.get()
+                data_arr = np.asarray(data_vector, dtype=[('data', np.uint32)], order='K')
+                array2root(data_arr, self._data_root_file, treename='data', mode='update')
+                del data_vector
+                gc.collect()
             log.info("Write to .root end.")
+            return True
 
     def draw_data(self):
         log.info("Start drawing plots...")
@@ -53,7 +58,7 @@ class DataAnalysis:
         dfile = ROOT.TFile(drawing_file, 'RECREATE', 'Drawing plots')
 
         ''' Try DataFrame '''
-        df = ROOT.RDataFrame("data", self.data_root_file)
+        df = ROOT.RDataFrame("data", self._data_root_file)
         d_valid = df.Filter("data < 0x1FFFFFF").Define("data_stream", "data")
 
         d_dummy_data = d_valid.Filter("data == 0xFFFFFFFF").Define("dummy_data", "data - 1")
