@@ -764,16 +764,17 @@ class JadePixDevice:
         while self.is_busy_rs():
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
             if len(mem0) > 0:
-                mem.extend(mem0)
+                mem.append(mem0)
             continue
         # try read more data
         for i in range(100):
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=True)
             if len(mem0) > 0:
-                mem.extend(mem0)
-
+                mem.append(mem0)
+        
         with open(data_file, 'a') as data_file:
             data_string = []
-            for data in mem:
-                data_string.append("{:#010x}\n".format(data))
+            for mem0 in mem:
+                for data in mem0:
+                    data_string.append("{:#010x}\n".format(data))
             data_file.write("".join(data_string))
