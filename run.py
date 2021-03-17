@@ -4,7 +4,6 @@ import time
 import logging
 import os
 
-
 import coloredlogs
 
 from lib.global_device import GlobalDevice
@@ -18,7 +17,6 @@ from lib.gen_pattern import GenPattern
 from data_analysis.data_analysis import DataAnalysis
 
 from lib import jadepix_defs
-
 
 import numpy as np
 
@@ -51,7 +49,6 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     global_dev = GlobalDevice(ipbus_link)
     dac70004_dev = Dac70004Device(ipbus_link)
     s_curve = SCurve(dac70004_dev, jadepix_dev)
-
 
     test_pattern_generator = GenPattern()
 
@@ -234,12 +231,14 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         hitmap_col_high = 351
         hitmap_en = False
         rs_frame_period_no_hitmap = 16 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
-        rs_hitmap_period = (hitmap_col_high - hitmap_col_low) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW  # Unit: ns
-        rs_frame_period = (rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap  # Unit: ns
+        rs_hitmap_period = (hitmap_col_high - hitmap_col_low + 1) * 4 * jadepix_defs.SYS_CLK_PERIOD * jadepix_defs.ROW
+        rs_frame_period = (rs_hitmap_period + rs_frame_period_no_hitmap) if hitmap_en else rs_frame_period_no_hitmap
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=hitmap_col_low,
                               hitmap_col_high=hitmap_col_high, hitmap_en=hitmap_en, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
         jadepix_dev.start_rs()
+        log.info("Normally we should wait for {:} secends until rolling shutter finished.".format(
+            rs_frame_period * frame_number / pow(10, 9)))
         log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
         data_que = jadepix_dev.read_data(data_file, write2txt=False, safe_mode=False)
         log.info("Rolling shutter finished!")
