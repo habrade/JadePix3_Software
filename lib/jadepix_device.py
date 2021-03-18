@@ -311,10 +311,14 @@ class JadePixDevice:
         """
         Set the frame number of rolling shutter.
 
-        :param frame_number: 22 bits.
+        :param frame_number: 30 bits.
         :param go_dispatch:
         :return:
         """
+        max_frame = pow(2, 30) - 1
+        if frame_number > max_frame:
+            log.error("Frame number can not be set larger than {:}, now: {:}".format(max_frame, frame_number))
+            sys.exit(-1)
         log.info("Set RS frame number: {}".format(frame_number))
         reg_name = "rs_frame_number"
         self.w_reg(reg_name, frame_number, is_pulse=False, go_dispatch=go_dispatch)
@@ -774,7 +778,7 @@ class JadePixDevice:
                 mem.append(mem0)
 
         return mem
-    
+
     @staticmethod
     def write2txt(data_file, mem):
         if len(mem) == 0:
@@ -785,15 +789,13 @@ class JadePixDevice:
                 os.remove(data_file)
             except OSError:
                 pass
-            
+
             data_string = []
             with open(data_file, 'a') as data_file:
                 for mem0 in mem:
                     for data in mem0:
-                        data_string.append("{:#010x}\n".format(data))
+                        data_string.append("{:08x}\n".format(data))
                 data_file.write("".join(data_string))
             log.info("Write to .txt end.")
             return True
-
-
-    
+   

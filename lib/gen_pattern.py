@@ -67,6 +67,6 @@ class GenPattern:
                             line_num += 1
                             data_flag = 2
                             data_string.append("{:#010x}\n".format(
-                                (data_flag << 23) + (block << 16) + data_out))
+                                (data_flag << 30) + (block << 16) + data_out))
             f.write("".join(data_string))
         return line_num

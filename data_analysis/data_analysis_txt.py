@@ -48,7 +48,7 @@ for frame_hex_string in fo.readlines():
 
     frame_hex_string = frame_hex_string.strip()
     frame_data = int(frame_hex_string, 16)
-    frame_type = (frame_data >> 23)
+    frame_type = (frame_data >> 30)
 
     if frame_type == 0:  # Tail
         last_tail_ptr = num_total
@@ -117,4 +117,4 @@ plt.xlabel('Frame Index')
 plt.ylabel('Numbers')
 plt.legend()
 plt.grid(True)
-plt.show()
+plt.savefig("data/fig/draw_status.png")
