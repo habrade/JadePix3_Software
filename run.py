@@ -38,7 +38,7 @@ class MainConfig(object):
         self.JADEPIX_RUN_RS = True
         self.JADEPIX_ANA_DATA = True
 
-        self.W_TXT = False
+        self.W_TXT = True
 
 
 def main(enable_config=0, dac_initial=0, spi_initial=0):
