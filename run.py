@@ -209,7 +209,8 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
             os.remove(data_file)
         except OSError:
             pass
-        jadepix_dev.read_data(data_file, write2txt=True, safe_mode=True)
+        data_que = jadepix_dev.read_data(safe_mode=True)
+        jadepix_dev.write2txt(data_file, data_que)
         log.info("Global shutter finished!")
 
     if main_config.JADEPIX_SCURVE_TEST:
@@ -221,12 +222,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        data_file = "data/data_rs.txt"
-        try:
-            os.remove(data_file)
-        except OSError:
-            pass
-        frame_number = 400
+        frame_number = 4
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False
@@ -240,15 +236,18 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         log.info("Normally we should wait for {:} secends until rolling shutter finished.".format(
             rs_frame_period * frame_number / pow(10, 9)))
         log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
-        data_que = jadepix_dev.read_data(data_file, write2txt=False, safe_mode=False)
+        data_que = jadepix_dev.read_data(safe_mode=True)
         log.info("Rolling shutter finished!")
 
-        data_analysis = DataAnalysis(frame_num=frame_number, is_save_png=True)
-        data_analysis.write2root(data_que)
-        ''' Draw some plots '''
-        data_analysis.draw_data()
-
-    # if main_config.JAVDEPIX_AVNA_DATA:
+        if main_config.W_TXT:
+            data_file = "data/data_rs.txt"
+            jadepix_dev.write2txt(data_file, data_que)
+        
+        if main_config.JADEPIX_ANA_DATA:
+            data_analysis = DataAnalysis(frame_num=frame_number, is_save_png=True)
+            data_analysis.write2root(data_que)
+            ''' Draw some plots '''
+            data_analysis.draw_data()
 
 
 if __name__ == '__main__':

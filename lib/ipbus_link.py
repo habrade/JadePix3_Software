@@ -117,9 +117,8 @@ class IPbusLink:
         if safe_mode:
             read_len = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_LEN").read()
             self._hw.dispatch()
-            if read_len > 0:
-                mem = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(read_len)
-                self._hw.dispatch()
+            mem = self._hw.getNode(reg_name_base + fifo_name + ".RFIFO_DATA").readBlock(read_len)
+            self._hw.dispatch()
             return mem
         else:
             try:

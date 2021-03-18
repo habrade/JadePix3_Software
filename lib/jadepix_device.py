@@ -1,5 +1,6 @@
 import time
 import sys
+import os
 
 import coloredlogs
 import logging
@@ -761,7 +762,7 @@ class JadePixDevice:
     def set_hit_rst_manually(self, hit_rst_man):
         self.w_reg("hit_rst_manually", hit_rst_man, is_pulse=False, go_dispatch=True)
 
-    def read_data(self, data_file, write2txt=False, safe_mode=True):
+    def read_data(self, safe_mode=True):
         data_que = SimpleQueue()
         while self.is_busy_rs():
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=safe_mode)
@@ -774,12 +775,27 @@ class JadePixDevice:
             if len(mem0) > 0:
                 data_que.put(mem0)
 
-        if write2txt:
+        return data_que
+    
+    @staticmethod
+    def write2txt(data_file, data_que):
+        if data_que.qsize() == 0:
+            log.error("Data queue is emtpy, quit!")
+            return False
+        else:
+            try:
+                os.remove(data_file)
+            except OSError:
+                pass
+            
+            data_string = []
             with open(data_file, 'a') as data_file:
-                data_string = []
                 for i in range(data_que.qsize()):
                     for data in data_que.get():
                         data_string.append("{:#010x}\n".format(data))
                 data_file.write("".join(data_string))
+            log.info("Write to .txt end.")
+            return True
 
-        return data_que
+
+    
