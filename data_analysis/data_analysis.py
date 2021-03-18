@@ -23,10 +23,10 @@ class DataAnalysis:
         self._frame_num = frame_num
         self._data_root_file = "data/data.root"
 
-    def write2root(self, data_que):
+    def write2root(self, data_mem):
         log.info("Write data to .root ...")
-        if data_que.qsize() == 0:
-            log.error("Data queue is emtpy, quit!")
+        if len(data_mem) == 0:
+            log.error("Data memory is emtpy, quit!")
             return False
         else:
             hfile = ROOT.gROOT.FindObject(self._data_root_file)
@@ -36,11 +36,10 @@ class DataAnalysis:
             if os.path.exists(self._data_root_file):
                 os.remove(self._data_root_file)
 
-            for i in range(data_que.qsize()):
-                data_vector = data_que.get()
-                data_arr = np.asarray(data_vector, dtype=[('data', np.uint32)], order='K')
+            for mem0 in data_mem:
+                data_arr = np.asarray(mem0, dtype=[('data', np.uint32)], order='K')
                 array2root(data_arr, self._data_root_file, treename='data', mode='update')
-                del data_vector
+                del mem0
                 gc.collect()
             log.info("Write to .root end.")
             return True

@@ -36,9 +36,9 @@ class MainConfig(object):
         self.JADEPIX_RUN_GS = False
         self.JADEPIX_SCURVE_TEST = False
         self.JADEPIX_RUN_RS = True
-        self.JADEPIX_ANA_DATA = False
+        self.JADEPIX_ANA_DATA = True
 
-        self.W_TXT = True
+        self.W_TXT = False
 
 
 def main(enable_config=0, dac_initial=0, spi_initial=0):
@@ -176,20 +176,20 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         log.info("Start configure the PULSE and MASK of each pixel...")
         # Write Mask to FIFO and start config
         if jadepix_dev.is_busy_cfg():
-            log.error("\rConfiguration is busy!")
+            log.error("Configuration is busy!")
         jadepix_dev.w_cfg(mask_arr)
         jadepix_dev.start_cfg()
         time.sleep(1.2)  # 100K(512 * 192) * 10us = 1s, FIFO -> Chip
         if not jadepix_dev.is_busy_cfg():
-            log.info("\rConfiguration mask finished!")
+            log.info("Configuration mask finished!")
         # Write PULSE to FIFO and start config
         if jadepix_dev.is_busy_cfg():
-            log.error("\rConfiguration is busy!")
+            log.error("Configuration is busy!")
         jadepix_dev.w_cfg(plse_arr)
         jadepix_dev.start_cfg()
         time.sleep(1.2)  # 100K(512 * 192) * 10us = 1s, FIFO -> Chip
         if not jadepix_dev.is_busy_cfg():
-            log.info("\rConfiguration pulse finished!")
+            log.info("Configuration pulse finished!")
 
     """From here we can test global shutter """
     """sys_clk period = 12 ns, so width = Number * Period"""
@@ -209,8 +209,8 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
             os.remove(data_file)
         except OSError:
             pass
-        data_que = jadepix_dev.read_data(safe_mode=True)
-        jadepix_dev.write2txt(data_file, data_que)
+        data_mem = jadepix_dev.read_data(safe_mode=True)
+        jadepix_dev.write2txt(data_file, data_mem)
         log.info("Global shutter finished!")
 
     if main_config.JADEPIX_SCURVE_TEST:
@@ -222,7 +222,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 4
+        frame_number = 40000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False
@@ -236,16 +236,16 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         log.info("Normally we should wait for {:} secends until rolling shutter finished.".format(
             rs_frame_period * frame_number / pow(10, 9)))
         log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
-        data_que = jadepix_dev.read_data(safe_mode=True)
+        data_mem = jadepix_dev.read_data(safe_mode=True)
         log.info("Rolling shutter finished!")
 
         if main_config.W_TXT:
             data_file = "data/data_rs.txt"
-            jadepix_dev.write2txt(data_file, data_que)
+            jadepix_dev.write2txt(data_file, data_mem)
         
         if main_config.JADEPIX_ANA_DATA:
             data_analysis = DataAnalysis(frame_num=frame_number, is_save_png=True)
-            data_analysis.write2root(data_que)
+            data_analysis.write2root(data_mem)
             ''' Draw some plots '''
             data_analysis.draw_data()
 

@@ -5,8 +5,6 @@ import os
 import coloredlogs
 import logging
 
-from queue import SimpleQueue
-
 from lib.jadepix_defs import *
 from lib.spi_device import SpiDevice
 
@@ -763,24 +761,24 @@ class JadePixDevice:
         self.w_reg("hit_rst_manually", hit_rst_man, is_pulse=False, go_dispatch=True)
 
     def read_data(self, safe_mode=True):
-        data_que = SimpleQueue()
+        mem = []
         while self.is_busy_rs():
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=safe_mode)
             if len(mem0) > 0:
-                data_que.put(mem0)
+                mem.append(mem0)
             continue
         # try read more data
         for i in range(100):
             mem0 = self.read_ipb_data_fifo(slice_size, safe_mode=safe_mode)
             if len(mem0) > 0:
-                data_que.put(mem0)
+                mem.append(mem0)
 
-        return data_que
+        return mem
     
     @staticmethod
-    def write2txt(data_file, data_que):
-        if data_que.qsize() == 0:
-            log.error("Data queue is emtpy, quit!")
+    def write2txt(data_file, mem):
+        if len(mem) == 0:
+            log.error("Data memory is emtpy, quit!")
             return False
         else:
             try:
@@ -790,8 +788,8 @@ class JadePixDevice:
             
             data_string = []
             with open(data_file, 'a') as data_file:
-                for i in range(data_que.qsize()):
-                    for data in data_que.get():
+                for mem0 in mem:
+                    for data in mem0:
                         data_string.append("{:#010x}\n".format(data))
                 data_file.write("".join(data_string))
             log.info("Write to .txt end.")

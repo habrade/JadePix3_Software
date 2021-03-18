@@ -45,7 +45,7 @@ class SCurve():
                 self.set_pulse_lo(pulse_lo)
                 self._jadepix_dev.reset_rfifo()
                 self._jadepix_dev.start_gs()
-                data_que = self._jadepix_dev.read_data(safe_mode=True)
-                self._jadepix_dev.write2txt(data_file, data_que)
+                data_mem = self._jadepix_dev.read_data(safe_mode=True)
+                self._jadepix_dev.write2txt(data_file, data_mem)
                 
             pulse_lo += lo_step
