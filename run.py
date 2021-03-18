@@ -36,7 +36,7 @@ class MainConfig(object):
         self.JADEPIX_RUN_GS = False
         self.JADEPIX_SCURVE_TEST = False
         self.JADEPIX_RUN_RS = True
-        self.JADEPIX_ANA_DATA = True
+        self.JADEPIX_ANA_DATA = False
 
         self.W_TXT = True
 
@@ -222,7 +222,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 40000
+        frame_number = 4000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False
