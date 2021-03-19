@@ -222,7 +222,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 4000
+        frame_number = 300000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False
@@ -232,10 +232,9 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=hitmap_col_low,
                               hitmap_col_high=hitmap_col_high, hitmap_en=hitmap_en, frame_number=frame_number)
         jadepix_dev.reset_rfifo()
-        jadepix_dev.start_rs()
         log.info("Normally we should wait for {:} secends until rolling shutter finished.".format(
             rs_frame_period * frame_number / pow(10, 9)))
-        log.info("Rolling shutter is busy: {:}".format(jadepix_dev.is_busy_rs()))
+        jadepix_dev.start_rs()
         data_mem = jadepix_dev.read_data(safe_mode=True)
         log.info("Rolling shutter finished!")
 
