@@ -6,7 +6,7 @@ from ROOT import TCanvas, TGraphErrors, TLine, gROOT, TGaxis, gPad, TLegend, TH1
 from datetime import datetime
 import time
 import numpy as np
-
+from rootUtil3 import waitRootCmdX
 
 def test():
     print("test")
@@ -48,7 +48,8 @@ def test():
                 c1.Update()
                 outfile.cd()
                 th2.Write()
-                a = input("aaa")
+#                 a = input("aaa")
+                waitRootCmdX(f"Eventnumber: {framenumber}, framenumber: {raw16}")
 
             elif flag == 2 and framestart and (not frameend): #data
                 sec = (raw16 >> 16) & 0x3 #0-3
