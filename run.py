@@ -38,8 +38,6 @@ class MainConfig(object):
         self.JADEPIX_RUN_RS = True
         self.JADEPIX_ANA_DATA = False
 
-        self.W_TXT = True
-
 
 def main(enable_config=0, dac_initial=0, spi_initial=0):
     ipbus_link = IPbusLink()
@@ -241,15 +239,8 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         data_mem = jadepix_dev.read_data(safe_mode=True)
         log.info("Rolling shutter finished!")
 
-        if main_config.W_TXT:
-            data_file = "data/data_rs.txt"
-            jadepix_dev.write2txt(data_file, data_mem)
-        
-        if main_config.JADEPIX_ANA_DATA:
-            data_analysis = DataAnalysis(frame_num=frame_number, is_save_png=True)
-            data_analysis.write2root(data_mem)
-            ''' Draw some plots '''
-            data_analysis.draw_data()
+        data_file = "data/data_rs.txt"
+        jadepix_dev.write2txt(data_file, data_mem)
 
 
 if __name__ == '__main__':
