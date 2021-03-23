@@ -58,7 +58,7 @@ class GenPattern:
                     dout_arr[pix_bit] = pix_out
                     if pix_bit == 2:
                         pix_data = int((dout_arr[2] << 2) | (
-                            dout_arr[1] << 1) | dout_arr[0])
+                                dout_arr[1] << 1) | dout_arr[0])
                         dout_arr = np.empty((3, 1), int)
                         if pix_data > 0:
                             log.debug("row: {} col: {} data: {}".format(
@@ -70,3 +70,22 @@ class GenPattern:
                                 (data_flag << 30) + (block << 16) + data_out))
             f.write("".join(data_string))
         return line_num
+
+    def code_c(self, config_arr):
+        self.set_config(config_arr, 64, 65, 48, 144, 1, 2)
+        self.set_config(config_arr, 64, 448, 48, 49, 1, 2)
+        self.set_config(config_arr, 448, 449, 48, 144, 1, 2)
+
+    def code_n(self, config_arr):
+        self.set_config(config_arr, 64, 448, 48, 49, 1, 2)
+        self.set_config(config_arr, 64, 448, 144, 145, 1, 2)
+        for i in range(144-48):
+            delta_row = 384/(144-48)
+            x = 48 + i
+            y = 64 + delta_row*i
+            self.set_config(config_arr, x, x+1, y, y+1, 1, 2)
+
+    def code_u(self, config_arr):
+        self.set_config(config_arr, 64, 448, 48, 49, 1, 2)
+        self.set_config(config_arr, 64, 448, 144, 145, 1, 2)
+        self.set_config(config_arr, 448, 448+1, 48, 144, 1, 2)

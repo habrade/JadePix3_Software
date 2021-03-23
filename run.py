@@ -160,10 +160,13 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
     # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
 
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=1, col_high=2, data=1)
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=50, col_high=51, data=1)
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=100, col_high=101, data=1)
-    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=168, col_high=169, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=1, col_high=2, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=50, col_high=51, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=100, col_high=101, data=1)
+    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=168, col_high=169, data=1)
+
+    # print C
+    test_pattern_generator.code_c(config_arr=plse_arr)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
