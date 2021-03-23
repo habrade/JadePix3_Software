@@ -138,31 +138,6 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
     plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
     plse_arr[:, :] = PLSE_DEFAULT
 
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=16, col_high=17, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=1, col_low=35, col_high=37, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=115, row_high=117, col_low=32, col_high=33, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=221, row_high=223, col_low=45, col_high=47, data=1)
-
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=144, col_high=192, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=511, row_high=512, col_low=79, col_high=80, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=255, row_high=257, col_low=95, col_high=96, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=254, row_high=256, col_low=71, col_high=73, data=1)
-
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=112, col_high=113, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=134, row_high=135, col_low=115, col_high=117, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=335, row_high=337, col_low=123, col_high=124, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=222, row_high=224, col_low=135, col_high=137, data=1)
-    #
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=1, row_high=2, col_low=168, col_high=192, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=111, row_high=112, col_low=167, col_high=169, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=333, row_high=335, col_low=171, col_high=172, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=2, row_high=4, col_low=181, col_high=183, data=1)
-
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=1, col_high=2, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=50, col_high=51, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=100, col_high=101, data=1)
-    # test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=168, col_high=169, data=1)
-
     # print C
     test_pattern_generator.code_c(config_arr=plse_arr)
 
