@@ -39,7 +39,7 @@ class MainConfig(object):
         self.JADEPIX_ANA_DATA = False
 
 
-def main(enable_config=0, dac_initial=0, spi_initial=0):
+def main(enable_config=0, dac_initial=0, spi_initial=0, outfilename="data/data_rs.txt"):
     ipbus_link = IPbusLink()
     main_config = MainConfig()
 
@@ -198,7 +198,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
                                           test_num=50)
 
     if main_config.JADEPIX_RUN_RS:
-        frame_number = 300000
+        frame_number = 100000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False
@@ -214,12 +214,12 @@ def main(enable_config=0, dac_initial=0, spi_initial=0):
         data_mem = jadepix_dev.read_data(safe_mode=True)
         log.info("Rolling shutter finished!")
 
-        data_file = "data/data_rs.txt"
+        data_file = outfilename
         jadepix_dev.write2txt(data_file, data_mem)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 4:
+    if len(sys.argv) > 5:
         print("Usage: ./run.py [enable config] [dac initial] [spi_initial]")
         log.error("only three parameters is accepted at most!")
         print("Example: ./run.py 1 0 0, enable config, do not set dac, do not set spi")
@@ -227,4 +227,4 @@ if __name__ == '__main__':
     elif len(sys.argv) == 1:
         main(enable_config=0, dac_initial=0, spi_initial=0)
     else:
-        main(enable_config=int(sys.argv[1]), dac_initial=int(sys.argv[2]), spi_initial=int(sys.argv[3]))
+        main(enable_config=int(sys.argv[1]), dac_initial=int(sys.argv[2]), spi_initial=int(sys.argv[3]), outfilename=sys.argv[4])
