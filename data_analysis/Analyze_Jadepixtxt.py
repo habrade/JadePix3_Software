@@ -115,7 +115,7 @@ def test(filename="../Data/data/data_rs.txt", outrootname = "./outth2f.root"):
     outfile.Close()
 
 
-def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.root", laserxpoi=0.700):
+def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.root", laserxpoi=0.700, doperbin=True):
 
     from optparse import OptionParser
     parser = OptionParser()
@@ -134,10 +134,13 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
     th1centerXraw = TH1F("th1centerXraw","th1centerXraw",100000,0,10000)
     th1resiXprojXall = TH1F("th1resiXprojXall","th1resiXprojXall",100000,0,1000)
 
-    lth1resiXperbin = []
-    for i in range(0,512):
-        th1resiXperbintmp = TH1F(f"lth1resiXperbin{i}",f"lth1resiXperbin{i}",100000,0,1000)
-        lth1resiXperbin.append(th1resiXperbintmp)
+    if doperbin:
+	    lth1resiXperbin = []
+	    for i in range(0,512):
+                th1resiXperbintmp = TH1F(f"lth1resiXperbin{i}",f"lth1resiXperbin{i}",100000,0,1000)
+                lth1resiXperbin.append(th1resiXperbintmp)
+
+    th1Nbinsabove0p1 = TH1F("th1Nbinsabove0p1","th1Nbinsabove0p1",1000,0,1000)
 
     with open(filename,'r') as fin:
         lines = fin.readlines()
@@ -186,12 +189,22 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
                 residuXprojXall = th1projXall.GetMean()*23 - laseroffsetX
                 print(f"th1projXall.GetMean() {th1projXall.GetMean()}, residuXprojXall {residuXprojXall}")
                 th1resiXprojXall.Fill(residuXprojXall)
+                
+                if doperbin:
+                        for i in range(0, 512):
+                            th1projXperbintmp = th2.ProjectionX(f"lth1projXperbin{i}",i+1,i+1)
+                            residuXprojXperbintmp = th1projXperbintmp.GetMean()*23 - laseroffsetX
+                            #print(f"i {i}, th1projXperbintmp.GetMean() {th1projXperbintmp.GetMean()}, residuXprojXperbintmp {residuXprojXperbintmp}")
+                            lth1resiXperbin[i].Fill(residuXprojXperbintmp)    
 
-                for i in range(0, 512):
-                    th1projXperbintmp = th2.ProjectionX(f"lth1projXperbin{i}",i+1,i+1)
-                    residuXprojXperbintmp = th1projXperbintmp.GetMean()*23 - laseroffsetX
-                    #print(f"i {i}, th1projXperbintmp.GetMean() {th1projXperbintmp.GetMean()}, residuXprojXperbintmp {residuXprojXperbintmp}")
-                    lth1resiXperbin[i].Fill(residuXprojXperbintmp)    
+#                Nbinsabove0p1 = 0;
+#                for ix in range(0,192):
+#                    for iy in range(0,512):
+#                        if th2.GetBinContent(ix+1, iy+1)>0.1: Nbinsabove0p1 += 1
+                Nbinswithhit = th2.Integral()
+#                print(f"Nbinsabove0p1 {Nbinsabove0p1}, Nbinswithhit {Nbinswithhit}")
+#                th1Nbinsabove0p1.Fill(Nbinsabove0p1)
+                th1Nbinsabove0p1.Fill(Nbinswithhit)
 
                 #waitRootCmdX(f"Eventnumber: {framenumber}, framenumber: {raw16}")
 
@@ -218,9 +231,11 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
     th1resiXraw.Write()
     th1centerXraw.Write()
     th1resiXprojXall.Write()
-    for i in range(0,512):
-        lth1resiXperbin[i].Write()
-
+    if doperbin:
+            for i in range(0,512):
+                lth1resiXperbin[i].Write()
+    th1Nbinsabove0p1.Write()
+    print(f"Summmary: th1resiXraw.GetRMS() {th1resiXraw.GetRMS()}, th1resiXprojXall.GetRMS() {th1resiXprojXall.GetRMS()}, th1Nbinsabove0p1.GetMean(), {th1Nbinsabove0p1.GetMean()}")
     outfile.Close()
 
 
