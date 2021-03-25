@@ -130,33 +130,33 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
     print(f"filename: {filename}, outrootname: {outrootname}")
 
     outfile = TFile(outrootname,'recreate')
-    th1resi = TH1F("th1resi","th1resi",100000,0,1000)
-    th1center = TH1F("th1center","th1center",100000,0,10000)
+    th1resiXraw = TH1F("th1resiXraw","th1resiXraw",100000,0,1000)
+    th1centerXraw = TH1F("th1centerXraw","th1centerXraw",100000,0,10000)
+    th1resiXprojXall = TH1F("th1resiXprojXall","th1resiXprojXall",100000,0,1000)
+
+    lth1resiXperbin = []
+    for i in range(0,512):
+        th1resiXperbintmp = TH1F(f"lth1resiXperbin{i}",f"lth1resiXperbin{i}",100000,0,1000)
+        lth1resiXperbin.append(th1resiXperbintmp)
+
     with open(filename,'r') as fin:
         lines = fin.readlines()
         lineindex = 0
         framenumber = 0
         framestart = False
         frameend = False
-        c1 = TCanvas("c1","c1",800,600)
-        c2 = TCanvas("c2","c2",800,600)
         for line in lines:
-#             print(lineindex)
             lineindex +=1
-#             if lineindex > 20:
-#                 break
             raw16 = int(line, 16)
             flag = (raw16 >> 23)
-#             print(hex(raw16), flag)
             if flag !=1 and (not framestart) and (not frameend):
-#                 print(flag, framestart, frameend)
                 continue
 
             if flag == 1: 
                 framestart = True
                 frameend = False
                 th2tag = f"TH2_{framenumber}"
-                print(th2tag)
+                #print(th2tag)
                 #th2 = TH2F(th2tag,th2tag,512,0,512,192,0,192);
                 th2 = TH2F(th2tag,th2tag,192,0,192,512,0,512);
                 th2.GetXaxis().SetTitle("Column")
@@ -165,32 +165,34 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
             elif flag == 0 and framestart:
                 frameend = True
                 framestart = False
-                print(f"framenumber: {raw16}")
-                c1.cd()
-                #th2.Draw("colz")
-                c1.Update()
-               
+                print(f"Eventnumber: {framenumber}, framenumber: {raw16}")
+                
+                laseroffsetX = (0.7-laserxpoi)*1000 + 100.*23
+		#calculaate residual from 2D hist
                 xbinlow = th2.FindFirstBinAbove(0.1, 1)
                 xbinhigh = th2.FindLastBinAbove(0.1, 1)
                 ybinlow = th2.FindFirstBinAbove(0.1, 2)
                 ybinhigh = th2.FindLastBinAbove(0.1, 2)
                 print(f"xbinlow {xbinlow}, xbinhigh {xbinhigh}, ybinlow {ybinlow}, ybinhigh {ybinhigh}")
-                xbincenter = (xbinlow+xbinhigh)*0.5*23.
-                residuX =  xbincenter - (0.7-laserxpoi)*1000-100.*23
-                th1resi.Fill(residuX)
-                th1center.Fill(xbincenter)
-                print(f"xbincenter {xbincenter}, residuX {residuX}")
-                
-                th2clone = th2.Clone("th2clone")
-                c2.cd()
-                th2clone.GetXaxis().SetRangeUser(xbinlow-5, xbinhigh+5)
-                th2clone.GetYaxis().SetRangeUser(ybinlow-5, ybinhigh+5)
-                #th2clone.Draw("colz")
-                c2.Update()
+                xbincenterraw = (xbinlow-0.5+xbinhigh-0.5)*0.5*23.
+                #xbincenterraw = (xbinlow+xbinhigh)*0.5*23.
+                residuXraw =  xbincenterraw - laseroffsetX
+                th1resiXraw.Fill(residuXraw)
+                th1centerXraw.Fill(xbincenterraw)
+                print(f"xbincenterraw {xbincenterraw}, residuXraw {residuXraw}")
 
-                outfile.cd()
-                #th2.Write()
-#                 a = input("aaa")
+                th1projXall = th2.ProjectionX("th1projXall")
+                #th1projXall.Draw()
+                residuXprojXall = th1projXall.GetMean()*23 - laseroffsetX
+                print(f"th1projXall.GetMean() {th1projXall.GetMean()}, residuXprojXall {residuXprojXall}")
+                th1resiXprojXall.Fill(residuXprojXall)
+
+                for i in range(0, 512):
+                    th1projXperbintmp = th2.ProjectionX(f"lth1projXperbin{i}",i+1,i+1)
+                    residuXprojXperbintmp = th1projXperbintmp.GetMean()*23 - laseroffsetX
+                    #print(f"i {i}, th1projXperbintmp.GetMean() {th1projXperbintmp.GetMean()}, residuXprojXperbintmp {residuXprojXperbintmp}")
+                    lth1resiXperbin[i].Fill(residuXprojXperbintmp)    
+
                 #waitRootCmdX(f"Eventnumber: {framenumber}, framenumber: {raw16}")
 
             elif flag == 2 and framestart and (not frameend): #data
@@ -202,39 +204,23 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
                 databit1 = (data >> 1) & 0x1
                 databit0 = (data & 0x1)
                 datacolumn = sec * 48 + datablk * 3 
-                print(hex(raw16), flag, sec, bin(data), datarow, datablk, databit0, databit1, databit2, datacolumn)
+                #print(hex(raw16), flag, sec, bin(data), datarow, datablk, databit0, databit1, databit2, datacolumn)
                 th2.SetBinContent(datacolumn, datarow, databit0);
                 th2.SetBinContent(datacolumn+1, datarow, databit1);
                 th2.SetBinContent(datacolumn+2, datarow, databit2);
    
             if lineindex == len(lines):
-                print(f"end of file")
-                #th2.Draw("colz")
-                c1.Update()
+                print(f"end of file, do not process the last event, for now...")
 
-                xbinlow = th2.FindFirstBinAbove(0.1, 1)
-                xbinhigh = th2.FindLastBinAbove(0.1, 1)
-                ybinlow = th2.FindFirstBinAbove(0.1, 2)
-                ybinhigh = th2.FindLastBinAbove(0.1, 2)
-                print(f"xbinlow {xbinlow}, xbinhigh {xbinhigh}, ybinlow {ybinlow}, ybinhigh {ybinhigh}")
-
-                th2clone = th2.Clone("th2clone")
-                c2.cd()
-                th2clone.GetXaxis().SetRangeUser(xbinlow-5, xbinhigh+5)
-                th2clone.GetYaxis().SetRangeUser(ybinlow-5, ybinhigh+5)
-                #th2clone.Draw("colz")
-                c2.Update()
-
-                outfile.cd()
-                #th2.Write()
-                #waitRootCmdX(f"endoffile")
-    c1.cd()
     #th1resi.Draw()
-    c2.cd()
     #th1center.Draw()
     #waitRootCmdX(f"residual and center")
-    th1resi.Write()
-    th1center.Write()
+    th1resiXraw.Write()
+    th1centerXraw.Write()
+    th1resiXprojXall.Write()
+    for i in range(0,512):
+        lth1resiXperbin[i].Write()
+
     outfile.Close()
 
 
