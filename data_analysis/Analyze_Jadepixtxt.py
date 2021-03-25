@@ -115,7 +115,7 @@ def test(filename="../Data/data/data_rs.txt", outrootname = "./outth2f.root"):
     outfile.Close()
 
 
-def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.root", laserxpoi=0.700, laserypoi=5.600, doperbin=True):
+def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.root", laserxpoi=0.700, laserypoi=5.600, doperbin=False):
 
     from optparse import OptionParser
     parser = OptionParser()
