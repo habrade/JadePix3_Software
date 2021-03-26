@@ -24,7 +24,7 @@ def GetEntries(filename, histname):
     return f1.Get(histname).GetEntries() 
 
 def draw_X():
-    filenamesX = glob.glob("Outfiles/test_rs_0326_tune94p1_x*.root")
+    filenamesX = glob.glob("Outfiles/test_rs_0326_tune94p2_x*.root")
     filenamesX = sorted(filenamesX, key=lambda x:x)
 
     grs = TGraphErrors()
@@ -74,5 +74,5 @@ if __name__ == '__main__':
     #test()
     gROOT.LoadMacro("AtlasStyle.C")
     gROOT.ProcessLine("SetAtlasStyle()")
-    #draw_X()
-    draw_Y()
+    draw_X()
+    #draw_Y()

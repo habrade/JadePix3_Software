@@ -38,7 +38,12 @@ mkdir -p Outfiles
 #done
 
 
-for i in $(seq 608 655); do
+# for i in $(seq 608 655); do
+#     echo ${i}
+#     ./Analyze_Jadepixtxt.py  -i ../data/data_rs_0326_tune94p2_y5${i}.txt -o Outfiles/test_rs_0326_tune94p2_y5${i}.root -y 5.${i} > Logfiles/log_rs_0326_rune94p2_y5${i} 2>&1&
+# done
+
+for i in $(seq 733 736); do
     echo ${i}
-    ./Analyze_Jadepixtxt.py  -i ../data/data_rs_0326_tune94p2_y5${i}.txt -o Outfiles/test_rs_0326_tune94p2_y5${i}.root -y 5.${i} > Logfiles/log_rs_0326_rune94p2_y5${i} 2>&1&
+    ./Analyze_Jadepixtxt.py  -i ../data/data_rs_0326_tune94p2_x0${i}.txt -o Outfiles/test_rs_0326_tune94p2_x0${i}.root -x 0.${i} > Logfiles/log_rs_0326_rune94p2_x0${i} 2>&1&
 done

@@ -70,7 +70,7 @@ def test(filename="../data/data_rs.txt", outrootname = "./outth2f.root"):
                 #th2clone.GetXaxis().SetRangeUser(xbinlow-5, xbinhigh+5)
                 th2clone.GetXaxis().SetRangeUser(102, 110)
                 #th2clone.GetYaxis().SetRangeUser(ybinlow-5, ybinhigh+5)
-                th2clone.GetYaxis().SetRangeUser(260, 270)
+                th2clone.GetYaxis().SetRangeUser(256, 266)
                 th2clone.Draw("colz")
                 c2.Update()
 
@@ -109,7 +109,7 @@ def test(filename="../data/data_rs.txt", outrootname = "./outth2f.root"):
                 #th2clone.GetXaxis().SetRangeUser(xbinlow-5, xbinhigh+5)
                 th2clone.GetXaxis().SetRangeUser(102, 110)
                 #th2clone.GetYaxis().SetRangeUser(ybinlow-5, ybinhigh+5)
-                th2clone.GetYaxis().SetRangeUser(260, 270)
+                th2clone.GetYaxis().SetRangeUser(256, 266)
                 th2clone.Draw("colz")
                 c2.Update()
 
@@ -307,5 +307,5 @@ if __name__ == '__main__':
     gROOT.LoadMacro("AtlasStyle.C")
     gROOT.ProcessLine("SetAtlasStyle()")
     gStyle.SetPalette(55)
-    #test()
-    testresidual()
+    test()
+    #testresidual()
