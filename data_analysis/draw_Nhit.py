@@ -13,13 +13,13 @@ from rootUtil3 import waitRootCmdX
 def GetNhit(filename):
     f = TFile(filename,"read")
     h1 = f.Get("th1Nbinsabove0p1")
-    Nhit = (h1.GetMean(), h1.GetMeanError(), h1.GetRMS(), h1.GetRMS()/(h1.GetEntries()**0.5) )
+    Nhit = (h1.GetMean(), h1.GetMeanError(), h1.GetRMS())
     return Nhit
 
 def test():
     print("test")
     Dir="./Outfiles/";
-    filenamesZ = glob.glob(Dir+"test_rs_0325_z*.root")
+    filenamesZ = glob.glob(Dir+"test_rs_0326_tune50_z*.root")
     filenamesZ = sorted(filenamesZ, key=lambda x:x)
 
     grs = TGraphErrors()

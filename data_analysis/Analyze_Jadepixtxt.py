@@ -8,7 +8,7 @@ import time
 import numpy as np
 from rootUtil3 import waitRootCmdX
 
-def test(filename="../Data/data/data_rs.txt", outrootname = "./outth2f.root"):
+def test(filename="../data/data_rs.txt", outrootname = "./outth2f.root"):
 
     from optparse import OptionParser
     parser = OptionParser()
@@ -67,9 +67,9 @@ def test(filename="../Data/data/data_rs.txt", outrootname = "./outth2f.root"):
              
                 th2clone = th2.Clone("th2clone")
                 c2.cd()
-                # th2clone.GetXaxis().SetRangeUser(xbinlow-5, xbinhigh+5)
+                #th2clone.GetXaxis().SetRangeUser(xbinlow-5, xbinhigh+5)
                 th2clone.GetXaxis().SetRangeUser(102, 110)
-                # th2clone.GetYaxis().SetRangeUser(ybinlow-5, ybinhigh+5)
+                #th2clone.GetYaxis().SetRangeUser(ybinlow-5, ybinhigh+5)
                 th2clone.GetYaxis().SetRangeUser(260, 270)
                 th2clone.Draw("colz")
                 c2.Update()
@@ -119,7 +119,7 @@ def test(filename="../Data/data/data_rs.txt", outrootname = "./outth2f.root"):
     outfile.Close()
 
 
-def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.root", laserxpoi=0.700, laserypoi=5.600, doperbin=False):
+def testresidual(filename="../data/data_rs.txt", outrootname = "./outth1f.root", laserxpoi=0.700, laserypoi=5.600, doperbin=False):
 
     from optparse import OptionParser
     parser = OptionParser()
