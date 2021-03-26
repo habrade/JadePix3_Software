@@ -197,6 +197,11 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
                 ybinhigh = th2.FindLastBinAbove(0.1, 2)
                 print(f"xbinlow {xbinlow}, xbinhigh {xbinhigh}, ybinlow {ybinlow}, ybinhigh {ybinhigh}")
 
+                # cut 
+                if xbinlow < 192*2./4 or xbinlow > 192*3./4 or ybinlow < 200 or ybinlow > 300:
+                    continue
+
+
                 xbincenterraw = (xbinlow-0.5+xbinhigh-0.5)*0.5*23.16
                 #xbincenterraw = (xbinlow+xbinhigh)*0.5*23.
                 residuXraw =  xbincenterraw - laseroffsetX
