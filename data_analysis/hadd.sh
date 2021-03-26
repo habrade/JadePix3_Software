@@ -3,3 +3,8 @@
 #hadd total_y_595to610.root Output/test_rs_0325_y5595.root Output/test_rs_0325_y5596.root Output/test_rs_0325_y5597.root Output/test_rs_0325_y5598.root Output/test_rs_0325_y5599.root Output/test_rs_0325_y5600.root Output/test_rs_0325_y5601.root Output/test_rs_0325_y5602.root Output/test_rs_0325_y5603.root Output/test_rs_0325_y5604.root Output/test_rs_0325_y5605.root Output/test_rs_0325_y5606.root Output/test_rs_0325_y5607.root Output/test_rs_0325_y5608.root Output/test_rs_0325_y5609.root Output/test_rs_0325_y5610.root
 
 #hadd total_x_all.root Outfiles/test_0325_x*.root
+hadd total_test_rs_0326_measure1_tune93p5_x.root Outfiles/test_rs_0326_measure1_tune93p5_x*.root
+hadd total_test_rs_0326_measure1_tune93p5_y.root Outfiles/test_rs_0326_measure1_tune93p5_y*.root
+
+hadd total_test_rs_0326_measure1_tune93p7_x.root Outfiles/test_rs_0326_measure1_tune93p7_x*.root
+hadd total_test_rs_0326_measure1_tune93p7_y.root Outfiles/test_rs_0326_measure1_tune93p7_y*.root

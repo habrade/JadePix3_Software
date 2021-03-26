@@ -307,5 +307,5 @@ if __name__ == '__main__':
     gROOT.LoadMacro("AtlasStyle.C")
     gROOT.ProcessLine("SetAtlasStyle()")
     gStyle.SetPalette(55)
-    test()
-    #testresidual()
+    #test()
+    testresidual()
