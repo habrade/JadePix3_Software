@@ -33,13 +33,10 @@ __email__ = "s.dong@mails.ccnu.edu.cn"
 class MainConfig(object):
     def __init__(self):
         self.GLOBAL_RESET = True
-        self.JADEPIX_RUN_GS = False
-        self.JADEPIX_SCURVE_TEST = False
-        self.JADEPIX_RUN_RS = True
         self.JADEPIX_ANA_DATA = False
 
 
-def main(config_pixel, spi_initial, dac_initial, rs_outfile):
+def main(config_pixel, spi_initial, gs_en, scurve_en, rs_en, dac_initial, rs_outfile):
     ipbus_link = IPbusLink()
     main_config = MainConfig()
 
@@ -171,7 +168,7 @@ def main(config_pixel, spi_initial, dac_initial, rs_outfile):
     """sys_clk period = 12 ns, so width = Number * Period"""
     """For pulse width, width = (high<<32 + low) * Period"""
     frame_number = 1
-    if main_config.JADEPIX_RUN_GS:
+    if gs_en:
         jadepix_dev.reset_rfifo()
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
                               hitmap_col_high=351, hitmap_en=True, frame_number=frame_number)
@@ -189,7 +186,7 @@ def main(config_pixel, spi_initial, dac_initial, rs_outfile):
         jadepix_dev.write2txt(data_file, data_mem)
         log.info("Global shutter finished!")
 
-    if main_config.JADEPIX_SCURVE_TEST:
+    if scurve_en:
         jadepix_dev.rs_config(cache_bit=0x0, hitmap_col_low=340,
                               hitmap_col_high=351, hitmap_en=True, frame_number=1)
         jadepix_dev.gs_config(pulse_delay=256, width_low=65535, width_high=0, pulse_deassert=256, deassert=5, col=313)
@@ -197,7 +194,7 @@ def main(config_pixel, spi_initial, dac_initial, rs_outfile):
         s_curve.run_scurve_pulse_low_test(pulse_hi=1.7, pulse_lo_init=1.4, pulse_lo_target=1.5, lo_step=0.01,
                                           test_num=50)
 
-    if main_config.JADEPIX_RUN_RS:
+    if rs_en:
         frame_number = 4000
         hitmap_col_low = 340
         hitmap_col_high = 351
@@ -219,13 +216,22 @@ def main(config_pixel, spi_initial, dac_initial, rs_outfile):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config-pixel',
+    parser.add_argument('-config', '--config-pixel',
                         help="Configure pixels' registers, PULSE and MASk",
                         action="store_true")
-    parser.add_argument('-s', '--spi_initial',
+    parser.add_argument('-spi', '--spi_initial',
                         help="Initial spi and load register in chip",
                         action="store_true")
-    parser.add_argument('-d', '--dac_initial',
+    parser.add_argument('-gs', '--gs_en',
+                        help="Enabel global shutter",
+                        action="store_true")
+    parser.add_argument('-sc', '--scurve_en',
+                        help="Enabel s-curve mode",
+                        action="store_true")
+    parser.add_argument('-rs', '--rs_en',
+                        help="Enabel rolling shutter",
+                        action="store_true")
+    parser.add_argument('-dac', '--dac_initial',
                         help="Initial DAC70004 on daughter-board",
                         default="data/data_rs.txt",
                         action="store_true")
@@ -233,4 +239,4 @@ if __name__ == '__main__':
                         default="data/data_rs.txt",
                         help="The path for saving the results (.txt) of rolling shutter.")
     args = parser.parse_args()
-    main(args.config_pixel, args.spi_initial, args.dac_initial, args.output_file)
+    main(args.config_pixel, args.spi_initial, args.gs_en, args.scurve_en, args.rs_en, args.dac_initial, args.output_file)
