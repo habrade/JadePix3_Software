@@ -12,6 +12,16 @@ def test(filename="total_test.root"):
         tp1 = f1.Get(key1.GetName())
         print(f"{key1.GetName()} {tp1.GetRMS()}")
 
+def GetEntries(filename="total_test.root"):
+    f1 = TFile(filename)
+    print(filename, f1.Get("th1resiXprojXall").GetEntries()) 
+
 
 if __name__ == '__main__':
-    test()
+    #test()
+    for f in range(720, 743):
+        GetEntries(f"Outfiles/test_rs_0326_tune94p1_x0{f}.root")
+
+
+    for f in range(608, 623):
+        GetEntries(f"Outfiles/test_rs_0326_tune94p1_y5{f}.root")
