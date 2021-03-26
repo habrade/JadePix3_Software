@@ -157,6 +157,8 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
                 lth1resiYperbin.append(th1resiYperbintmp)
 
     th1Nbinsabove0p1 = TH1F("th1Nbinsabove0p1","th1Nbinsabove0p1",1000,0,1000)
+    th1Nrowsabove0p1 = TH1F("th1Nrowsabove0p1","th1Nrowsabove0p1",1000,0,1000)
+    th1Ncolsabove0p1 = TH1F("th1Ncolsabove0p1","th1Ncolsabove0p1",1000,0,1000)
 
     with open(filename,'r') as fin:
         lines = fin.readlines()
@@ -242,6 +244,17 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
 #                th1Nbinsabove0p1.Fill(Nbinsabove0p1)
                 th1Nbinsabove0p1.Fill(Nbinswithhit)
 
+                Nrowswithhit =0;
+                for iy in range(ybinlow,ybinhigh+1):
+                    if th1projYall.GetBinContent(iy)>0.1: Nrowswithhit += 1
+                th1Nrowsabove0p1.Fill(Nrowswithhit)
+
+                Ncolswithhit =0;
+                for ix in range(xbinlow,xbinhigh+1):
+                    if th1projXall.GetBinContent(ix)>0.1: Ncolswithhit += 1
+                th1Ncolsabove0p1.Fill(Ncolswithhit)
+                
+
                 #waitRootCmdX(f"Eventnumber: {framenumber}, framenumber: {raw16}")
 
             elif flag == 2 and framestart and (not frameend): #data
@@ -270,12 +283,17 @@ def testresidual(filename="../Data/data/data_rs.txt", outrootname = "./outth1f.r
     th1resiYraw.Write()
     th1centerYraw.Write()
     th1resiYprojYall.Write()
+
     if doperbin:
             for i in range(0,512):
                 lth1resiXperbin[i].Write()
             for i in range(0,192):
                 lth1resiYperbin[i].Write()
+
     th1Nbinsabove0p1.Write()
+    th1Nrowsabove0p1.Write()
+    th1Ncolsabove0p1.Write()
+
     print(f"Summmary: th1resiXraw.GetRMS() {th1resiXraw.GetRMS()}, th1resiXprojXall.GetRMS() {th1resiXprojXall.GetRMS()}, th1resiYraw.GetRMS() {th1resiYraw.GetRMS()}, th1resiYprojYall.GetRMS() {th1resiYprojYall.GetRMS()}, th1Nbinsabove0p1.GetMean(), {th1Nbinsabove0p1.GetMean()}")
     outfile.Close()
 
@@ -284,5 +302,5 @@ if __name__ == '__main__':
     gROOT.LoadMacro("AtlasStyle.C")
     gROOT.ProcessLine("SetAtlasStyle()")
     gStyle.SetPalette(55)
-    test()
-    #testresidual()
+    #test()
+    testresidual()
