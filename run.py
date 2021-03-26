@@ -225,7 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--spi_initial',
                         help="Initial spi and load register in chip",
                         action="store_true")
-    parser.add_argument('-a', '--adc_initial',
+    parser.add_argument('-d', '--dac_initial',
                         help="Initial DAC70004 on daughter-board",
                         default="data/data_rs.txt",
                         action="store_true")
