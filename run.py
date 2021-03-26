@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import sys
 import time
 import logging
 import os
@@ -223,17 +222,16 @@ if __name__ == '__main__':
                         help="Initial spi and load register in chip",
                         action="store_true")
     parser.add_argument('-gs', '--gs_en',
-                        help="Enabel global shutter",
+                        help="Enable global shutter",
                         action="store_true")
     parser.add_argument('-sc', '--scurve_en',
-                        help="Enabel s-curve mode",
+                        help="Enable s-curve mode",
                         action="store_true")
     parser.add_argument('-rs', '--rs_en',
-                        help="Enabel rolling shutter",
+                        help="Enable rolling shutter",
                         action="store_true")
     parser.add_argument('-dac', '--dac_initial',
                         help="Initial DAC70004 on daughter-board",
-                        default="data/data_rs.txt",
                         action="store_true")
     parser.add_argument('-o', '--output-file',
                         default="data/data_rs.txt",
