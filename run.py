@@ -195,7 +195,7 @@ def main(config_pixel, spi_initial, gs_en, scurve_en, rs_en, dac_initial, rs_out
                                           test_num=50)
 
     if rs_en:
-        frame_number = 4000
+        frame_number = 10000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False

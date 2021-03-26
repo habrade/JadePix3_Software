@@ -20,8 +20,8 @@ def test(filename="total_test.root"):
 
 def GetEntries(filename, histname):
     f1 = TFile(filename)
-    print(filename, f1.Get("th1resiXprojXall").GetEntries()) 
-
+#    print(filename, f1.Get("th1resiXprojXall").GetEntries()) 
+    return f1.Get(histname).GetEntries() 
 
 def draw_X():
     filenamesX = glob.glob("Outfiles/test_rs_0326_tune94p1_x*.root")
@@ -47,7 +47,32 @@ def draw_X():
     waitRootCmdX()
 
 
+def draw_Y():
+    filenamesY = glob.glob("Outfiles/test_rs_0326_tune94p2_y*.root")
+    filenamesY = sorted(filenamesY, key=lambda x:x)
+
+    grs = TGraphErrors()
+    index = 0
+    for filename in filenamesY:
+        Y = float(os.path.basename(filename).split('.')[0][-4:])
+        NEntries = GetEntries(filename, "th1resiYprojYall")
+        print(filename, Y, NEntries)
+        grs.SetPoint(index, Y, NEntries)
+        grs.SetPointError(index, 0, 0)
+        index += 1
+
+    c1 = TCanvas("c1","c1",0,0,800,600)
+    grs.Draw("APL")
+    grs.GetYaxis().SetTitle("Laser Position Y (#mum)")
+    grs.GetYaxis().SetTitle("Entries")
+    c1.Update()
+    os.makedirs("./Plots", exist_ok=True)
+    c1.Print("./Plots/EntriesVSY.pdf")
+    waitRootCmdX()
 
 if __name__ == '__main__':
     #test()
-    draw_X()
+    gROOT.LoadMacro("AtlasStyle.C")
+    gROOT.ProcessLine("SetAtlasStyle()")
+    #draw_X()
+    draw_Y()
