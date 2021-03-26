@@ -14,7 +14,7 @@ from lib.jadepix_device import JadePixDevice
 from lib.s_curve import SCurve
 from lib.gen_pattern import GenPattern
 
-from data_analysis.data_analysis import DataAnalysis
+import argparse
 
 from lib import jadepix_defs
 
@@ -39,7 +39,7 @@ class MainConfig(object):
         self.JADEPIX_ANA_DATA = False
 
 
-def main(enable_config=0, dac_initial=0, spi_initial=0, outfilename="data/data_rs.txt"):
+def main(config_pixel, spi_initial, dac_initial, rs_outfile):
     ipbus_link = IPbusLink()
     main_config = MainConfig()
 
@@ -143,7 +143,7 @@ def main(enable_config=0, dac_initial=0, spi_initial=0, outfilename="data/data_r
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
-    if enable_config:
+    if config_pixel:
         """ Set configuration timing factor """
         jadepix_dev.set_cfg_add_factor_t0(t0_factor=83)  # 1-255
         jadepix_dev.set_cfg_add_factor_t1(t1_factor=83)  # 1-65535
@@ -214,17 +214,23 @@ def main(enable_config=0, dac_initial=0, spi_initial=0, outfilename="data/data_r
         data_mem = jadepix_dev.read_data(safe_mode=True)
         log.info("Rolling shutter finished!")
 
-        data_file = outfilename
-        jadepix_dev.write2txt(data_file, data_mem)
+        jadepix_dev.write2txt(rs_outfile, data_mem)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 5:
-        print("Usage: ./run.py [enable config] [dac initial] [spi_initial]")
-        log.error("only three parameters is accepted at most!")
-        print("Example: ./run.py 1 0 0, enable config, do not set dac, do not set spi")
-        sys.exit(0)
-    elif len(sys.argv) == 1:
-        main(enable_config=0, dac_initial=0, spi_initial=0)
-    else:
-        main(enable_config=int(sys.argv[1]), dac_initial=int(sys.argv[2]), spi_initial=int(sys.argv[3]), outfilename=sys.argv[4])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config-pixel',
+                        help="Configure pixels' registers, PULSE and MASk",
+                        action="store_true")
+    parser.add_argument('-s', '--spi_initial',
+                        help="Initial spi and load register in chip",
+                        action="store_true")
+    parser.add_argument('-d', '--dac_initial',
+                        help="Initial DAC70004 on daughter-board",
+                        default="data/data_rs.txt",
+                        action="store_true")
+    parser.add_argument('-o', '--output-file',
+                        default="data/data_rs.txt",
+                        help="The path for saving the results (.txt) of rolling shutter.")
+    args = parser.parse_args()
+    main(args.config_pixel, args.spi_initial, args.dac_initial, args.output_file)
