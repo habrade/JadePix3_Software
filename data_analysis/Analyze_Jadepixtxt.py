@@ -188,7 +188,7 @@ def testresidual(filename="../data/data_rs.txt", outrootname = "./outth1f.root",
                 framestart = False
                 print(f"Eventnumber: {framenumber}, framenumber: {raw16}")
                 
-                laseroffsetX = (0.7-laserxpoi)*1000 + 100.*23.16
+                laseroffsetX = (0.7-laserxpoi)*1000 + 100.*23.11
                 laseroffsetY = (5.6-laserypoi)*1000 + 230.*16
 		#calculaate residual from 2D hist
                 xbinlow = th2.FindFirstBinAbove(0.1, 1)
@@ -202,7 +202,7 @@ def testresidual(filename="../data/data_rs.txt", outrootname = "./outth1f.root",
                     continue
 
 
-                xbincenterraw = (xbinlow-0.5+xbinhigh-0.5)*0.5*23.16
+                xbincenterraw = (xbinlow-0.5+xbinhigh-0.5)*0.5*23.11
                 #xbincenterraw = (xbinlow+xbinhigh)*0.5*23.
                 residuXraw =  xbincenterraw - laseroffsetX
                 th1resiXraw.Fill(residuXraw)
@@ -218,7 +218,7 @@ def testresidual(filename="../data/data_rs.txt", outrootname = "./outth1f.root",
 
                 th1projXall = th2.ProjectionX("th1projXall")
                 #th1projXall.Draw()
-                residuXprojXall = th1projXall.GetMean()*23.16 - laseroffsetX
+                residuXprojXall = th1projXall.GetMean()*23.11 - laseroffsetX
                 print(f"th1projXall.GetMean() {th1projXall.GetMean()}, residuXprojXall {residuXprojXall}")
                 th1resiXprojXall.Fill(residuXprojXall)
 
