@@ -135,7 +135,7 @@ def main(config_pixel, spi_initial, gs_en, scurve_en, rs_en, dac_initial, rs_out
     plse_arr[:, :] = PLSE_DEFAULT
 
     # print C
-    test_pattern_generator.code_c(config_arr=plse_arr)
+    test_pattern_generator.code_cepc(config_arr=plse_arr)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 

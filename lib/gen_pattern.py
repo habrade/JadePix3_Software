@@ -74,23 +74,23 @@ class GenPattern:
     def code_cepc(self, config_arr):
         """ code CEPC """
         """ C """
-        self.set_config(config_arr, 32, 33, 24, 168, 1, 2)
-        self.set_config(config_arr, 32, 96, 24, 25, 1, 2)
-        self.set_config(config_arr, 96, 97, 24, 168, 1, 2)
+        self.set_config(config_arr, 32, 33, 24, 168, 2, 1)
+        self.set_config(config_arr, 32, 96, 24, 25, 2, 1)
+        self.set_config(config_arr, 96, 97, 24, 168, 2, 1)
         """ E """
-        self.set_config(config_arr, 32+128, 33+128, 24, 168, 1, 2)
-        self.set_config(config_arr, 32+128+32, 33+128+32, 24, 168, 1, 2)
-        self.set_config(config_arr, 32+128, 96+128, 24, 25, 1, 2)
-        self.set_config(config_arr, 96+128, 97+128, 24, 168, 1, 2)
+        self.set_config(config_arr, 32+128*2, 33+128*2, 24, 168, 2, 1)
+        self.set_config(config_arr, 32+128*2+32, 33+128*2+32, 24, 168, 2, 1)
+        self.set_config(config_arr, 32+128*2, 96+128*2, 24, 25, 2, 1)
+        self.set_config(config_arr, 96+128*2, 97+128*2, 24, 168, 2, 1)
         """ P """
-        self.set_config(config_arr, 32+128*2, 33+128*2, 24, 168, 1, 2)
-        self.set_config(config_arr, 32+128*2+32, 33+128*2+32, 24, 168, 1, 2)
-        self.set_config(config_arr, 32+128*2, 96+128*2, 24, 25, 1, 2)
-        self.set_config(config_arr, 32+128*2, 33+128*2, 168, 168+32, 1, 2)
+        self.set_config(config_arr, 32+128*1+64, 33+128*1+64, 24, 168, 2, 1)
+        self.set_config(config_arr, 32+128*1+32, 33+128*1+32, 24, 168, 2, 1)
+        self.set_config(config_arr, 32+128*1, 96+128*1, 24, 25, 2, 1)
+        self.set_config(config_arr, 32+128*1+64-32, 33+128*1+64, 168, 169, 2, 1)
         """ C """
-        self.set_config(config_arr, 32+128*3, 33+128*3, 24, 168, 1, 2)
-        self.set_config(config_arr, 32+128*3, 96+128*3, 24, 25, 1, 2)
-        self.set_config(config_arr, 96+128*3, 97+128*3, 24, 168, 1, 2)
+        self.set_config(config_arr, 32+128*3, 33+128*3, 24, 168, 2, 1)
+        self.set_config(config_arr, 32+128*3, 96+128*3, 24, 25, 2, 1)
+        self.set_config(config_arr, 96+128*3, 97+128*3, 24, 168, 2, 1)
 
 
     def code_c(self, config_arr):
