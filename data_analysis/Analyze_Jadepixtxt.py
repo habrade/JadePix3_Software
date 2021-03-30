@@ -35,7 +35,7 @@ def test(filename="../data/data_rs.txt", outrootname = "./outth2f.root"):
 #             if lineindex > 20:
 #                 break
             raw16 = int(line, 16)
-            flag = (raw16 >> 23)
+            flag = (raw16 >> 30)
 #             print(hex(raw16), flag)
             if flag !=1 and (not framestart) and (not frameend):
 #                 print(flag, framestart, frameend)
@@ -169,7 +169,7 @@ def testresidual(filename="../data/data_rs.txt", outrootname = "./outth1f.root",
         for line in lines:
             lineindex +=1
             raw16 = int(line, 16)
-            flag = (raw16 >> 23)
+            flag = (raw16 >> 30)
             if flag !=1 and (not framestart) and (not frameend):
                 continue
 
