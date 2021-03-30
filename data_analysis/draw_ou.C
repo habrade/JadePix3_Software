@@ -2,7 +2,7 @@
 
 
 void draw_ou(){
-  int rebinsize = 100;
+  int rebinsize = 1;
   //TFile* f1 = new TFile("../data/archive/20210325/results/total_x_0to22.root");
   TFile* f1 = new TFile("../data/archive/20210326/results/total_x_all_test_rs_0326_tune92p7_x720742.root");
   TH1F* th1resiXprojXall = (TH1F*) f1->Get("th1resiXprojXall");
