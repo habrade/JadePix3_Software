@@ -51,6 +51,7 @@ def calc(pulse_period, frame_number, output_file):
 
     test_rs_period = pulse_period/((y[-1]-y[0])/(x[-1]-x[0]))
     print("Calc rs period: {:}, should be 98.304.".format(test_rs_period))
+    print("The diff: {:.4}%".format((test_rs_period/98.304)-1))
     #c1.cd()
     #hpxpy.Draw("colz")
     #c1.Update()
