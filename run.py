@@ -134,8 +134,8 @@ def main(config_pixel, spi_initial, gs_en, scurve_en, rs_en, dac_initial, rs_out
     plse_arr = np.empty(CONFIG_SHAPE, dtype=int)
     plse_arr[:, :] = PLSE_DEFAULT
 
-    # print C
-    test_pattern_generator.code_cepc(config_arr=plse_arr)
+    # Fire one column
+    test_pattern_generator.set_con_data(config_arr=plse_arr, row_low=0, row_high=512, col_low=80, col_high=81, data=1)
 
     data_per_frame = test_pattern_generator.gen_test_pattern(plse_arr)
 
@@ -194,7 +194,7 @@ def main(config_pixel, spi_initial, gs_en, scurve_en, rs_en, dac_initial, rs_out
                                           test_num=50)
 
     if rs_en:
-        frame_number = 10000
+        frame_number = 400000
         hitmap_col_low = 340
         hitmap_col_high = 351
         hitmap_en = False
@@ -215,26 +215,36 @@ def main(config_pixel, spi_initial, gs_en, scurve_en, rs_en, dac_initial, rs_out
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    mode_group = parser.add_mutually_exclusive_group()
     parser.add_argument('-config', '--config-pixel',
                         help="Configure pixels' registers, PULSE and MASk",
                         action="store_true")
+    mode_group.add_argument('-a', '--all',
+                            help="Global reset, initial spi, dac70004 and start rolling shutter",
+                            action="store_true")
     parser.add_argument('-spi', '--spi_initial',
                         help="Initial spi and load register in chip",
                         action="store_true")
-    parser.add_argument('-gs', '--gs_en',
-                        help="Enable global shutter",
-                        action="store_true")
-    parser.add_argument('-sc', '--scurve_en',
-                        help="Enable s-curve mode",
-                        action="store_true")
-    parser.add_argument('-rs', '--rs_en',
-                        help="Enable rolling shutter",
-                        action="store_true")
+    mode_group.add_argument('-gs', '--gs_en',
+                            help="Enable global shutter",
+                            action="store_true")
+    mode_group.add_argument('-sc', '--scurve_en',
+                            help="Enable s-curve mode",
+                            action="store_true")
+    mode_group.add_argument('-rs', '--rs_en',
+                            help="Enable rolling shutter",
+                            action="store_true")
     parser.add_argument('-dac', '--dac_initial',
                         help="Initial DAC70004 on daughter-board",
                         action="store_true")
-    parser.add_argument('-o', '--output-file',
+    parser.add_argument('-o', '--output_file',
                         default="data/data_rs.txt",
                         help="The path for saving the results (.txt) of rolling shutter.")
     args = parser.parse_args()
-    main(args.config_pixel, args.spi_initial, args.gs_en, args.scurve_en, args.rs_en, args.dac_initial, args.output_file)
+
+    if args.a:
+        main(config_pixel=True, spi_initial=True, gs_en=False, scurve_en=False, rs_en=True, dac_initial=True,
+             rs_outfile=args.output_file)
+    else:
+        main(args.config_pixel, args.spi_initial, args.gs_en, args.scurve_en, args.rs_en, args.dac_initial,
+             args.output_file)
